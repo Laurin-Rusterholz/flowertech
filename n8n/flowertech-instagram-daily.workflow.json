@@ -1,0 +1,606 @@
+{
+  "name": "FlowerTech: Instagram Reel täglich 08:30",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## FlowerTech — Instagram Reel (08:30, Europe/Zurich)\n\n**Produktionsablauf:** Themenrotation und Duplikatschutz → OpenAI-Konzept → 9:16-Videoanbieter → Archivierung in Firebase Storage → Instagram-Reel via Meta Graph API → Status in `flowertech/videos`.\n\n**Bereits verbunden:** OpenAI-Credential `OpenAI account`.\n\n**Vor dem Testlauf noch zu verbinden:**\n1. `Video erstellen (9:16)` → vorhandenes Videoanbieter-Credential und `FLOWERTECH_VIDEO_API_URL`.\n2. Meta-Nodes → Meta/Instagram-Publishing-Credential und `INSTAGRAM_BUSINESS_ACCOUNT_ID`.\n3. Die Netlify-Function `flowertech-video` benötigt Firebase-Admin-Variablen im AI-Sync-Netlify-Projekt.\n\nDer Workflow bleibt bis zum kontrollierten Test bewusst inaktiv. Nach erfolgreichem manuellen Test aktivieren; der Schedule läuft täglich um 08:30 Uhr.",
+        "height": 560,
+        "width": 540,
+        "color": 4
+      },
+      "id": "f1000000-0000-4000-8000-000000000001",
+      "name": "Einrichtung & Sicherheitscheck",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        -520
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000002",
+      "name": "Täglich 08:30 (Europe/Zurich)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -980,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "f1000000-0000-4000-8000-000000000003",
+      "name": "Kontrollierter Testlauf",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -980,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const tz = 'Europe/Zurich';\nconst now = new Date();\nconst dateKey = now.toLocaleDateString('en-CA', { timeZone: tz });\nconst dayIndex = Math.floor(Date.parse(dateKey + 'T00:00:00Z') / 86400000);\nconst topics = [\n  { key: 'website-leads', title: 'Wie eine KMU-Website automatisch qualifizierte Anfragen gewinnt', angle: 'Konkreter Vorher-Nachher-Ablauf vom Formular bis zum Rückruf' },\n  { key: 'kundenportal', title: 'Kundenportal statt E-Mail-Chaos', angle: 'Status, Dokumente und Freigaben an einem Ort' },\n  { key: 'offerten', title: 'Offerten automatisch vorbereiten', angle: 'Anfrage strukturieren, Daten prüfen und Entwurf erzeugen' },\n  { key: 'terminworkflow', title: 'Termine ohne Hin und Her koordinieren', angle: 'Formular, Kalenderprüfung und automatische Bestätigung' },\n  { key: 'ki-support', title: 'KI beantwortet wiederkehrende Kundenfragen', angle: 'Wissensbasis mit sauberer Übergabe an einen Menschen' },\n  { key: 'mobile-webapp', title: 'Interne Abläufe als mobile Web-App', angle: 'Checklisten, Fotos und Status direkt vor Ort erfassen' },\n  { key: 'datenfluss', title: 'Doppelte Dateneingabe eliminieren', angle: 'Website, CRM und Buchhaltung zuverlässig verbinden' },\n  { key: 'website-speed', title: 'Langsame Website kostet Anfragen', angle: 'Drei messbare Verbesserungen für Schweizer KMU' }\n];\nconst topic = topics[((dayIndex % topics.length) + topics.length) % topics.length];\nconst isManual = $execution.mode === 'manual';\nconst runStamp = now.toLocaleString('sv-SE', { timeZone: tz }).replace(/[^0-9]/g, '').slice(0, 12);\nconst postKey = isManual ? `test-${dateKey}-${topic.key}-${runStamp}` : `${dateKey}-${topic.key}`;\nreturn [{ json: {\n  postKey,\n  dateKey,\n  timezone: tz,\n  mode: isManual ? 'controlled-test' : 'scheduled',\n  topic: topic.title,\n  angle: topic.angle,\n  brand: {\n    name: 'FlowerTech',\n    domain: 'https://flowertech.ch',\n    audience: 'Schweizer KMU und Privatpersonen',\n    colors: ['#081d17', '#c8f36b', '#f5f1e8'],\n    style: 'ruhig, hochwertig, technisch klar, keine erfundenen Kunden oder Zahlen'\n  }\n} }];"
+      },
+      "id": "f1000000-0000-4000-8000-000000000004",
+      "name": "Lauf & Thema vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-video?postKey={{ $json.postKey }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000005",
+      "name": "Firebase: Duplikat prüfen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        80
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f1-condition-existing-post",
+              "leftValue": "={{ $json.exists === true && ['published', 'publishing', 'ready'].includes($json.video?.status) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f1000000-0000-4000-8000-000000000006",
+      "name": "Bereits vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $('Lauf & Thema vorbereiten').first().json;\nreturn [{ json: { ...run, skipped: true, reason: 'duplicate-post-protection' } }];"
+      },
+      "id": "f1000000-0000-4000-8000-000000000007",
+      "name": "Ohne Doppelpost beenden",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gpt-4.1-mini', temperature: 0.8, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'Du bist Creative Director für FlowerTech. Erstelle kurze, konkrete Instagram-Reels für Schweizer KMU. Keine erfundenen Referenzen, Bewertungen, Kundennamen oder Geschäftszahlen. Schweizer Rechtschreibung: ss statt ß. Antworte ausschliesslich als valides JSON.' }, { role: 'user', content: `Thema: ${$('Lauf & Thema vorbereiten').first().json.topic}\\nBlickwinkel: ${$('Lauf & Thema vorbereiten').first().json.angle}\\nMarke: ${JSON.stringify($('Lauf & Thema vorbereiten').first().json.brand)}\\n\\nErzeuge JSON mit: hook (max 12 Wörter), caption (Deutsch, 450-900 Zeichen, 3-5 passende Hashtags), cta, voiceover (45-70 Wörter), videoPrompt (visuelle Regie für ein hochwertiges vertikales 9:16-Video, keine Logos fremder Marken), scenes (Array aus exakt 5 Objekten mit secondStart, secondEnd, visual, overlay; Gesamtdauer 20 Sekunden). CTA verweist auf flowertech.ch.` }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000008",
+      "name": "OpenAI: Reel-Konzept",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        20,
+        160
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "ZpOqoNOmTULsRJKf",
+          "name": "OpenAI account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const run = $('Lauf & Thema vorbereiten').first().json;\nconst raw = $json?.choices?.[0]?.message?.content;\nif (!raw) throw new Error('OpenAI lieferte keinen Inhalt.');\nlet concept;\ntry { concept = JSON.parse(raw); } catch { throw new Error('OpenAI-Antwort ist kein valides JSON.'); }\nif (!concept.hook || !concept.caption || !concept.cta || !concept.videoPrompt || !Array.isArray(concept.scenes) || concept.scenes.length !== 5) {\n  throw new Error('Reel-Konzept ist unvollständig.');\n}\nreturn [{ json: { ...run, ...concept, status: 'generating' } }];"
+      },
+      "id": "f1000000-0000-4000-8000-000000000009",
+      "name": "Konzept validieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-video",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ postKey: $json.postKey, topic: $json.topic, hook: $json.hook, caption: $json.caption, cta: $json.cta, scenes: $json.scenes, scheduledAt: new Date().toISOString(), status: 'generating' }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000010",
+      "name": "Firebase: Generierung protokollieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FLOWERTECH_VIDEO_API_URL }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ aspect_ratio: '9:16', duration_seconds: 20, prompt: $('Konzept validieren').first().json.videoPrompt, voiceover: $('Konzept validieren').first().json.voiceover, scenes: $('Konzept validieren').first().json.scenes, brand: $('Konzept validieren').first().json.brand, output_format: 'mp4' }) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000011",
+      "name": "Video erstellen (9:16)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        740,
+        160
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ERSETZEN-VIDEO-CREDENTIAL",
+          "name": "Video Provider"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 15000
+    },
+    {
+      "parameters": {
+        "jsCode": "const concept = $('Konzept validieren').first().json;\nconst videoUrl = $json.video_url || $json.videoUrl || $json.url || $json.output?.url || $json.data?.url;\nif (!videoUrl || !String(videoUrl).startsWith('https://')) throw new Error('Der Videoanbieter lieferte keine öffentliche HTTPS-Video-URL.');\nreturn [{ json: { ...concept, videoUrl: String(videoUrl), providerJobId: $json.id || $json.job_id || $json.data?.id || null, status: 'ready' } }];"
+      },
+      "id": "f1000000-0000-4000-8000-000000000012",
+      "name": "Video-Antwort validieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-video",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ postKey: $json.postKey, topic: $json.topic, hook: $json.hook, caption: $json.caption, cta: $json.cta, scenes: $json.scenes, videoUrl: $json.videoUrl, archive: true, status: 'ready' }) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000013",
+      "name": "Firebase Storage: Video archivieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/{{ $env.INSTAGRAM_BUSINESS_ACCOUNT_ID }}/media",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "REELS"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ $('Video-Antwort validieren').first().json.videoUrl }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $('Video-Antwort validieren').first().json.caption }}"
+            },
+            {
+              "name": "share_to_feed",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000014",
+      "name": "Meta: Reel-Container erstellen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        160
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ERSETZEN-META-CREDENTIAL",
+          "name": "Meta Instagram Publishing"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 10000
+    },
+    {
+      "parameters": {
+        "amount": 45,
+        "unit": "seconds"
+      },
+      "id": "f1000000-0000-4000-8000-000000000015",
+      "name": "Auf Meta-Verarbeitung warten",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1700,
+        160
+      ],
+      "webhookId": "f1000000-0000-4000-8000-000000000015"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/{{ $env.INSTAGRAM_BUSINESS_ACCOUNT_ID }}/media_publish",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $('Meta: Reel-Container erstellen').first().json.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000016",
+      "name": "Meta: Reel veröffentlichen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        160
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ERSETZEN-META-CREDENTIAL",
+          "name": "Meta Instagram Publishing"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 15000
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v23.0/{{ $json.id }}?fields=id,permalink,timestamp,media_type,caption",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000017",
+      "name": "Meta: Veröffentlichung prüfen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        160
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ERSETZEN-META-CREDENTIAL",
+          "name": "Meta Instagram Publishing"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 10000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-video",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ postKey: $('Video-Antwort validieren').first().json.postKey, topic: $('Video-Antwort validieren').first().json.topic, hook: $('Video-Antwort validieren').first().json.hook, caption: $('Video-Antwort validieren').first().json.caption, cta: $('Video-Antwort validieren').first().json.cta, scenes: $('Video-Antwort validieren').first().json.scenes, videoUrl: $('Video-Antwort validieren').first().json.videoUrl, instagramCreationId: $('Meta: Reel-Container erstellen').first().json.id, instagramMediaId: $json.id, permalink: $json.permalink, publishedAt: $json.timestamp || new Date().toISOString(), metrics: { impressions: null, reach: null, plays: null, likes: null, comments: null, shares: null, saved: null }, status: 'published' }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "f1000000-0000-4000-8000-000000000018",
+      "name": "Firebase: Veröffentlichung speichern",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        160
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Täglich 08:30 (Europe/Zurich)": {
+      "main": [
+        [
+          {
+            "node": "Lauf & Thema vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kontrollierter Testlauf": {
+      "main": [
+        [
+          {
+            "node": "Lauf & Thema vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lauf & Thema vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "Firebase: Duplikat prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firebase: Duplikat prüfen": {
+      "main": [
+        [
+          {
+            "node": "Bereits vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bereits vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Ohne Doppelpost beenden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenAI: Reel-Konzept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI: Reel-Konzept": {
+      "main": [
+        [
+          {
+            "node": "Konzept validieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Konzept validieren": {
+      "main": [
+        [
+          {
+            "node": "Firebase: Generierung protokollieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firebase: Generierung protokollieren": {
+      "main": [
+        [
+          {
+            "node": "Video erstellen (9:16)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video erstellen (9:16)": {
+      "main": [
+        [
+          {
+            "node": "Video-Antwort validieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video-Antwort validieren": {
+      "main": [
+        [
+          {
+            "node": "Firebase Storage: Video archivieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firebase Storage: Video archivieren": {
+      "main": [
+        [
+          {
+            "node": "Meta: Reel-Container erstellen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta: Reel-Container erstellen": {
+      "main": [
+        [
+          {
+            "node": "Auf Meta-Verarbeitung warten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auf Meta-Verarbeitung warten": {
+      "main": [
+        [
+          {
+            "node": "Meta: Reel veröffentlichen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta: Reel veröffentlichen": {
+      "main": [
+        [
+          {
+            "node": "Meta: Veröffentlichung prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta: Veröffentlichung prüfen": {
+      "main": [
+        [
+          {
+            "node": "Firebase: Veröffentlichung speichern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Zurich",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "f1000000-0000-4000-8000-000000000099",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
