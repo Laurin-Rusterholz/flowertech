@@ -93,8 +93,8 @@
     border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; background: rgba(255,255,255,.03); }
   #mnav .mn-mode .lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); }
   #mnav .mn-links { display: flex; flex-direction: column; }
-  #mnav .mn-links a { display: flex; align-items: baseline; gap: 16px; text-decoration: none;
-    font-size: 23px; font-weight: 750; letter-spacing: -.02em; padding: 13px 2px; border-bottom: 1px solid var(--line);
+  #mnav .mn-links a { display: flex; align-items: baseline; gap: 14px; text-decoration: none;
+    font-size: 19px; font-weight: 700; letter-spacing: -.02em; padding: 11px 2px; border-bottom: 1px solid var(--line);
     opacity: 0; transform: translateY(16px); transition: opacity .45s cubic-bezier(.16,.7,.2,1), transform .45s cubic-bezier(.16,.7,.2,1), color .25s; }
   #mnav .mn-links a .no { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--ink-faint); width: 24px; flex: none; }
   #mnav .mn-links a:active { color: var(--lime); }
@@ -1422,88 +1422,114 @@
   @media (max-width: 760px) {
     body { -webkit-tap-highlight-color: transparent; }
 
-    /* --- 3. Bedienelemente: Daumengrösse statt Mauszeigergrösse --- */
+    /* --- 3. Bedienelemente: gross genug für den Daumen, nicht grösser.
+       48 px reichen; die 54-px-Schaltflächen davor wirkten aufgeblasen. --- */
     .bttn { display: inline-flex; align-items: center; justify-content: center;
-      min-height: 54px; padding: 16px 30px; font-size: 16px; font-weight: 700; }
+      min-height: 48px; padding: 13px 24px; font-size: 15px; font-weight: 700; }
     .bttn:hover { transform: none; }
     .bttn:active { transform: scale(.97); background: var(--lime); }
 
-    /* Sekundär-Aktion wird zur Outline-Taste statt zum Unterstrich-Link */
-    .ctas .lnk, .pn-cta .lnk {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-height: 54px; padding: 16px 26px; font-size: 15.5px; font-weight: 650;
-      border: 1px solid var(--line-3); border-bottom: 1px solid var(--line-3); border-radius: 100px; }
-    .ctas .lnk:active, .pn-cta .lnk:active { border-color: var(--lime); color: var(--lime); }
+    /* Nur die Hauptaktion ist eine Fläche. Die Nebenaktion bleibt ein Link —
+       zwei gleich schwere Balken untereinander lesen sich wie ein Formular. */
+    .ctas .lnk, .pn-cta .lnk { display: block; text-align: center; border: 0;
+      padding: 12px 0 10px; font-size: 14.5px; font-weight: 600; color: var(--ink-dim); }
+    .ctas .lnk:active, .pn-cta .lnk:active { color: var(--lime); }
 
-    /* Aktionspaare stapeln sich und füllen die Breite */
-    .hero .ctas, .pn-cta, .websec .ctas { flex-direction: column; align-items: stretch; gap: 12px; }
-    .hero .ctas > *, .pn-cta > *, .websec .ctas > *, .cb-in .bttn, .mn-cta .bttn { width: 100%; }
+    .hero .ctas, .pn-cta, .websec .ctas { flex-direction: column; align-items: stretch; gap: 2px; }
+    .hero .ctas .bttn, .pn-cta .bttn, .websec .ctas .bttn, .cb-in .bttn, .mn-cta .bttn { width: 100%; }
 
-    .mswitch button { padding: 10px 18px; font-size: 13px; min-height: 42px; }
-    .faq summary { padding: 21px 2px; font-size: 16.5px; min-height: 62px; }
-    .mt { padding: 12px 18px; font-size: 13.5px; min-height: 46px; }
-    .sug, .mnode { padding: 11px 11px 11px 16px; font-size: 13.5px; min-height: 46px; }
-    .sug u, .mnode u { width: 26px; height: 26px; font-size: 16px; }
-    .chat .sugs button, .pc-sugs button { font-size: 13px; padding: 11px 15px; min-height: 44px; }
-    .chat .inp, .pc-in, .mm-own, .mm-send, .vr-input { padding: 7px 7px 7px 16px; }
-    .chat .inp .snd, .pc-in .snd { width: 42px; height: 42px; font-size: 17px; }
-    .mm-own button { width: 40px; height: 40px; font-size: 20px; }
-    .pc-x { width: 38px; height: 38px; font-size: 18px; }
-    .aw-x { width: 42px; height: 42px; font-size: 20px; }
-    .bttn.sm2 { min-height: 48px; padding: 13px 24px; font-size: 14px; }
-    .lnk2 { font-size: 14px; padding: 12px 0; }
-    #pcFab { padding: 15px; box-shadow: 0 16px 50px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.16); }
+    .mswitch button { padding: 9px 15px; font-size: 12.5px; min-height: 38px; }
+    .faq summary { padding: 17px 2px; font-size: 15px; min-height: 54px; }
+    .mt { padding: 10px 15px; font-size: 12.5px; min-height: 42px; }
+    .sug, .mnode { padding: 10px 10px 10px 14px; font-size: 12.5px; min-height: 42px; }
+    .sug u, .mnode u { width: 24px; height: 24px; font-size: 15px; }
+    .chat .sugs button, .pc-sugs button { font-size: 12px; padding: 9px 13px; min-height: 40px; }
+    .chat .inp, .pc-in, .mm-own, .mm-send, .vr-input { padding: 6px 6px 6px 14px; }
+    .chat .inp .snd, .pc-in .snd { width: 38px; height: 38px; font-size: 16px; }
+    .mm-own button { width: 36px; height: 36px; font-size: 19px; }
+    .pc-x { width: 34px; height: 34px; font-size: 17px; }
+    .aw-x { width: 38px; height: 38px; font-size: 19px; }
+    .bttn.sm2 { min-height: 44px; padding: 11px 20px; font-size: 13.5px; }
+    .lnk2 { font-size: 13.5px; padding: 11px 0; }
+    #pcFab { padding: 13px; box-shadow: 0 14px 40px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.16); }
+    #pcFab svg { width: 22px; height: 22px; }
 
-    /* --- 4. Typografie: für den Lesabstand von ~30 cm gesetzt --- */
-    .hero .sub { font-size: 16px; line-height: 1.5; margin-top: 20px; }
-    .sec-head h2 { font-size: 34px; line-height: 1.08; }
-    .sec-head p { font-size: 15.5px; line-height: 1.55; }
-    .dyn-txt h3, .ki-txt h3, .w-txt h3, .pn-txt h3 { font-size: 27px; line-height: 1.1; }
-    .dyn-txt p, .ki-txt p, .w-txt p { font-size: 15.5px; line-height: 1.6; }
-    .dyn-li .it b { font-size: 16px; }
-    .dyn-li .it span { font-size: 14px; line-height: 1.55; }
-    .kf b { font-size: 14.5px; } .kf span { font-size: 13px; }
-    .l-incl li b { font-size: 15.5px; } .l-incl li span { font-size: 13.5px; }
-    .al b { font-size: 15px; } .al span { font-size: 13px; }
-    .af-node b { font-size: 16px; } .af-node span { font-size: 13.5px; }
-    .st-i b { font-size: 19px; } .st-i span { font-size: 14.5px; }
-    .faq .a { font-size: 15.5px; }
-    .num .v { font-size: 42px; } .num .l { font-size: 13.5px; }
-    .aud-tile p, .final p { font-size: 15.5px; }
-    .w-chips span { font-size: 11.5px; padding: 8px 14px; }
-    .a-chips span { font-size: 12px; padding: 8px 13px; }
+    /* --- 4. Typografie: eigene Handy-Staffel. Die Desktop-Grade wirken auf
+       390 px plakativ und drücken den Inhalt aus dem Bild. --- */
+    .hero h1 { font-size: 34px; line-height: 1.06; letter-spacing: -.03em; }
+    .hero .sub { font-size: 14.5px; line-height: 1.5; margin-top: 14px; max-width: 340px; }
+    .hero .ctas { margin-top: 22px; }
+    .eyebrow { font-size: 9.5px; padding: 6px 13px; margin-bottom: 20px; }
+    .sec-head h2 { font-size: 27px; line-height: 1.1; }
+    .sec-head p { font-size: 14px; line-height: 1.55; margin-top: 12px; }
+    .sec-head .k, .dyn-txt .k, .ki-txt .k, .w-txt .k, .pn-txt .k, .aud-tile .k { font-size: 9.5px; }
+    .dyn-txt h3, .ki-txt h3, .w-txt h3, .pn-txt h3 { font-size: 22px; line-height: 1.14; margin-top: 10px; }
+    .dyn-txt p, .ki-txt p, .w-txt p { font-size: 14.5px; line-height: 1.6; margin-top: 12px; }
+    .dyn-li { margin-top: 20px; gap: 13px; }
+    .dyn-li .it b { font-size: 14.5px; }
+    .dyn-li .it span { font-size: 13px; line-height: 1.5; }
+    .dyn-li .it .n { width: 23px; height: 23px; font-size: 9px; }
+    .kf { padding: 12px 13px; } .kf b { font-size: 13.5px; } .kf span { font-size: 12.5px; }
+    .l-incl li b { font-size: 14px; } .l-incl li span { font-size: 12.5px; }
+    .l-incl ul { gap: 14px; } .l-incl .t2 { margin-bottom: 16px; }
+    .l-hi .big { font-size: 24px; } .l-hi p { font-size: 13px; margin-top: 11px; }
+    .l-mini b { font-size: 14px; } .l-mini span { font-size: 12.5px; }
+    .al b { font-size: 13.5px; } .al span { font-size: 12.5px; }
+    .af-node b { font-size: 14.5px; } .af-node span { font-size: 12.5px; }
+    .af-node { padding: 10px 0; } .af-node .aic { width: 28px; height: 28px; }
+    .st-i b { font-size: 17px; } .st-i span { font-size: 13.5px; }
+    .faq .a { font-size: 14.5px; padding-bottom: 22px; }
+    .num .v { font-size: 34px; } .num .l { font-size: 12.5px; margin-top: 6px; }
+    .aud-tile h3 { font-size: 22px; } .aud-tile p, .final p { font-size: 14.5px; }
+    .cb-t b { font-size: 18px; } .cb-t span { font-size: 13.5px; }
+    .final h2 { font-size: 32px; line-height: 1.06; }
+    .final .k, .final .micro { font-size: 9.5px; }
+    .statement h2 { font-size: 24px; line-height: 1.2; }
     /* Dateinamen wie «Offerte_Weber_Badsanierung.pdf» bieten keine Trennstelle */
-    .bub { font-size: 14px; max-width: 88%; overflow-wrap: anywhere; }
+    .bub { font-size: 13.5px; max-width: 88%; overflow-wrap: anywhere; }
     .bub.ai .doc b, .bub.ai .doc span { overflow-wrap: anywhere; }
-    .pc-bd .bub { font-size: 13.5px; }
-    .mm-empty { font-size: 14px; }
-    .vr-note, .mm-sum { font-size: 13.5px; }
-    footer { font-size: 10.5px; }
+    .pc-bd .bub { font-size: 13px; }
+    .mm-empty { font-size: 13px; }
+    .vr-note, .mm-sum { font-size: 12.5px; }
+    footer { font-size: 10px; }
+
+    /* Merkmalslisten laufen seitlich weiter statt umzubrechen — spart Höhe
+       und ist auf dem Telefon die gewohnte Geste. */
+    .w-chips, .a-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .w-chips::-webkit-scrollbar, .a-chips::-webkit-scrollbar { display: none; }
+    .w-chips span, .a-chips span { flex: none; }
+    .w-chips span { font-size: 11px; padding: 7px 12px; }
+    .a-chips span { font-size: 11.5px; padding: 7px 12px; }
 
     /* iOS zoomt bei Eingabefeldern unter 16px automatisch hinein */
     input, .pc-in input, .chat .inp input, .mm-own input, .mm-send input, .vr-input input, .mm-core input { font-size: 16px; }
-    .mm-core input { font-size: 18px; }
+    .mm-core input { font-size: 17px; }
 
-    /* --- 5. Raster: fester Rhythmus in px statt vh (Browserleisten schwanken) --- */
+    /* --- 5. Raster: dichter Rhythmus in px. Desktop-Weissraum wirkt am
+       Telefon wie eine leere Seite zwischen den Abschnitten. --- */
     .build, .vision, .dyn, .ki-sec, .vonunten, .autosec, .works, .leist, .ctaband, .websec, .aud {
       padding-left: 18px; padding-right: 18px; }
-    .dyn, .ki-sec, .vonunten, .autosec, .vision, .build { padding-top: 64px; padding-bottom: 64px; }
-    .works { padding-top: 64px; padding-bottom: 24px; }
-    .leist { padding-top: 56px; padding-bottom: 48px; }
-    .ctaband { padding-top: 24px; padding-bottom: 72px; }
-    .nums { padding: 64px 18px; }
-    .steps-sec { padding: 72px 18px; }
-    .faq { padding: 32px 18px 80px; }
-    .statement { padding: 120px 20px; }
-    .final { padding: 110px 20px 96px; }
-    .sec-head { margin-bottom: 40px; }
-    .work { padding: 40px 0; }
-    .nums-in { gap: 34px 16px; }
-    .ph-row { row-gap: 34px; }
+    .dyn, .ki-sec, .vonunten, .autosec, .vision, .build { padding-top: 44px; padding-bottom: 44px; }
+    .works { padding-top: 44px; padding-bottom: 16px; }
+    .leist { padding-top: 40px; padding-bottom: 32px; }
+    .ctaband { padding-top: 16px; padding-bottom: 48px; }
+    .nums { padding: 44px 18px; }
+    .steps-sec { padding: 48px 18px; }
+    .faq { padding: 24px 18px 52px; }
+    .statement { padding: 80px 20px; }
+    .final { padding: 72px 20px 64px; }
+    .sec-head { margin-bottom: 26px; }
+    .work { padding: 26px 0; gap: 18px; }
+    .nums-in { gap: 26px 14px; }
+    .ph-row { row-gap: 26px; }
+    .ph-line { margin-top: 40px; }
+    .pn-cta { margin-top: 20px; }
+    .pn-stats { margin-top: 18px; }
+    .ki-feats { margin-top: 18px; gap: 8px; }
 
     /* Hero — flacherer Anflug, damit das Mockup nicht seitlich abgeschnitten wird */
-    .hero { padding: 104px 18px 0; }
-    .stage { width: 92vw; margin-top: 26px; }
+    .hero { padding: 92px 18px 0; }
+    .stage { width: 94vw; margin-top: 20px; }
     .scene3 { transform: rotateY(-12deg) rotateX(4deg) translate3d(60px, 16px, -80px); }
     .scene3.in { transform: rotateY(-4deg) rotateX(2deg) translate3d(0,0,0); }
     /* Schreibtisch-Requisiten überdecken auf 390 px nur das Mockup */
@@ -1512,28 +1538,48 @@
     body[data-mode="biz"] .hero-ph { display: none; }
     body[data-mode="priv"] #heroLap { display: none; }
     body[data-mode="priv"] .hero-ph { position: relative; right: auto; bottom: auto;
-      width: 208px; margin: 0 auto; transform: none; }
+      width: 190px; margin: 0 auto; transform: none; }
 
-    /* --- 6. Karten und Flächen: mehr Luft innen, klarere Kanten --- */
-    .pick { padding: 26px 22px 24px; border-radius: 20px; }
-    .pk-tt { font-size: 27px; }
-    .pk-sub { font-size: 14.5px; }
-    .pk-plus { right: 20px; bottom: 22px; width: 34px; height: 34px; }
-    .pk-plus::before { left: 9px; right: 9px; top: 16px; }
-    .pk-plus::after { top: 9px; bottom: 9px; left: 16px; }
-    .pn-grid { padding: 20px 16px; border-radius: 20px; }
-    .pn-stats { gap: 8px; }
-    .pn-stats div { padding: 12px 10px; }
-    .pn-stats b { font-size: 17px; }
-    .pn-stats span { font-size: 10.5px; }
-    .auto-flow { padding: 20px 18px 20px 22px; }
-    .af-line { left: 37px; }
-    .l-incl { padding: 26px 20px; }
-    .l-hi { padding: 26px 20px; }
-    .l-mini { padding: 20px; }
-    .aud-tile { padding: 30px 22px; }
-    .cb-in { flex-direction: column; align-items: stretch; text-align: center; padding: 28px 20px; }
-    footer { flex-direction: column; text-align: center; gap: 10px; padding: 28px 18px; }
+    /* --- 5b. Kein Laptop-Gehäuse auf einem Telefon. Deckel, Scharnier und
+       Standfuss sind das deutlichste Zeichen einer umgestellten Desktop-Seite;
+       der Inhalt steht am Handy in einer schlichten Karte. --- */
+    .lap-cam, .lap-base, .lap-shadow, .lap-glow, .desk-glow, .desk-edge { display: none; }
+    .lap-lid { padding: 0; border-radius: 16px; border: 1px solid var(--line-2);
+      background: #0b0b0e; box-shadow: 0 16px 40px rgba(0,0,0,.66); }
+    .lap-scr { border-radius: 15px; }
+    .lap-scr::after { display: none; }
+    body[data-mode="biz"] .sl-cam, body[data-mode="biz"] .sl-hinge,
+    body[data-mode="biz"] .sl-base, body[data-mode="biz"] .sl-brand { display: none; }
+    body[data-mode="biz"] .sl-lid { border-radius: 18px; padding: 10px; }
+    body[data-mode="biz"] .sl-lid::after { border-radius: 18px; }
+
+    /* --- 6. Karten und Flächen: kompakter, damit mehr als eine Karte
+       gleichzeitig sichtbar bleibt --- */
+    .pick { padding: 18px 18px 16px; border-radius: 16px; }
+    .pk-no { font-size: 9px; }
+    .pk-tt { font-size: 21px; margin-top: 8px; }
+    .pk-sub { font-size: 13px; margin-top: 4px; }
+    .pk-plus { right: 16px; bottom: 16px; width: 28px; height: 28px; }
+    .pk-plus::before { left: 7px; right: 7px; top: 13px; }
+    .pk-plus::after { top: 7px; bottom: 7px; left: 13px; }
+    .pick-grid { gap: 10px; }
+    .pn-grid { padding: 16px 14px; border-radius: 16px; margin-top: 10px; }
+    .pn-stats { gap: 7px; }
+    .pn-stats div { padding: 10px 8px; border-radius: 11px; }
+    .pn-stats b { font-size: 15px; }
+    .pn-stats span { font-size: 10px; }
+    .auto-flow { padding: 16px 14px 16px 18px; border-radius: 16px; }
+    .af-line { left: 33px; }
+    .l-incl { padding: 20px 16px; border-radius: 18px; }
+    .l-hi { padding: 20px 16px; border-radius: 18px; }
+    .l-mini { padding: 16px; border-radius: 14px; }
+    .l-side { gap: 10px; }
+    .leist-grid { gap: 10px; }
+    .aud-tile { padding: 22px 18px; border-radius: 18px; }
+    .aud-grid { gap: 10px; }
+    .cb-in { flex-direction: column; align-items: stretch; text-align: center;
+      padding: 20px 16px; border-radius: 18px; gap: 14px; }
+    footer { flex-direction: column; text-align: center; gap: 8px; padding: 22px 18px; }
 
     /* --- 7. Gerätemodelle: am Handy zeigen wir das Wesentliche gross --- */
     .kpis { gap: 8px; }
@@ -1554,9 +1600,10 @@
     .model-cap, .fr-caps { bottom: 96px; height: 0; }
     /* Kürzere Blende: sonst stehen beim Wechsel zwei Bildtexte übereinander */
     .model-cap .c, .fr-grp .fc { width: min(92vw, 660px); bottom: 0; top: auto; transition: opacity .22s ease; }
-    .model-cap b, .fr-grp .fc b { font-size: 21px; }
-    .model-cap span.s, .fr-grp .fc .s { font-size: 13.5px; }
-    .model-cap .k, .fr-grp .fc .k { font-size: 9.5px; }
+    .model-cap b, .fr-grp .fc b { font-size: 18px; }
+    .model-cap span.s, .fr-grp .fc .s { font-size: 12.5px; margin-top: 5px; }
+    .model-cap .k, .fr-grp .fc .k { font-size: 9px; margin-bottom: 7px; }
+    .model-head .k, .fr-head .k { font-size: 9px; }
 
     /* Der Marker sass zu tief unter der Zeile */
     .hero h1 .hl, .final h2 .hl {
@@ -1603,11 +1650,13 @@
   @keyframes awsheet { from { transform: translateY(40px); opacity: 0; } }
 
   @media (max-width: 420px) {
-    .sec-head h2 { font-size: 30px; }
-    .dyn-txt h3, .ki-txt h3, .w-txt h3, .pn-txt h3 { font-size: 25px; }
-    .pick-grid { gap: 12px; }
-    .num .v { font-size: 38px; }
-    .nums-in { gap: 28px 12px; }
+    .hero h1 { font-size: 31px; }
+    .sec-head h2 { font-size: 25px; }
+    .dyn-txt h3, .ki-txt h3, .w-txt h3, .pn-txt h3 { font-size: 20.5px; }
+    .final h2 { font-size: 29px; }
+    .pk-tt { font-size: 20px; }
+    .num .v { font-size: 30px; }
+    .nums-in { gap: 22px 12px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
