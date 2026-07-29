@@ -1101,9 +1101,12 @@
     .mm-canvas { height: auto; padding: 22px 16px 26px; }
     .mm-links { display: none; }
     .mm-core { position: relative; left: auto; top: auto; transform: none; width: 100%; margin-bottom: 18px; }
-    .mm-nodes { position: relative; inset: auto; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-    .mnode { position: relative !important; transform: none !important; max-width: 100%;
-      touch-action: auto; padding: 9px 9px 9px 14px; }
+    /* Zentriert umbrechende Pillen ergaben ein unruhiges Zickzack —
+       am Handy liest sich eine gleichmässige Spalte deutlich besser. */
+    .mm-nodes { position: relative; inset: auto; display: flex; flex-direction: column; gap: 8px; }
+    .mnode { position: relative !important; transform: none !important; max-width: 100%; width: 100%;
+      justify-content: space-between; touch-action: auto; padding: 9px 9px 9px 14px; }
+    .mnode span { flex: 1; min-width: 0; }
     .mnode u { width: 24px; height: 24px; }
     .mnode.hidden { display: none; }
     .mm-empty { position: relative; left: auto; bottom: auto; transform: none; margin-top: 16px; }
@@ -1498,9 +1501,18 @@
     .nums-in { gap: 34px 16px; }
     .ph-row { row-gap: 34px; }
 
-    /* Hero */
+    /* Hero — flacherer Anflug, damit das Mockup nicht seitlich abgeschnitten wird */
     .hero { padding: 104px 18px 0; }
-    .stage { width: 96vw; margin-top: 26px; }
+    .stage { width: 92vw; margin-top: 26px; }
+    .scene3 { transform: rotateY(-12deg) rotateX(4deg) translate3d(60px, 16px, -80px); }
+    .scene3.in { transform: rotateY(-4deg) rotateX(2deg) translate3d(0,0,0); }
+    /* Schreibtisch-Requisiten überdecken auf 390 px nur das Mockup */
+    .mug, .pad { display: none; }
+    /* Ein Gerät statt einer Szene: das zur gewählten Ansicht passende */
+    body[data-mode="biz"] .hero-ph { display: none; }
+    body[data-mode="priv"] #heroLap { display: none; }
+    body[data-mode="priv"] .hero-ph { position: relative; right: auto; bottom: auto;
+      width: 208px; margin: 0 auto; transform: none; }
 
     /* --- 6. Karten und Flächen: mehr Luft innen, klarere Kanten --- */
     .pick { padding: 26px 22px 24px; border-radius: 20px; }
@@ -1538,15 +1550,17 @@
        damit er nicht unter den schwebenden Chat-Knopf läuft */
     .model-head, .fr-head { top: 74px; }
     .floors { top: 108px; }
+    .layer .tag { left: 0; top: -14px; font-size: 9px; padding: 4px 8px; }
     .model-cap, .fr-caps { bottom: 96px; height: 0; }
-    .model-cap .c, .fr-grp .fc { width: min(92vw, 660px); bottom: 0; top: auto; }
+    /* Kürzere Blende: sonst stehen beim Wechsel zwei Bildtexte übereinander */
+    .model-cap .c, .fr-grp .fc { width: min(92vw, 660px); bottom: 0; top: auto; transition: opacity .22s ease; }
     .model-cap b, .fr-grp .fc b { font-size: 21px; }
     .model-cap span.s, .fr-grp .fc .s { font-size: 13.5px; }
     .model-cap .k, .fr-grp .fc .k { font-size: 9.5px; }
 
     /* Der Marker sass zu tief unter der Zeile */
     .hero h1 .hl, .final h2 .hl {
-      background: linear-gradient(transparent 56%, rgba(200,255,46,.85) 56%, rgba(200,255,46,.85) 88%, transparent 88%); }
+      background: linear-gradient(transparent 52%, rgba(200,255,46,.85) 52%, rgba(200,255,46,.85) 84%, transparent 84%); }
 
     /* Titel links, Status rechts — ohne feste Platzierung rutscht das Kürzel nach vorn */
     .aw-li { grid-template-columns: minmax(0,1fr) auto; }
@@ -2977,12 +2991,14 @@
   let baseB = 1, baseP = 1, fullK = 1.5;
   const isPhone = () => window.innerWidth <= 760;
   function resize() {
-    /* Gekippt belegt die Ebene deutlich mehr Breite als ihre 620 px.
-       Auf dem Handy muss dieser Zuschlag in die Skalierung einfliessen,
-       sonst ragt die Platte seitlich aus dem Bild. */
-    const wB = isPhone() ? .72 : .94, wP = isPhone() ? .58 : .92;
-    baseB = Math.min(1.14, (window.innerWidth * wB) / 620, (window.innerHeight * .66) / 430);
-    baseP = Math.min(1.05, (window.innerWidth * wP) / 360, (window.innerHeight * .7) / 600);
+    /* Am Handy steht das Modell frontal, braucht also keinen Zuschlag für die
+       Drehung und darf entsprechend grösser ausfallen. */
+    const ph = isPhone();
+    const wB = ph ? .84 : .94, wP = ph ? .72 : .92;
+    /* Hochformat-Ebene muss zwischen Etagenanzeige und Bildtext passen */
+    const hB = ph ? .52 : .66, hP = ph ? .56 : .7;
+    baseB = Math.min(1.14, (window.innerWidth * wB) / 620, (window.innerHeight * hB) / 430);
+    baseP = Math.min(1.05, (window.innerWidth * wP) / 360, (window.innerHeight * hP) / 600);
   }
   function calcFullK() {
     const priv = document.body.dataset.mode === 'priv';
@@ -3007,10 +3023,14 @@
       const rise = easeIO(norm(d, .05, .34));
       const zoom = easeIO(norm(d, .07, .5));
       if (d > .02) scene3.classList.add('live');
+      /* Am Handy ist das Mockup schon fast bildschirmbreit — der Desktop-Zoom
+         auf 131 % würde es links und rechts abschneiden. */
+      const ph = isPhone();
+      const rotY = ph ? -4 : -9, rotX = ph ? 2 : 4.5, dz = ph ? .05 : .34;
       scene3.style.transform =
-        'rotateY(' + (-9 + 9*zoom) + 'deg) rotateX(' + (4.5 - 4.5*zoom) + 'deg)' +
+        'rotateY(' + (rotY * (1 - zoom)) + 'deg) rotateX(' + (rotX * (1 - zoom)) + 'deg)' +
         ' translate3d(0,' + (rise*-vh*.1) + 'px,0)' +
-        ' scale(' + (.97 + zoom*.34) + ')';
+        ' scale(' + (.97 + zoom*dz) + ')';
     }
 
     /* Rein-Zoom + Parallax: aus dem Layout-Cache, ohne Reflow */
@@ -3036,11 +3056,12 @@
     const tReveal = easeIO(norm(p, P_SHRINK[1] - .03, P_TILT[1]));
 
     /* Vollbild-Laptop -> schrumpft in Position -> kippt in die Iso-Ansicht */
-    /* Flachere Drehung am Handy: die Platte bleibt dadurch grösser lesbar,
-       ohne über den schmalen Bildschirmrand hinauszuwachsen. */
-    const rotK = isPhone() ? .5 : 1;
-    let rx = 44 * tTilt * (isPhone() ? .84 : 1);
-    let rz = (-22 - 12 * clamp((p - P_EXP[0]) / (P_COL[0] - P_EXP[0]), 0, 1)) * tTilt * rotK;
+    /* Am Handy bleibt das Modell flach. Gekippt und weichgezeichnet sind die
+       Ebeneninhalte auf 390 px nicht mehr lesbar — stattdessen zeigen wir sie
+       frontal als Kartenstapel und blenden pro Schritt eine Ebene ein. */
+    const phone = isPhone();
+    let rx = phone ? 0 : 44 * tTilt;
+    let rz = phone ? 0 : (-22 - 12 * clamp((p - P_EXP[0]) / (P_COL[0] - P_EXP[0]), 0, 1)) * tTilt;
     fullK = calcFullK();
     let sc = mix(fullK, 1.0, tShrink) + .06 * tTilt;
     const lift = [0,0,0,0];
@@ -3050,7 +3071,7 @@
       floor = TOUR_ORDER[k];
       lift[floor] = 26;
       sc += .05;
-      sy = (1.5 - k) * 34;
+      sy = phone ? -20 : (1.5 - k) * 34;
       stepK = k; stepT = clamp(tTour * 4 - k, 0, 1);
     }
     rx = mix(rx, 0, tCol); rz = mix(rz, 0, tCol);
@@ -3060,12 +3081,23 @@
     /* Ebenen-Ziele: Frontstapel -> gestaffelte Explosion -> frontal verschmolzen */
     for (let i = 0; i < 4; i++) {
       const back = 3 - i;
-      const fy = -back * 16 * (1 - tTilt);                       /* Kartenstapel vorne */
-      const fz = -back * 52 * (1 - tTilt);
-      const ez = i * 112 * easeIO(norm(p, P_EXP[0] + i * .018, P_EXP[1])) * tTilt;
-      let zy = fy, zz = fz + ez + lift[i];
-      zy = mix(zy, -back * 3, tCol);
-      zz = mix(zz, i * 3, tCol);
+      let zy, zz;
+      if (phone) {
+        /* Ohne Tiefe: die Ebenen fächern nach oben auf wie ein Kartenstapel,
+           in der Tour rückt die aktive nach vorn und die übrigen weichen aus. */
+        const spread = easeIO(norm(p, P_EXP[0], P_EXP[1])) * tTilt;
+        zy = -back * (12 + 30 * spread);
+        if (floor >= 0) zy = i === floor ? 0 : -back * 30 - 70;
+        zy = mix(zy, -back * 5, tCol);
+        zz = 0;
+      } else {
+        const fy = -back * 16 * (1 - tTilt);                     /* Kartenstapel vorne */
+        const fz = -back * 52 * (1 - tTilt);
+        const ez = i * 112 * easeIO(norm(p, P_EXP[0] + i * .018, P_EXP[1])) * tTilt;
+        zy = fy; zz = fz + ez + lift[i];
+        zy = mix(zy, -back * 3, tCol);
+        zz = mix(zz, i * 3, tCol);
+      }
       sm.ly[i] += (zy - sm.ly[i]) * .09;
       sm.lz[i] += (zz - sm.lz[i]) * .09;
     }
@@ -3107,7 +3139,9 @@
     else if (p >= P_TILT[1]) cap = 1;
     layers.forEach((ly,i) => {
       const base = i === 3 ? 1 : tReveal;
-      ly.style.opacity = String(base * (ly.dataset.act === '0' ? .13 : 1));
+      /* Flach übereinander würden abgeblendete Ebenen durchscheinen und
+         den Inhalt der aktiven unlesbar machen. */
+      ly.style.opacity = String(base * (ly.dataset.act === '0' ? (phone ? 0 : .13) : 1));
     });
     floorsEls.forEach(f => {
       const bar = f.querySelector('.fbar i');
@@ -3127,7 +3161,7 @@
         const act = floor === -1 || floor === i;
         ly.dataset.act = act ? '1' : '0';
         ly.classList.toggle('hot', floor === i);
-        ly.style.filter = act ? '' : 'blur(4px) saturate(.6)';
+        ly.style.filter = (act || phone) ? '' : 'blur(4px) saturate(.6)';
       });
     }
 
