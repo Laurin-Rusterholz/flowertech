@@ -2,7 +2,7 @@
 <html lang="de-CH">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>FlowerTech — Software, die mitwächst</title>
 <meta name="description" content="FlowerTech entwickelt Websites und Web-Apps mit Automatisierung und KI. Software, die mitwächst: Änderungen jede Woche — und jede Person im Team stellt sich ihr Programm selbst zusammen.">
 <style>
@@ -64,7 +64,59 @@
   .nav-in .links a:hover { color: #fff; }
   .nav-in .links a.cta { color: #000; background: #fff; font-weight: 600; padding: 8px 17px; border-radius: 100px; transition: .25s; }
   .nav-in .links a.cta:hover { background: var(--lime); }
-  @media (max-width: 760px) { .nav-in .links a:not(.cta) { display: none; } }
+
+  /* ---- Burger + Mobile-Menü ---- */
+  .mburg { display: none; width: 40px; height: 40px; flex: none; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    background: none; border: 1px solid var(--line-2); border-radius: 50%; cursor: pointer; padding: 0; }
+  .mburg i { display: block; width: 16px; height: 1.6px; background: var(--ink); border-radius: 2px;
+    transition: transform .35s cubic-bezier(.2,.7,.3,1), opacity .25s; }
+  body.menu-open .mburg i:nth-child(1) { transform: translateY(6.6px) rotate(45deg); }
+  body.menu-open .mburg i:nth-child(2) { opacity: 0; }
+  body.menu-open .mburg i:nth-child(3) { transform: translateY(-6.6px) rotate(-45deg); }
+  @media (max-width: 900px) {
+    nav.nav { padding-top: env(safe-area-inset-top, 0px); background: rgba(0,0,0,.72); }
+    .nav-in { padding: 0 14px 0 16px; height: 60px; }
+    .nav-in .links { gap: 10px; }
+    .nav-in .links a:not(.cta) { display: none; }
+    .nav-in .links a.cta { padding: 11px 18px; font-size: 13px; font-weight: 700; }
+    .mburg { display: inline-flex; }
+  }
+  #mnav { position: fixed; inset: 0; z-index: 240; display: none; flex-direction: column; overflow-y: auto;
+    padding: calc(84px + env(safe-area-inset-top, 0px)) 24px calc(30px + env(safe-area-inset-bottom, 0px));
+    background: rgba(0,0,0,.93); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+    opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility .35s; }
+  @media (max-width: 900px) { #mnav { display: flex; } }
+  body.menu-open { overflow: hidden; }
+  body.menu-open nav.nav { z-index: 250; }
+  body.menu-open #mnav { opacity: 1; visibility: visible; }
+  #mnav .mn-mode { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 20px;
+    border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; background: rgba(255,255,255,.03); }
+  #mnav .mn-mode .lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); }
+  #mnav .mn-links { display: flex; flex-direction: column; }
+  #mnav .mn-links a { display: flex; align-items: baseline; gap: 16px; text-decoration: none;
+    font-size: 23px; font-weight: 750; letter-spacing: -.02em; padding: 13px 2px; border-bottom: 1px solid var(--line);
+    opacity: 0; transform: translateY(16px); transition: opacity .45s cubic-bezier(.16,.7,.2,1), transform .45s cubic-bezier(.16,.7,.2,1), color .25s; }
+  #mnav .mn-links a .no { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--ink-faint); width: 24px; flex: none; }
+  #mnav .mn-links a:active { color: var(--lime); }
+  body.menu-open #mnav .mn-links a { opacity: 1; transform: none; }
+  body.menu-open #mnav .mn-links a:nth-child(1) { transition-delay: .04s; }
+  body.menu-open #mnav .mn-links a:nth-child(2) { transition-delay: .07s; }
+  body.menu-open #mnav .mn-links a:nth-child(3) { transition-delay: .10s; }
+  body.menu-open #mnav .mn-links a:nth-child(4) { transition-delay: .13s; }
+  body.menu-open #mnav .mn-links a:nth-child(5) { transition-delay: .16s; }
+  body.menu-open #mnav .mn-links a:nth-child(6) { transition-delay: .19s; }
+  body.menu-open #mnav .mn-links a:nth-child(7) { transition-delay: .22s; }
+  body.menu-open #mnav .mn-links a:nth-child(8) { transition-delay: .25s; }
+  body.menu-open #mnav .mn-links a:nth-child(9) { transition-delay: .28s; }
+  body.menu-open #mnav .mn-links a:nth-child(10) { transition-delay: .31s; }
+  #mnav .mn-cta { margin-top: 26px; }
+  #mnav .mn-cta .bttn { display: block; text-align: center; }
+  #mnav .mn-mail { margin-top: 16px; text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--ink-faint); }
+  #mnav .mn-mail a { color: var(--ink-dim); text-decoration: none; }
+  @media (prefers-reduced-motion: reduce) {
+    #mnav, #mnav .mn-links a, .mburg i { transition: none; }
+    body.menu-open #mnav .mn-links a { transition-delay: 0s; }
+  }
 
   .bttn { background: #fff; color: #000; text-decoration: none; font-size: 14.5px; font-weight: 650; padding: 15px 32px; border-radius: 100px; transition: .25s; display: inline-block; }
   .bttn:hover { background: var(--lime); transform: scale(1.04); box-shadow: 0 10px 44px rgba(200,255,46,.25); }
@@ -165,10 +217,12 @@
   .st.v { color: var(--pink); background: rgba(255,62,165,.12); }
   @media (max-width: 760px) {
     .ui { grid-template-columns: 1fr; min-height: 430px; }
-    .ui-side { flex-direction: row; overflow: hidden; padding: 10px; align-items: center; }
+    .ui-side { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 10px; align-items: center;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .ui-side::-webkit-scrollbar { display: none; }
     .traffic { margin: 0 8px 0 0; }
-    .ui-user { margin: 0 8px 0 0; }
-    .ui-item { white-space: nowrap; }
+    .ui-user { margin: 0 8px 0 0; flex: none; }
+    .ui-item { white-space: nowrap; flex: none; }
   }
 
 
@@ -190,13 +244,13 @@
   @media (max-width: 1100px) { .webmap { display: none; } }
 
   /* ========== Produkt-Chat (schwebend) ========== */
-  #pcFab { position: fixed; right: 22px; bottom: 22px; z-index: 210; display: flex; align-items: center; gap: 9px;
+  #pcFab { position: fixed; right: 22px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 210; display: flex; align-items: center; gap: 9px;
     background: #f6f6f4; color: #000; border: 0; border-radius: 100px; padding: 12px 18px 12px 13px;
     font-family: inherit; font-size: 13px; font-weight: 750; cursor: pointer;
     box-shadow: 0 16px 50px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.1); transition: transform .25s, background .25s; }
   #pcFab:hover { transform: scale(1.06); background: var(--lime); }
   #pcFab.hide { display: none; }
-  #pchat { position: fixed; right: 22px; bottom: 22px; z-index: 215; width: min(360px, calc(100vw - 28px));
+  #pchat { position: fixed; right: 22px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 215; width: min(360px, calc(100vw - 28px));
     display: none; flex-direction: column; border-radius: 20px; overflow: hidden; background: #0b0b0e;
     border: 1px solid rgba(255,255,255,.16); box-shadow: 0 -1px 0 rgba(255,255,255,.2) inset, 0 40px 120px rgba(0,0,0,.9); }
   #pchat.on { display: flex; animation: awin .4s cubic-bezier(.2,.8,.25,1); }
@@ -205,7 +259,7 @@
   .pc-demo { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; color: var(--cyan); }
   .pc-x { margin-left: auto; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-2); background: none; color: var(--ink); font-size: 14px; cursor: pointer; transition: .25s; }
   .pc-x:hover { background: #fff; color: #000; }
-  .pc-bd { padding: 14px; display: flex; flex-direction: column; gap: 10px; max-height: 320px; min-height: 160px; overflow-y: auto; scrollbar-width: thin; }
+  .pc-bd { padding: 14px; display: flex; flex-direction: column; gap: 10px; max-height: 320px; max-height: min(320px, 42dvh); min-height: 160px; overflow-y: auto; scrollbar-width: thin; }
   .pc-bd .bub { font-size: 12px; }
   .pc-sugs { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 14px 10px; }
   .pc-sugs button { font-family: inherit; font-size: 10.5px; color: var(--ink-dim); background: rgba(255,255,255,.04); border: 1px solid var(--line-2); border-radius: 100px; padding: 6px 11px; cursor: pointer; transition: .25s; }
@@ -221,7 +275,7 @@
   #appOv { position: fixed; inset: 0; z-index: 220; display: none; place-items: center; padding: 24px;
     background: rgba(0,0,0,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
   #appOv.on { display: grid; }
-  .appwin { width: min(880px, 96vw); max-height: 84vh; overflow: auto; border-radius: 18px; background: #0b0b0e;
+  .appwin { width: min(880px, 96vw); max-height: 84vh; max-height: 86dvh; overflow: auto; border-radius: 18px; background: #0b0b0e;
     border: 1px solid rgba(255,255,255,.16); box-shadow: 0 -1px 0 rgba(255,255,255,.2) inset, 0 60px 160px rgba(0,0,0,.9);
     animation: awin .45s cubic-bezier(.2,.8,.25,1); }
   @keyframes awin { from { transform: scale(.86) translateY(24px); opacity: 0; } }
@@ -453,7 +507,15 @@
   .floors .f.on { border-color: rgba(246,246,244,.14); background: rgba(255,255,255,.03); }
   .floors .f.on .nm { color: #fff; }
   .floors .f.on .ln2 { width: 46px; background: rgba(255,255,255,.14); }
-  @media (max-width: 900px) { .floors { display: none; } }
+  @media (max-width: 900px) {
+    .floors { flex-direction: row; gap: 5px; right: auto; left: 50%; top: calc(7.5svh + 32px); bottom: auto;
+      transform: translateX(-50%); pointer-events: none; }
+    .floors .f { padding: 6px 10px; gap: 8px; border-radius: 100px; }
+    .floors .f .no { width: auto; }
+    .floors .f .nm { display: none; }
+    .floors .f .ln2 { width: 14px; }
+    .floors .f.on .ln2 { width: 24px; }
+  }
 
   .model-cap { position: absolute; left: 0; right: 0; bottom: 6svh; z-index: 5; height: 92px; pointer-events: none; }
   .model-cap .c { position: absolute; left: 50%; transform: translate(-50%, 18px); width: min(92vw, 660px); text-align: center; opacity: 0; transition: .55s ease; }
@@ -652,6 +714,7 @@
   /* ========== KI ========== */
   .ki-sec { position: relative; z-index: 2; padding: 12vh 24px; max-width: 1200px; margin: 0 auto; }
   .ki-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(30px, 5vw, 80px); align-items: center; }
+  @media (max-width: 900px) { .ki-grid { grid-template-columns: 1fr; } }
   .ki-txt .k { font-family: var(--mono); font-size: 10px; letter-spacing: .26em; text-transform: uppercase; color: var(--cyan); }
   .ki-txt h3 { margin-top: 14px; font-size: clamp(28px, 3.8vw, 48px); font-weight: 750; letter-spacing: -.03em; line-height: 1.06; }
   .ki-txt p { margin-top: 18px; color: var(--ink-dim); font-size: 16px; line-height: 1.65; max-width: 460px; }
@@ -1039,11 +1102,14 @@
     .mm-links { display: none; }
     .mm-core { position: relative; left: auto; top: auto; transform: none; width: 100%; margin-bottom: 18px; }
     .mm-nodes { position: relative; inset: auto; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-    .mnode { position: relative !important; transform: none !important; max-width: 100%; }
+    .mnode { position: relative !important; transform: none !important; max-width: 100%;
+      touch-action: auto; padding: 9px 9px 9px 14px; }
+    .mnode u { width: 24px; height: 24px; }
     .mnode.hidden { display: none; }
     .mm-empty { position: relative; left: auto; bottom: auto; transform: none; margin-top: 16px; }
     .mm-send, .mm-own { width: 100%; }
     .mm-send input { flex: 1; width: auto; }
+    .mm-reset { display: none; }
   }
 
 
@@ -1295,6 +1361,241 @@
   .rv.on { opacity: 1; transform: none; }
   .rv.d1 { transition-delay: .09s; } .rv.d2 { transition-delay: .18s; } .rv.d3 { transition-delay: .27s; }
 
+  /* ==========================================================
+     MOBILE — eigenständige Gestaltung, kein verkleinerter Desktop.
+     Alles ab hier greift ausschliesslich auf Touch-Breiten.
+     ========================================================== */
+
+  /* --- 1. Kontrast: Handys werden unterwegs und bei Tageslicht gelesen.
+         Gedämpfte Töne und Haarlinien vom Desktop verschwinden dort. --- */
+  @media (max-width: 900px) {
+    :root {
+      --ink-dim: #c8c8ce;
+      --ink-faint: #9a9aa3;
+      --line: rgba(246,246,244,.17);
+      --line-2: rgba(246,246,244,.32);
+      --line-3: rgba(246,246,244,.6);
+    }
+    .grain { opacity: .03; }
+
+    /* Sprungziele dürfen nicht unter der Navigationsleiste landen */
+    #top, #wasbauen, #vision, #system, #dynamik, #ki, #arbeiten, #leistungen,
+    #ablauf, #faq, #kontakt, #einsatz, #automatik, #vonunten, #zahlen { scroll-margin-top: 76px; }
+
+    /* Mockups auf Touch-Breiten zwingen. `fr`-Spalten und feste Seitenleisten
+       wachsen sonst auf die Mindestbreite ihres Inhalts und schieben die
+       ganze Seite seitlich auf — auch schon auf Tablets. */
+    .lap.small .ui { grid-template-columns: 1fr; min-height: 340px; }
+    .lap.small .ui-main { padding: 14px; }
+    .u2, .fs, .lap-scr, .bd-vis { min-width: 0; }
+    .bd-vis { max-width: 100%; }
+    .kpis { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .kpi { min-width: 0; }
+    .u2t { flex-wrap: wrap; gap: 6px; }
+    .u2t b { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    /* `white-space: nowrap` hält die Mindestbreite sonst auf voller Textlänge.
+       Erst `width: 0` zusammen mit `flex-grow` lässt die Zeile wirklich kürzen. */
+    .u2r, .bv-row { min-width: 0; }
+    .u2r span, .bv-row .rtx { flex: 1 1 0; width: 0; min-width: 0; }
+    .w-vis, .pn-vis { min-width: 0; }
+    .lap, .brw, .builder, .wboard, .chat, .auto-flow { max-width: 100%; }
+    .row { grid-template-columns: 20px minmax(0,1.5fr) minmax(0,1fr) 68px; gap: 9px; padding: 9px 10px; }
+    .row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row .st { white-space: nowrap; font-size: 9px; }
+    .ui-top .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Der weiche Schein ragte seitlich über den Bildschirmrand hinaus */
+    .w-glow { inset: -4% 0; }
+    /* In der waagerechten Seitenleiste stünden Name und Rolle aneinandergeklebt */
+    .ui-user .nm2, .ui-user .rl { display: block; }
+  }
+
+  /* --- 2. Scroll-Strecken kürzen: am Handy zählt jede Wischbewegung --- */
+  @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+    .dive { height: 172vh; }
+    .model-scroll { height: 560vh; }
+    .frame-scroll { height: 240vh; }
+  }
+
+  @media (max-width: 760px) {
+    body { -webkit-tap-highlight-color: transparent; }
+
+    /* --- 3. Bedienelemente: Daumengrösse statt Mauszeigergrösse --- */
+    .bttn { display: inline-flex; align-items: center; justify-content: center;
+      min-height: 54px; padding: 16px 30px; font-size: 16px; font-weight: 700; }
+    .bttn:hover { transform: none; }
+    .bttn:active { transform: scale(.97); background: var(--lime); }
+
+    /* Sekundär-Aktion wird zur Outline-Taste statt zum Unterstrich-Link */
+    .ctas .lnk, .pn-cta .lnk {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 54px; padding: 16px 26px; font-size: 15.5px; font-weight: 650;
+      border: 1px solid var(--line-3); border-bottom: 1px solid var(--line-3); border-radius: 100px; }
+    .ctas .lnk:active, .pn-cta .lnk:active { border-color: var(--lime); color: var(--lime); }
+
+    /* Aktionspaare stapeln sich und füllen die Breite */
+    .hero .ctas, .pn-cta, .websec .ctas { flex-direction: column; align-items: stretch; gap: 12px; }
+    .hero .ctas > *, .pn-cta > *, .websec .ctas > *, .cb-in .bttn, .mn-cta .bttn { width: 100%; }
+
+    .mswitch button { padding: 10px 18px; font-size: 13px; min-height: 42px; }
+    .faq summary { padding: 21px 2px; font-size: 16.5px; min-height: 62px; }
+    .mt { padding: 12px 18px; font-size: 13.5px; min-height: 46px; }
+    .sug, .mnode { padding: 11px 11px 11px 16px; font-size: 13.5px; min-height: 46px; }
+    .sug u, .mnode u { width: 26px; height: 26px; font-size: 16px; }
+    .chat .sugs button, .pc-sugs button { font-size: 13px; padding: 11px 15px; min-height: 44px; }
+    .chat .inp, .pc-in, .mm-own, .mm-send, .vr-input { padding: 7px 7px 7px 16px; }
+    .chat .inp .snd, .pc-in .snd { width: 42px; height: 42px; font-size: 17px; }
+    .mm-own button { width: 40px; height: 40px; font-size: 20px; }
+    .pc-x { width: 38px; height: 38px; font-size: 18px; }
+    .aw-x { width: 42px; height: 42px; font-size: 20px; }
+    .bttn.sm2 { min-height: 48px; padding: 13px 24px; font-size: 14px; }
+    .lnk2 { font-size: 14px; padding: 12px 0; }
+    #pcFab { padding: 15px; box-shadow: 0 16px 50px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.16); }
+
+    /* --- 4. Typografie: für den Lesabstand von ~30 cm gesetzt --- */
+    .hero .sub { font-size: 16px; line-height: 1.5; margin-top: 20px; }
+    .sec-head h2 { font-size: 34px; line-height: 1.08; }
+    .sec-head p { font-size: 15.5px; line-height: 1.55; }
+    .dyn-txt h3, .ki-txt h3, .w-txt h3, .pn-txt h3 { font-size: 27px; line-height: 1.1; }
+    .dyn-txt p, .ki-txt p, .w-txt p { font-size: 15.5px; line-height: 1.6; }
+    .dyn-li .it b { font-size: 16px; }
+    .dyn-li .it span { font-size: 14px; line-height: 1.55; }
+    .kf b { font-size: 14.5px; } .kf span { font-size: 13px; }
+    .l-incl li b { font-size: 15.5px; } .l-incl li span { font-size: 13.5px; }
+    .al b { font-size: 15px; } .al span { font-size: 13px; }
+    .af-node b { font-size: 16px; } .af-node span { font-size: 13.5px; }
+    .st-i b { font-size: 19px; } .st-i span { font-size: 14.5px; }
+    .faq .a { font-size: 15.5px; }
+    .num .v { font-size: 42px; } .num .l { font-size: 13.5px; }
+    .aud-tile p, .final p { font-size: 15.5px; }
+    .w-chips span { font-size: 11.5px; padding: 8px 14px; }
+    .a-chips span { font-size: 12px; padding: 8px 13px; }
+    /* Dateinamen wie «Offerte_Weber_Badsanierung.pdf» bieten keine Trennstelle */
+    .bub { font-size: 14px; max-width: 88%; overflow-wrap: anywhere; }
+    .bub.ai .doc b, .bub.ai .doc span { overflow-wrap: anywhere; }
+    .pc-bd .bub { font-size: 13.5px; }
+    .mm-empty { font-size: 14px; }
+    .vr-note, .mm-sum { font-size: 13.5px; }
+    footer { font-size: 10.5px; }
+
+    /* iOS zoomt bei Eingabefeldern unter 16px automatisch hinein */
+    input, .pc-in input, .chat .inp input, .mm-own input, .mm-send input, .vr-input input, .mm-core input { font-size: 16px; }
+    .mm-core input { font-size: 18px; }
+
+    /* --- 5. Raster: fester Rhythmus in px statt vh (Browserleisten schwanken) --- */
+    .build, .vision, .dyn, .ki-sec, .vonunten, .autosec, .works, .leist, .ctaband, .websec, .aud {
+      padding-left: 18px; padding-right: 18px; }
+    .dyn, .ki-sec, .vonunten, .autosec, .vision, .build { padding-top: 64px; padding-bottom: 64px; }
+    .works { padding-top: 64px; padding-bottom: 24px; }
+    .leist { padding-top: 56px; padding-bottom: 48px; }
+    .ctaband { padding-top: 24px; padding-bottom: 72px; }
+    .nums { padding: 64px 18px; }
+    .steps-sec { padding: 72px 18px; }
+    .faq { padding: 32px 18px 80px; }
+    .statement { padding: 120px 20px; }
+    .final { padding: 110px 20px 96px; }
+    .sec-head { margin-bottom: 40px; }
+    .work { padding: 40px 0; }
+    .nums-in { gap: 34px 16px; }
+    .ph-row { row-gap: 34px; }
+
+    /* Hero */
+    .hero { padding: 104px 18px 0; }
+    .stage { width: 96vw; margin-top: 26px; }
+
+    /* --- 6. Karten und Flächen: mehr Luft innen, klarere Kanten --- */
+    .pick { padding: 26px 22px 24px; border-radius: 20px; }
+    .pk-tt { font-size: 27px; }
+    .pk-sub { font-size: 14.5px; }
+    .pk-plus { right: 20px; bottom: 22px; width: 34px; height: 34px; }
+    .pk-plus::before { left: 9px; right: 9px; top: 16px; }
+    .pk-plus::after { top: 9px; bottom: 9px; left: 16px; }
+    .pn-grid { padding: 20px 16px; border-radius: 20px; }
+    .pn-stats { gap: 8px; }
+    .pn-stats div { padding: 12px 10px; }
+    .pn-stats b { font-size: 17px; }
+    .pn-stats span { font-size: 10.5px; }
+    .auto-flow { padding: 20px 18px 20px 22px; }
+    .af-line { left: 37px; }
+    .l-incl { padding: 26px 20px; }
+    .l-hi { padding: 26px 20px; }
+    .l-mini { padding: 20px; }
+    .aud-tile { padding: 30px 22px; }
+    .cb-in { flex-direction: column; align-items: stretch; text-align: center; padding: 28px 20px; }
+    footer { flex-direction: column; text-align: center; gap: 10px; padding: 28px 18px; }
+
+    /* --- 7. Gerätemodelle: am Handy zeigen wir das Wesentliche gross --- */
+    .kpis { gap: 8px; }
+    .kpi { padding: 11px 12px; }
+    .kpi .v { font-size: 17px; }
+    .kpi .l { font-size: 9.5px; }
+    .fr-lap { width: 94vw; }
+    .fs { padding: 15px; gap: 11px; }
+    .fscreens { min-height: 420px; }
+    .fs .aw-pos, .fs .aw-tot { font-size: 13px; }
+    .u2r { font-size: 12px; padding: 10px 11px; }
+
+    /* Modell-Kopf unter die Navigationsleiste; Bildtext wächst nach oben,
+       damit er nicht unter den schwebenden Chat-Knopf läuft */
+    .model-head, .fr-head { top: 74px; }
+    .floors { top: 108px; }
+    .model-cap, .fr-caps { bottom: 96px; height: 0; }
+    .model-cap .c, .fr-grp .fc { width: min(92vw, 660px); bottom: 0; top: auto; }
+    .model-cap b, .fr-grp .fc b { font-size: 21px; }
+    .model-cap span.s, .fr-grp .fc .s { font-size: 13.5px; }
+    .model-cap .k, .fr-grp .fc .k { font-size: 9.5px; }
+
+    /* Der Marker sass zu tief unter der Zeile */
+    .hero h1 .hl, .final h2 .hl {
+      background: linear-gradient(transparent 56%, rgba(200,255,46,.85) 56%, rgba(200,255,46,.85) 88%, transparent 88%); }
+
+    /* Titel links, Status rechts — ohne feste Platzierung rutscht das Kürzel nach vorn */
+    .aw-li { grid-template-columns: minmax(0,1fr) auto; }
+    .aw-li b { grid-area: 1 / 1 / 2 / 2; }
+    .aw-li span { grid-area: 2 / 1 / 3 / 2; }
+    .aw-li em { grid-area: 1 / 2 / 3 / 3; justify-self: end; align-self: center; font-size: 10.5px; }
+
+    /* --- 8. Builder: eine Spalte, Reiter wischbar --- */
+    .builder .hd { flex-direction: column; align-items: stretch; gap: 12px; }
+    .builder .tabs { overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+    .builder .tabs::-webkit-scrollbar { display: none; }
+    .builder .tab { flex: none; font-size: 12px; padding: 9px 14px; min-height: 40px; }
+    .builder .body { grid-template-columns: 1fr; padding: 12px 12px 14px; gap: 9px; }
+    .mod { padding: 13px 14px; min-height: 58px; }
+    .mod .tx b { font-size: 13px; } .mod .tx span { font-size: 10.5px; }
+    .mod .sw2 { width: 40px; height: 24px; }
+    .mod .sw2::after { width: 18px; height: 18px; }
+    .mod.on .sw2::after { left: 19px; }
+    .builder .ft { flex-direction: column; align-items: flex-start; gap: 5px; }
+
+    /* --- 9. Überlagerungen füllen den Bildschirm statt zu schweben --- */
+    #appOv { padding: 0; place-items: end stretch; }
+    .appwin { width: 100%; max-height: 92dvh; border-radius: 22px 22px 0 0; animation: awsheet .4s cubic-bezier(.2,.8,.25,1); }
+    .aw-body { padding: 18px 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+    .aw-cols { gap: 14px; }
+    .aw-li { padding: 14px 16px; }
+    #pchat { left: 10px; right: 10px; width: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); border-radius: 22px; }
+    .pc-bd { max-height: 46dvh; }
+
+    /* --- 10. Mindmap --- */
+    .mm { border-radius: 20px; }
+    .mm-top { padding: 14px; gap: 12px; }
+    .mm-hint { margin: 0; width: 100%; font-size: 10px; letter-spacing: .1em; }
+    .mm-canvas { padding: 18px 12px 22px; }
+    .mm-core { padding: 18px 18px 16px; }
+    .mm-foot { padding: 14px; gap: 10px; }
+    .mm-sum { padding: 0 14px 16px; }
+  }
+
+  @keyframes awsheet { from { transform: translateY(40px); opacity: 0; } }
+
+  @media (max-width: 420px) {
+    .sec-head h2 { font-size: 30px; }
+    .dyn-txt h3, .ki-txt h3, .w-txt h3, .pn-txt h3 { font-size: 25px; }
+    .pick-grid { gap: 12px; }
+    .num .v { font-size: 38px; }
+    .nums-in { gap: 28px 12px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #intro { display: none; }
     .dive { height: auto; }
@@ -1349,9 +1650,35 @@
         <button type="button" data-m="priv">Privat</button>
       </span>
       <a class="cta" href="#kontakt">Erstgespräch</a>
+      <button class="mburg" id="mBurg" type="button" aria-label="Menü" aria-expanded="false" aria-controls="mnav"><i></i><i></i><i></i></button>
     </div>
   </div>
 </nav>
+
+<!-- ================= MOBILE-MENÜ ================= -->
+<div id="mnav" aria-hidden="true">
+  <div class="mn-mode">
+    <span class="lbl">Ansicht</span>
+    <span class="mswitch" role="group" aria-label="Zielgruppe">
+      <button type="button" data-m="biz" class="on">Unternehmen</button>
+      <button type="button" data-m="priv">Privat</button>
+    </span>
+  </div>
+  <nav class="mn-links" aria-label="Mobile Navigation">
+    <a href="#top"><span class="no">01</span>Start</a>
+    <a href="#wasbauen"><span class="no">02</span>Was wir bauen</a>
+    <a href="#vision"><span class="no">03</span>Visionroom</a>
+    <a href="#system"><span class="no">04</span>System</a>
+    <a href="#dynamik"><span class="no">05</span>Dynamik</a>
+    <a href="#ki"><span class="no">06</span>KI</a>
+    <a href="#arbeiten"><span class="no">07</span>Beispiele</a>
+    <a href="#leistungen"><span class="no">08</span>Leistungen</a>
+    <a href="#ablauf"><span class="no">09</span>Ablauf</a>
+    <a href="#faq"><span class="no">10</span>Fragen</a>
+  </nav>
+  <div class="mn-cta"><a class="bttn" href="#kontakt">Erstgespräch vereinbaren</a></div>
+  <div class="mn-mail"><a href="mailto:contact@laurin-rusterholz.ch">contact@laurin-rusterholz.ch</a></div>
+</div>
 
 <!-- ================= HERO (Dive-In) ================= -->
 <div class="dive" id="dive">
@@ -2648,9 +2975,14 @@
   }, { passive: true });
 
   let baseB = 1, baseP = 1, fullK = 1.5;
+  const isPhone = () => window.innerWidth <= 760;
   function resize() {
-    baseB = Math.min(1.14, (window.innerWidth * .9) / 620, (window.innerHeight * .66) / 430);
-    baseP = Math.min(1.05, (window.innerWidth * .92) / 360, (window.innerHeight * .7) / 600);
+    /* Gekippt belegt die Ebene deutlich mehr Breite als ihre 620 px.
+       Auf dem Handy muss dieser Zuschlag in die Skalierung einfliessen,
+       sonst ragt die Platte seitlich aus dem Bild. */
+    const wB = isPhone() ? .72 : .94, wP = isPhone() ? .58 : .92;
+    baseB = Math.min(1.14, (window.innerWidth * wB) / 620, (window.innerHeight * .66) / 430);
+    baseP = Math.min(1.05, (window.innerWidth * wP) / 360, (window.innerHeight * .7) / 600);
   }
   function calcFullK() {
     const priv = document.body.dataset.mode === 'priv';
@@ -2704,8 +3036,11 @@
     const tReveal = easeIO(norm(p, P_SHRINK[1] - .03, P_TILT[1]));
 
     /* Vollbild-Laptop -> schrumpft in Position -> kippt in die Iso-Ansicht */
-    let rx = 44 * tTilt;
-    let rz = (-22 - 12 * clamp((p - P_EXP[0]) / (P_COL[0] - P_EXP[0]), 0, 1)) * tTilt;
+    /* Flachere Drehung am Handy: die Platte bleibt dadurch grösser lesbar,
+       ohne über den schmalen Bildschirmrand hinauszuwachsen. */
+    const rotK = isPhone() ? .5 : 1;
+    let rx = 44 * tTilt * (isPhone() ? .84 : 1);
+    let rz = (-22 - 12 * clamp((p - P_EXP[0]) / (P_COL[0] - P_EXP[0]), 0, 1)) * tTilt * rotK;
     fullK = calcFullK();
     let sc = mix(fullK, 1.0, tShrink) + .06 * tTilt;
     const lift = [0,0,0,0];
@@ -3024,12 +3359,23 @@
       setTimeout(() => { if (typeof window.__ftRefresh === 'function') window.__ftRefresh(); }, 800);
     }));
 
-    /* Navigation und Chat entsperren die Seite ebenfalls */
-    document.querySelectorAll('nav.nav a[href^="#"], .webmap a[href^="#"], a[href="#vision"], a[href="#system"]').forEach(a => {
-      a.addEventListener('click', () => {
-        if (a.getAttribute('href') === '#top') return;
-        unlock();
-      });
+    /* Jeder Sprungmarken-Link entsperrt die Seite und springt danach ans Ziel.
+       Ohne das läuft z. B. «Projekt starten» ins Leere, weil #kontakt noch versteckt ist. */
+    document.addEventListener('click', e => {
+      const a = e.target.closest('a[href^="#"]');
+      if (!a) return;
+      const href = a.getAttribute('href');
+      if (!href || href === '#' || href === '#top') return;
+      const target = document.getElementById(href.slice(1));
+      if (!target) return;
+      const wasLocked = rest.classList.contains('locked');
+      unlock();
+      if (!wasLocked) return;
+      /* Erst nach dem Einblenden steht die Zielposition fest */
+      e.preventDefault();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }));
     });
   })();
 
@@ -3082,6 +3428,9 @@
     if (!canvas) return;
 
     let type = '', idea = '', items = [];   /* {label, on, custom, mx, my} */
+    const dragHint = () => window.innerWidth <= 860
+      ? 'Antippen zum Anhängen — eigene unten ergänzen'
+      : 'Ziehen zum Verschieben · Doppelklick zum Umbenennen';
 
     function suggest(txt, tp) {
       const x = (txt || '').toLowerCase();
@@ -3169,6 +3518,14 @@
         b.addEventListener('pointerup', endDrag);
         b.addEventListener('pointercancel', endDrag);
 
+        /* Mobil: ganze Pille antippen schaltet die Funktion um */
+        b.addEventListener('click', e => {
+          if (window.innerWidth > 860 || e.target.tagName === 'INPUT') return;
+          if (!it.on && needType()) return;
+          if (it.on && it.custom) { items = items.filter(o => o !== it); render(); sync(); return; }
+          it.on = !it.on; render(); sync();
+        });
+
         nodesWrap.appendChild(b);
       });
       mmEmpty.classList.toggle('gone', items.length > 0);
@@ -3235,7 +3592,7 @@
       document.querySelectorAll('.mt').forEach(o => o.classList.remove('on'));
       b.classList.add('on'); type = name;
       core.style.borderColor = b.querySelector('i').style.background;
-      mmHint.textContent = idea ? 'Ziehen zum Verschieben · Doppelklick zum Umbenennen'
+      mmHint.textContent = idea ? dragHint()
         : (silent ? 'Aus Ihrer Auswahl übernommen — jetzt Idee eintippen' : 'Jetzt Idee ins Zentrum tippen');
       rebuild(); sync();
       if (!silent) vrIdea.focus();
@@ -3249,7 +3606,7 @@
       t0 = setTimeout(() => {
         idea = vrIdea.value.trim();
         if (!type) { sync(); return; }
-        mmHint.textContent = 'Ziehen zum Verschieben · Doppelklick zum Umbenennen';
+        mmHint.textContent = dragHint();
         rebuild(); sync();
       }, 300);
     });
@@ -3268,6 +3625,27 @@
     if (rs) rs.addEventListener('click', () => { items.forEach(i => { delete i.mx; delete i.my; }); layout(); });
     window.addEventListener('resize', layout);
     sync();
+  })();
+
+  /* ================= Mobile-Menü ================= */
+  (function () {
+    const burg = document.getElementById('mBurg');
+    const menu = document.getElementById('mnav');
+    if (!burg || !menu) return;
+    function setMenu(open) {
+      document.body.classList.toggle('menu-open', open);
+      burg.setAttribute('aria-expanded', open ? 'true' : 'false');
+      menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+    burg.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
+    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      const href = a.getAttribute('href') || '';
+      if (href.startsWith('#') && href !== '#top' && typeof window.__ftUnlock === 'function') window.__ftUnlock();
+      setMenu(false);
+    }));
+    document.querySelectorAll('nav.nav .links a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+    window.addEventListener('resize', () => { if (window.innerWidth > 900) setMenu(false); });
   })();
 
   /* ================= Modus + App-Overlay ================= */
