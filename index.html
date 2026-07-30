@@ -404,7 +404,7 @@
   .ticker .fl { width: 14px; height: 14px; flex: none; }
 
   /* ========== 3D-System ========== */
-  .model-scroll { position: relative; z-index: 1; height: 1100vh; }
+  .model-scroll { position: relative; z-index: 1; height: 1250vh; }
   .model-stage { position: sticky; top: 0; height: 100svh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
   .model-head { position: absolute; top: 7.5svh; left: 0; right: 0; text-align: center; z-index: 5; padding: 0 24px; }
   .model-head .k { font-family: var(--mono); font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-faint); }
@@ -3272,27 +3272,34 @@
     wmC = wmLinks.map(a => { const el = document.getElementById(a.dataset.sec); return el ? el.offsetTop : 0; });
   }
 
-  /* Der Auftakt bleibt kompakt; der Hauptteil gehört den vier Ebenen.
+  /* Der Auftakt zeigt zuerst das ganze Gerät, so wie es auf einem Tisch steht:
+     Deckel, Scharnier, Sockel — die Website sitzt sauber im Bildschirmausschnitt.
+     Danach fährt die Kamera heran (das Gerät wächst), erst zum Schluss kippt das
+     Modell und die vier Ebenen fahren auseinander.
      Jede Ebene bleibt auf Desktop rund 1.5 und auf Mobile rund 1.2
      Bildschirmhöhen stehen, damit Trackpad-Wischen nichts überspringt. */
-  const P_FULL = [0, .05];
-  const P_SHRINK = [.05, .12];
-  const P_TILT = [.12, .20];
-  const P_EXP = [.20, .27];
-  const P_TOUR = [.30, .90];
+  const P_INTRO = [0, .07];
+  const P_GROW = [P_INTRO[1], .18];
+  const P_SHRINK = [.18, .25];
+  const P_TILT = [.25, .33];
+  const P_EXP = [.33, .40];
+  const P_TOUR = [.42, .90];
   const P_COL = [.90, 1];
   const TAGSB = ['Ihr Programm · Vollbild','Explosionsansicht','Ebene 01 · Website','Ebene 02 · Automatik','Ebene 03 · KI','Ebene 04 · Daten','Bereit · Wochentakt aktiv'];
   const TAGSP = ['Deine App · Vollbild','Explosionsansicht','Ebene 01 · Deine App','Ebene 02 · Automatik','Ebene 03 · KI','Ebene 04 · Daten','Bereit · Ganz deine'];
   const TOUR_ORDER = [3, 2, 1, 0];
 
-  const sm = { rx: 0, rz: 0, sc: 1.0, sy: 0, ly: [0,0,0,0], lz: [-156,-104,-52,0], dimo: 0 };
+  const sm = { rx: 0, rz: 0, sc: 1.0, sy: 0, dv: .76, ly: [0,0,0,0], lz: [-156,-104,-52,0], dimo: 0 };
   let baseScale = 1;
   let mouseX = .5, mouseY = .5;
   window.addEventListener('pointermove', e => {
     mouseX = e.clientX / window.innerWidth; mouseY = e.clientY / window.innerHeight;
   }, { passive: true });
 
-  let baseB = 1, baseP = 1, fullK = 1.5;
+  let baseB = 1, baseP = 1, growK = 1.15;
+  /* Startgrösse des ganzen Geräts: klein genug, dass Deckel, Scharnier und
+     Sockel mit Luft ringsum im Bild stehen. */
+  const INTRO_K = .76;
   const isPhone = () => window.innerWidth <= 760;
   function resize() {
     const ph = isPhone();
@@ -3306,12 +3313,15 @@
       baseP = Math.min(1.05, (window.innerWidth * .92) / 360, (window.innerHeight * .7) / 600);
     }
   }
-  function calcFullK() {
+  /* Wie weit das komplette Gerät heranfahren darf, ohne oben an die Kopfzeile
+     oder unten an die Bildunterschrift zu stossen. */
+  function calcGrowK() {
     const priv = document.body.dataset.mode === 'priv';
     const bs = priv ? baseP : baseB;
-    const lw = priv ? 392 : 680, lh = priv ? 648 : 560;
-    const hf = priv ? .70 : .84;
-    return Math.max(.8, Math.min((window.innerWidth * .88) / (lw * bs), (window.innerHeight * hf) / (lh * bs)));
+    const lw = priv ? 404 : 680, lh = priv ? 640 : 500;
+    /* Zwischen Kopfzeile und Bildunterschrift bleibt der freie Streifen übrig. */
+    const free = window.innerHeight * .94 - 208;
+    return Math.max(.82, Math.min(1.4, (window.innerWidth * .9) / (lw * bs), free / (lh * bs)));
   }
   window.__ftResize = resize;
   window.addEventListener('resize', resize); resize();
@@ -3417,6 +3427,7 @@
       if (clickHint) clickHint.style.opacity = '0';
       if (stageShadow) stageShadow.style.opacity = '0';
     } else {
+      const tGrow = easeIO(norm(p, P_GROW[0], P_GROW[1]));
       const tShrink = easeIO(norm(p, P_SHRINK[0], P_SHRINK[1]));
       const tTilt = easeIO(norm(p, P_TILT[0], P_TILT[1]));
       const tTour = norm(p, P_TOUR[0], P_TOUR[1]);
@@ -3424,8 +3435,13 @@
       const tReveal = easeIO(norm(p, P_SHRINK[1] - .03, P_TILT[1]));
       let rx = 44 * tTilt;
       let rz = (-22 - 12 * clamp((p - P_EXP[0]) / (P_COL[0] - P_EXP[0]), 0, 1)) * tTilt;
-      fullK = calcFullK();
-      let sc = mix(fullK, 1.0, tShrink) + .06 * tTilt;
+      growK = calcGrowK();
+      /* Gehäuse und Inhalt wachsen gemeinsam — die Website bleibt im Ausschnitt.
+         Auf flachen Fenstern bleibt auch der Auftakt kleiner, damit der Sprung
+         zwischen Start- und Nahaufnahme sichtbar bleibt. */
+      const introK = Math.min(INTRO_K, growK * .78);
+      const devK = mix(mix(introK, growK, tGrow), 1, tShrink);
+      let sc = 1 + .06 * tTilt;
       const lift = [0,0,0,0];
       if (p >= P_TOUR[0] && p < P_TOUR[1]) {
         const k = clamp(Math.floor(tTour * 4 - 1e-6), 0, 3);
@@ -3437,7 +3453,9 @@
       }
       rx = mix(rx, 0, tCol); rz = mix(rz, 0, tCol);
       sc = mix(sc, 1.12, tCol); sy = mix(sy, 12, tCol);
-      sy += (document.body.dataset.mode === 'priv' ? -6 : -46) * (1 - tShrink);
+      /* Solange Sockel und Schatten mitlaufen, sitzt der Bildschirm optisch zu
+         tief — das Gerät wird um seine Gehäusehöhe angehoben. */
+      sy += (document.body.dataset.mode === 'priv' ? -14 : -34 * devK) * (1 - tShrink);
 
       for (let i = 0; i < 4; i++) {
         const back = 3 - i;
@@ -3458,10 +3476,11 @@
       sm.rz += (rz + mrz + idle - sm.rz) * k2;
       sm.sc += (sc - sm.sc) * k2;
       sm.sy += (sy - sm.sy) * k2;
+      sm.dv += (devK - sm.dv) * k2;
 
       if (!reduced) {
         baseScale = document.body.dataset.mode === 'priv' ? baseP : baseB;
-        scaleWrap.style.transform = 'translateY(' + sm.sy + 'px) scale(' + baseScale + ')';
+        scaleWrap.style.transform = 'translateY(' + sm.sy + 'px) scale(' + (baseScale * sm.dv) + ')';
         iso.style.transform = 'rotateX(' + sm.rx + 'deg) rotateZ(' + sm.rz + 'deg) scale3d(' + sm.sc + ',' + sm.sc + ',' + sm.sc + ')';
         layers.forEach((ly,i) => {
           ly.style.transform = 'translate3d(0,' + sm.ly[i] + 'px,' + sm.lz[i] + 'px)';
@@ -3469,12 +3488,13 @@
           if (i < 3) ly.style.setProperty('--layop', tReveal);
         });
         if (sysLap) {
-          const lo = 1 - easeIO(norm(p, P_SHRINK[1] - .05, P_TILT[0] + .05));
+          /* Der Rahmen bleibt stehen, bis das Modell zu kippen beginnt. */
+          const lo = 1 - easeIO(norm(p, P_SHRINK[1] - .04, P_TILT[0] + .03));
           document.documentElement.style.setProperty('--islandop', String(1 - lo));
           sysLap.style.opacity = String(lo);
           sysLap.style.visibility = lo < .02 ? 'hidden' : 'visible';
         }
-        const uiOp = easeIO(norm(p, P_SHRINK[0] + .02, P_SHRINK[1] + .03));
+        const uiOp = easeIO(norm(p, P_GROW[0] + .01, P_GROW[1]));
         if (stageUI) stageUI.style.opacity = String(uiOp);
         if (floorsBox) floorsBox.style.opacity = String(uiOp);
         if (clickHint) clickHint.style.opacity = String(uiOp);
