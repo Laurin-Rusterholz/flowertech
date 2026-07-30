@@ -774,6 +774,11 @@
   .lap.small .ui { min-height: 370px; grid-template-columns: 160px 1fr; }
   .lap.small .ui-main { padding: 16px 18px; gap: 12px; }
 
+  /* Der Träger um die Beispiele ist am Desktop für das Layout nicht vorhanden;
+     erst am Handy wird er zur waagerechten Wisch-Spur. */
+  .works-track { display: contents; }
+  .works-dots { display: none; }
+
   .phone-wrap { display: flex; justify-content: center; }
   .ph { position: relative; z-index: 2; width: min(300px, 74vw); border-radius: 48px; padding: 11px;
     background: linear-gradient(160deg, #3c3c42, #141418 30%, #0a0a0c);
@@ -1414,9 +1419,11 @@
 
   /* --- 2. Scroll-Strecken kürzen: am Handy zählt jede Wischbewegung --- */
   @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
-    .dive { height: 172vh; }
-    .model-scroll { height: 560vh; }
-    .frame-scroll { height: 240vh; }
+    /* Am Telefon kostet jede Bildschirmhöhe eine Wischbewegung. Die Strecken
+       sind so bemessen, dass jede Tour-Ebene noch rund eine halbe Höhe hält. */
+    .dive { height: 148vh; }
+    .model-scroll { height: 440vh; }
+    .frame-scroll { height: 190vh; }
   }
 
   @media (max-width: 760px) {
@@ -1519,7 +1526,35 @@
     .statement { padding: 80px 20px; }
     .final { padding: 72px 20px 64px; }
     .sec-head { margin-bottom: 26px; }
-    .work { padding: 26px 0; gap: 18px; }
+
+    /* --- 5c. Beispiele als Wisch-Karussell. Untereinander gestapelt füllten
+       die vier Beispiele rund vier Bildschirmhöhen; nebeneinander bleibt der
+       Vergleich in Reichweite und die Geste ist am Telefon die gewohnte. --- */
+    .works-track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none; align-items: stretch; }
+    .works-track::-webkit-scrollbar { display: none; }
+    .work { flex: 0 0 88%; scroll-snap-align: center; padding: 0; gap: 14px;
+      border: 1px solid var(--line); border-radius: 18px; padding: 18px 16px 20px;
+      background: linear-gradient(180deg, #0e0e12, #060608); }
+    /* In der Karte steht der Text oben, unabhängig vom Wechselrhythmus */
+    .work.flip .w-txt, .work .w-txt { order: 1; }
+    .work.flip .w-vis, .work .w-vis { order: 2; }
+    .w-txt p { margin-top: 10px; }
+    .w-chips { margin-top: 16px; }
+    /* Die Mockups sind auf Desktop-Höhen ausgelegt; in einer Wisch-Karte
+       soll eine Karte ungefähr eine Bildschirmhöhe belegen. */
+    .work .lap.small .ui { min-height: 200px; }
+    .work .u2 { min-height: 200px !important; }   /* überschreibt das Höhen-Attribut im Markup */
+    .work .ui-main { gap: 9px; padding: 12px; }
+    .work .rows { gap: 6px; }
+    .work .chart { min-height: 74px; padding: 10px; }
+    .work .u2 { padding: 12px; gap: 7px; }
+    /* 74vw bezieht sich auf den Bildschirm, nicht auf die schmalere Karte */
+    .work .ph { width: min(200px, 64%); }
+    .works-dots { display: flex; justify-content: center; gap: 7px; margin-top: 18px; }
+    .works-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2);
+      transition: background .3s, transform .3s; }
+    .works-dots i.on { background: var(--lime); transform: scale(1.25); }
     .nums-in { gap: 26px 14px; }
     .ph-row { row-gap: 26px; }
     .ph-line { margin-top: 40px; }
@@ -2456,6 +2491,8 @@
     <p>Drei Beispiele, wie mitwachsende Software im Alltag wirkt.</p>
   </div>
 
+  <!-- Träger: am Desktop per display:contents unsichtbar, am Handy Wisch-Spur -->
+  <div class="works-track" id="worksTrack">
   <div class="work" data-only="biz">
     <div class="w-txt rv">
       <span class="k" style="color:var(--lime)">Beispiel 01 · Handwerk</span>
@@ -2661,6 +2698,8 @@
       </div>
     </div>
   </div>
+  </div>
+  <div class="works-dots" id="worksDots" aria-hidden="true"></div>
 </section>
 
 
@@ -3090,10 +3129,15 @@
       const sv = .93 + .07 * pz;
       if (Math.abs(sv - z.last) > .0015) { z.last = sv; z.el.style.transform = 'scale(' + sv + ')'; }
     }
-    if (!reduced) for (let pi = 0; pi < parC.length; pi++) {
+    /* Der Parallax-Versatz verschiebt die Mockups gegen ihren Text. In der
+       Wisch-Karte am Handy würden sie dadurch über die Absätze wandern. */
+    if (!reduced && !isPhone()) for (let pi = 0; pi < parC.length; pi++) {
       const q = parC[pi], c = (q.top - y + q.h / 2 - vh / 2) / vh;
       const tv = c * q.f * -1;
       if (Math.abs(tv - q.last) > .25) { q.last = tv; q.el.style.transform = 'translateY(' + tv + 'px)'; }
+    } else if (isPhone()) for (let pi = 0; pi < parC.length; pi++) {
+      const q = parC[pi];
+      if (q.last !== 0) { q.last = 0; q.el.style.transform = ''; }
     }
 
     const total = Math.max(1, modelScroll.offsetHeight - vh);
@@ -3418,6 +3462,8 @@
       if (!rest.classList.contains('locked')) return;
       rest.classList.remove('locked');
       document.body.classList.remove('locked');
+      /* Vorher sind die Karten unsichtbar und liefern keine Masse */
+      if (typeof window.__ftWorks === 'function') window.__ftWorks();
       setTimeout(() => { if (typeof window.__ftRefresh === 'function') window.__ftRefresh(); }, 120);
       setTimeout(() => { if (typeof window.__ftRefresh === 'function') window.__ftRefresh(); }, 900);
     }
@@ -3708,6 +3754,45 @@
     if (rs) rs.addEventListener('click', () => { items.forEach(i => { delete i.mx; delete i.my; }); layout(); });
     window.addEventListener('resize', layout);
     sync();
+  })();
+
+  /* ================= Beispiele: Wisch-Karussell (nur Handy) ================= */
+  (function () {
+    const track = document.getElementById('worksTrack');
+    const dots = document.getElementById('worksDots');
+    if (!track || !dots) return;
+    const cards = Array.from(track.querySelectorAll('.work'));
+    const sichtbar = () => cards.filter(c => c.offsetParent !== null);
+
+    function build() {
+      const v = sichtbar();
+      dots.innerHTML = '';
+      if (window.innerWidth > 760 || v.length < 2) return;
+      v.forEach(() => dots.appendChild(document.createElement('i')));
+      mark();
+    }
+    function mark() {
+      const v = sichtbar();
+      if (!dots.children.length || !v.length) return;
+      const mitte = track.scrollLeft + track.clientWidth / 2;
+      let nah = 0, best = Infinity;
+      v.forEach((c, i) => {
+        const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mitte);
+        if (d < best) { best = d; nah = i; }
+      });
+      Array.from(dots.children).forEach((d, i) => d.classList.toggle('on', i === nah));
+    }
+    let tick = false;
+    track.addEventListener('scroll', () => {
+      if (tick) return; tick = true;
+      requestAnimationFrame(() => { tick = false; mark(); });
+    }, { passive: true });
+    window.addEventListener('resize', build);
+    /* Beim Zielgruppen-Wechsel wechselt der Kartensatz komplett */
+    document.querySelectorAll('.mswitch button, [data-setmode]').forEach(b =>
+      b.addEventListener('click', () => setTimeout(() => { track.scrollLeft = 0; build(); }, 60)));
+    build();
+    window.__ftWorks = build;
   })();
 
   /* ================= Mobile-Menü ================= */
