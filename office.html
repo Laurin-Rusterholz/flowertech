@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FlowerTech Office — Dokumente</title>
+<style>
+:root{--bg:#090909;--panel:#121212;--line:#2b2b2b;--ink:#f6f6f4;--dim:#9d9da3;--lime:#c8ff2e;--pink:#ff3ea5;--paper:#fff;--paperink:#151515;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}button,input,select,textarea{font:inherit}.app{min-height:100vh;display:grid;grid-template-columns:360px 1fr}.side{padding:22px;border-right:1px solid var(--line);background:#0d0d0d;overflow:auto}.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:20px;margin-bottom:22px}.flower{width:30px;height:30px;border-radius:50%;background:conic-gradient(var(--lime),var(--pink),#25d5ff,var(--lime));box-shadow:0 0 25px rgba(200,255,46,.25)}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}.tab,.btn{border:1px solid var(--line);background:#171717;color:var(--ink);border-radius:12px;padding:10px 12px;cursor:pointer}.tab.active,.btn.primary{background:var(--lime);color:#000;border-color:var(--lime);font-weight:750}.group{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}.group h3{font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--dim);margin:0 0 12px}.field{margin-bottom:11px}.field label{display:block;font-size:12px;color:var(--dim);margin-bottom:6px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:#171717;color:var(--ink);padding:10px}.field textarea{min-height:78px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap}.workspace{padding:28px;overflow:auto}.paper{width:210mm;min-height:297mm;background:var(--paper);color:var(--paperink);margin:0 auto;padding:18mm 17mm;box-shadow:0 18px 70px rgba(0,0,0,.45);position:relative}.doc-head{display:flex;justify-content:space-between;gap:30px;border-bottom:3px solid #111;padding-bottom:18px}.doc-brand h1{font-size:26px;margin:0}.doc-brand p,.muted{color:#666}.doc-type{text-align:right}.doc-type h2{margin:0;font-size:34px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin:26px 0}.box h4{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:#777;margin:0 0 7px}.box p{margin:2px 0;white-space:pre-line}.intro{margin:26px 0;line-height:1.55}.items{width:100%;border-collapse:collapse;margin-top:18px}.items th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;text-align:left;border-bottom:1px solid #aaa;padding:9px 6px}.items td{padding:10px 6px;border-bottom:1px solid #ddd;vertical-align:top}.items td:nth-child(2),.items td:nth-child(3),.items td:nth-child(4),.items th:nth-child(2),.items th:nth-child(3),.items th:nth-child(4){text-align:right}.totals{margin:18px 0 0 auto;width:270px}.totals div{display:flex;justify-content:space-between;padding:5px 0}.totals .grand{font-weight:800;font-size:18px;border-top:2px solid #111;margin-top:5px;padding-top:10px}.footer{position:absolute;left:17mm;right:17mm;bottom:14mm;border-top:1px solid #ccc;padding-top:10px;font-size:10px;color:#666;display:flex;justify-content:space-between;gap:25px}.qr{width:118px;height:118px;border:1px dashed #999;display:grid;place-items:center;overflow:hidden;margin-top:12px;background:#fafafa}.qr img{max-width:100%;max-height:100%}.form-section{margin:18px 0}.form-section h3{font-size:15px;border-bottom:1px solid #bbb;padding-bottom:6px}.form-line{display:grid;grid-template-columns:160px 1fr;gap:12px;margin:10px 0}.answer{border-bottom:1px solid #777;min-height:23px}.vision-badge{display:inline-block;background:#111;color:#fff;border-radius:99px;padding:5px 10px;font-size:10px;letter-spacing:.08em;text-transform:uppercase}.item-editor{display:grid;grid-template-columns:1fr 70px 90px 34px;gap:6px;margin-bottom:7px}.item-editor input{min-width:0}.remove{border:0;border-radius:8px;background:#2a1515;color:#ff8b8b;cursor:pointer}.hint{font-size:11px;color:var(--dim);line-height:1.45}.hidden{display:none!important}@media(max-width:1050px){.app{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid var(--line)}.workspace{padding:12px}.paper{transform-origin:top left;zoom:.72}}@media print{body{background:#fff}.side{display:none}.app{display:block}.workspace{padding:0}.paper{box-shadow:none;margin:0;width:210mm;min-height:297mm}.no-print{display:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand"><span class="flower"></span>FlowerTech Office</div>
+  <div class="tabs">
+    <button class="tab active" data-type="invoice">Rechnung</button>
+    <button class="tab" data-type="offer">Offerte</button>
+    <button class="tab" data-type="form">Formular</button>
+  </div>
+
+  <div class="group"><h3>Dokument</h3>
+    <div class="row"><div class="field"><label>Nummer</label><input id="number" value="FT-2026-001"></div><div class="field"><label>Datum</label><input id="date" type="date"></div></div>
+    <div class="row"><div class="field"><label>Fällig / gültig bis</label><input id="due" type="date"></div><div class="field"><label>Währung</label><select id="currency"><option>CHF</option><option>EUR</option></select></div></div>
+    <div class="field"><label>Titel / Betreff</label><input id="subject" value="Webentwicklung und Automatisierung"></div>
+  </div>
+
+  <div class="group"><h3>Kundschaft</h3>
+    <div class="field"><label>Name / Firma</label><input id="client" placeholder="Muster AG"></div>
+    <div class="field"><label>Adresse</label><textarea id="address" placeholder="Vorname Nachname\nStrasse 1\n9000 St. Gallen"></textarea></div>
+    <div class="field"><label>E-Mail</label><input id="email" type="email"></div>
+  </div>
+
+  <div class="group doc-only"><h3>Positionen</h3><div id="items"></div><button class="btn" id="addItem">+ Position</button></div>
+
+  <div class="group doc-only"><h3>Beträge</h3>
+    <div class="row"><div class="field"><label>MwSt. %</label><input id="vat" type="number" value="8.1" step="0.1"></div><div class="field"><label>Rabatt CHF</label><input id="discount" type="number" value="0" step="0.05"></div></div>
+  </div>
+
+  <div class="group"><h3>Vision-Board-Bezug</h3>
+    <div class="field"><label>Projekt / Ziel</label><input id="visionProject" value="Software, die mitwächst"></div>
+    <div class="field"><label>Nutzenversprechen</label><textarea id="visionPromise">Klare, modulare Lösungen, die mit dem Unternehmen wachsen und Abläufe vereinfachen.</textarea></div>
+    <div class="field"><label>Ergebnis / nächster Meilenstein</label><textarea id="visionOutcome">Umsetzung gemäss gemeinsamem Projektplan und abgestimmten Meilensteinen.</textarea></div>
+    <div class="hint">Diese Angaben werden automatisch in Offerten und Formulare übernommen, damit Dokumente zur FlowerTech-Vision passen.</div>
+  </div>
+
+  <div class="group form-only hidden"><h3>Formularfelder</h3><div id="formFields"></div><button class="btn" id="addField">+ Feld</button></div>
+
+  <div class="group"><h3>Text & Zahlung</h3>
+    <div class="field"><label>Einleitung</label><textarea id="intro">Vielen Dank für das Vertrauen. Nachfolgend finden Sie die vereinbarten Leistungen.</textarea></div>
+    <div class="field doc-only"><label>Zahlungsangaben / Hinweise</label><textarea id="payment">Zahlbar innert 14 Tagen. Vielen Dank.</textarea></div>
+    <div class="field invoice-only"><label>QR-Rechnung / QR-Code manuell hochladen</label><input id="qrUpload" type="file" accept="image/*"></div>
+  </div>
+
+  <div class="group"><div class="actions"><button class="btn primary" onclick="window.print()">Als PDF drucken</button><button class="btn" id="save">Entwurf speichern</button><button class="btn" id="reset">Neu</button></div></div>
+</aside>
+
+<main class="workspace"><article class="paper" id="paper">
+  <header class="doc-head"><div class="doc-brand"><span class="vision-badge">FlowerTech</span><h1>FlowerTech</h1><p>Software, die mitwächst</p></div><div class="doc-type"><h2 id="outType">RECHNUNG</h2><p id="outNumber">FT-2026-001</p></div></header>
+  <section class="meta"><div class="box"><h4>Empfänger:in</h4><p id="outClient">Kundschaft</p><p id="outAddress"></p><p id="outEmail"></p></div><div class="box"><h4>Dokumentdetails</h4><p>Datum: <span id="outDate"></span></p><p><span id="dueLabel">Fällig am</span>: <span id="outDue"></span></p><p>Betreff: <span id="outSubject"></span></p></div></section>
+  <section class="intro"><p id="outIntro"></p><p><strong id="outVisionProject"></strong><br><span id="outVisionPromise"></span></p></section>
+  <section id="docContent"><table class="items"><thead><tr><th>Leistung</th><th>Menge</th><th>Preis</th><th>Total</th></tr></thead><tbody id="outItems"></tbody></table><div class="totals"><div><span>Zwischensumme</span><strong id="subtotal"></strong></div><div><span>Rabatt</span><span id="outDiscount"></span></div><div><span>MwSt.</span><span id="outVat"></span></div><div class="grand"><span>Total</span><span id="grand"></span></div></div><div style="margin-top:28px"><p id="outPayment"></p><div class="qr" id="qrBox"><span>QR-Code hochladen</span></div></div></section>
+  <section id="formContent" class="hidden"><div class="form-section"><h3>Projektkontext</h3><p id="formVision"></p></div><div id="outFields"></div><div class="form-section"><h3>Bestätigung</h3><div class="form-line"><span>Ort, Datum</span><span class="answer"></span></div><div class="form-line"><span>Unterschrift</span><span class="answer"></span></div></div></section>
+  <footer class="footer"><span>FlowerTech · Digitale Lösungen, Websites und Automatisierung</span><span id="footerNumber">FT-2026-001</span></footer>
+</article></main>
+</div>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const state={type:'invoice',items:[{name:'Konzeption und Projektplanung',qty:1,price:450},{name:'Umsetzung Web-App / Automatisierung',qty:1,price:1250}],fields:['Unternehmen / Organisation','Kontaktperson','Ausgangslage','Ziele des Projekts','Gewünschte Funktionen','Termin / Deadline','Budgetrahmen','Weitere Hinweise']};
+const ids=['number','date','due','currency','subject','client','address','email','vat','discount','visionProject','visionPromise','visionOutcome','intro','payment'];
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function money(v){return new Intl.NumberFormat('de-CH',{style:'currency',currency:$('#currency').value||'CHF'}).format(Number(v)||0)}
+function renderEditors(){
+  $('#items').innerHTML=state.items.map((x,i)=>`<div class="item-editor"><input data-i="${i}" data-k="name" value="${esc(x.name)}"><input data-i="${i}" data-k="qty" type="number" step="0.1" value="${x.qty}"><input data-i="${i}" data-k="price" type="number" step="0.05" value="${x.price}"><button class="remove" data-remove="${i}">×</button></div>`).join('');
+  $('#formFields').innerHTML=state.fields.map((x,i)=>`<div class="item-editor" style="grid-template-columns:1fr 34px"><input data-fi="${i}" value="${esc(x)}"><button class="remove" data-fremove="${i}">×</button></div>`).join('');
+}
+function setType(type){state.type=type;$$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.type===type));$$('.form-only').forEach(e=>e.classList.toggle('hidden',type!=='form'));$$('.doc-only').forEach(e=>e.classList.toggle('hidden',type==='form'));$$('.invoice-only').forEach(e=>e.classList.toggle('hidden',type!=='invoice'));$('#docContent').classList.toggle('hidden',type==='form');$('#formContent').classList.toggle('hidden',type!=='form');$('#outType').textContent=type==='invoice'?'RECHNUNG':type==='offer'?'OFFERTE':'FORMULAR';$('#dueLabel').textContent=type==='offer'?'Gültig bis':'Fällig am';update()}
+function update(){
+  const val=id=>$('#'+id)?.value||'';$('#outNumber').textContent=val('number');$('#footerNumber').textContent=val('number');$('#outClient').textContent=val('client')||'Kundschaft';$('#outAddress').textContent=val('address');$('#outEmail').textContent=val('email');$('#outDate').textContent=val('date');$('#outDue').textContent=val('due');$('#outSubject').textContent=val('subject');$('#outIntro').textContent=val('intro');$('#outVisionProject').textContent=val('visionProject');$('#outVisionPromise').textContent=val('visionPromise');$('#outPayment').textContent=val('payment');
+  let sub=0;$('#outItems').innerHTML=state.items.map(x=>{const total=(Number(x.qty)||0)*(Number(x.price)||0);sub+=total;return `<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td>${money(x.price)}</td><td>${money(total)}</td></tr>`}).join('');const disc=Number(val('discount'))||0,vatRate=Number(val('vat'))||0,vat=Math.max(0,sub-disc)*vatRate/100,total=Math.max(0,sub-disc)+vat;$('#subtotal').textContent=money(sub);$('#outDiscount').textContent='− '+money(disc);$('#outVat').textContent=money(vat)+' ('+vatRate+' %)';$('#grand').textContent=money(total);
+  $('#formVision').textContent=[val('visionProject'),val('visionPromise'),val('visionOutcome')].filter(Boolean).join(' — ');$('#outFields').innerHTML=state.fields.map((f,i)=>`<div class="form-section"><h3>${i+1}. ${esc(f)}</h3><div class="answer" style="min-height:${i>2?'70':'28'}px"></div></div>`).join('');
+}
+$$('.tab').forEach(b=>b.onclick=()=>setType(b.dataset.type));ids.forEach(id=>$('#'+id)?.addEventListener('input',update));$('#addItem').onclick=()=>{state.items.push({name:'Neue Leistung',qty:1,price:0});renderEditors();update()};$('#addField').onclick=()=>{state.fields.push('Neues Feld');renderEditors();update()};document.addEventListener('input',e=>{if(e.target.dataset.i!==undefined){state.items[+e.target.dataset.i][e.target.dataset.k]=e.target.dataset.k==='name'?e.target.value:Number(e.target.value);update()}if(e.target.dataset.fi!==undefined){state.fields[+e.target.dataset.fi]=e.target.value;update()}});document.addEventListener('click',e=>{if(e.target.dataset.remove!==undefined){state.items.splice(+e.target.dataset.remove,1);renderEditors();update()}if(e.target.dataset.fremove!==undefined){state.fields.splice(+e.target.dataset.fremove,1);renderEditors();update()}});
+$('#qrUpload').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('#qrBox').innerHTML=`<img src="${r.result}" alt="QR-Code">`};r.readAsDataURL(f)};
+$('#save').onclick=()=>{const data={type:state.type,items:state.items,fields:state.fields,values:Object.fromEntries(ids.map(id=>[id,$('#'+id)?.value||'']))};localStorage.setItem('flowertech-office-draft',JSON.stringify(data));alert('Entwurf lokal gespeichert.')};
+$('#reset').onclick=()=>{if(confirm('Neues Dokument beginnen?')){localStorage.removeItem('flowertech-office-draft');location.reload()}};
+(function init(){const today=new Date(),iso=today.toISOString().slice(0,10);$('#date').value=iso;const d=new Date(today);d.setDate(d.getDate()+14);$('#due').value=d.toISOString().slice(0,10);try{const saved=JSON.parse(localStorage.getItem('flowertech-office-draft'));if(saved){state.type=saved.type||state.type;state.items=saved.items||state.items;state.fields=saved.fields||state.fields;Object.entries(saved.values||{}).forEach(([k,v])=>{if($('#'+k))$('#'+k).value=v})}}catch{}renderEditors();setType(state.type);update()})();
+</script>
+</body>
+</html>
