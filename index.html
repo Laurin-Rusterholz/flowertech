@@ -404,7 +404,7 @@
   .ticker .fl { width: 14px; height: 14px; flex: none; }
 
   /* ========== 3D-System ========== */
-  .model-scroll { position: relative; z-index: 1; height: 740vh; }
+  .model-scroll { position: relative; z-index: 1; height: 1100vh; }
   .model-stage { position: sticky; top: 0; height: 100svh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
   .model-head { position: absolute; top: 7.5svh; left: 0; right: 0; text-align: center; z-index: 5; padding: 0 24px; }
   .model-head .k { font-family: var(--mono); font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-faint); }
@@ -1420,12 +1420,12 @@
     .ui-user .nm2, .ui-user .rl { display: block; }
   }
 
-  /* --- 2. Scroll-Strecken kürzen: am Handy zählt jede Wischbewegung --- */
+  /* --- 2. Scroll-Strecken: kurze Inhaltsanimationen, ruhige Modell-Tour --- */
   @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
-    /* Am Telefon kostet jede Bildschirmhöhe eine Wischbewegung. Die Strecken
-       sind so bemessen, dass jede Tour-Ebene noch rund eine halbe Höhe hält. */
+    /* Das Systemmodell braucht bewusst mehr Weg: Jede Ebene bleibt länger
+       als einen Bildschirm stehen und kann in Ruhe gelesen werden. */
     .dive { height: 148vh; }
-    .model-scroll { height: 440vh; }
+    .model-scroll { height: 720svh; }
     .frame-scroll { height: 190vh; }
   }
 
@@ -1825,7 +1825,7 @@
     .vr-note { line-height: 1.55; }
 
     /* Systemmodell: ein festes Gerät, vier Screens, keine sichtbaren Layer-Kanten. */
-    .model-scroll { height: 520svh !important; }
+    .model-scroll { height: 720svh !important; }
     .model-stage { height: 100svh; }
     #system .persp { perspective: none; }
     #system .iso, #system .layer { transform-style: flat; }
@@ -3272,12 +3272,15 @@
     wmC = wmLinks.map(a => { const el = document.getElementById(a.dataset.sec); return el ? el.offsetTop : 0; });
   }
 
-  const P_FULL = [0, .09];
-  const P_SHRINK = [.09, .21];
-  const P_TILT = [.21, .33];
-  const P_EXP = [.33, .44];
-  const P_TOUR = [.46, .86];
-  const P_COL = [.86, 1];
+  /* Der Auftakt bleibt kompakt; der Hauptteil gehört den vier Ebenen.
+     Jede Ebene bleibt auf Desktop rund 1.5 und auf Mobile rund 1.2
+     Bildschirmhöhen stehen, damit Trackpad-Wischen nichts überspringt. */
+  const P_FULL = [0, .05];
+  const P_SHRINK = [.05, .12];
+  const P_TILT = [.12, .20];
+  const P_EXP = [.20, .27];
+  const P_TOUR = [.30, .90];
+  const P_COL = [.90, 1];
   const TAGSB = ['Ihr Programm · Vollbild','Explosionsansicht','Ebene 01 · Website','Ebene 02 · Automatik','Ebene 03 · KI','Ebene 04 · Daten','Bereit · Wochentakt aktiv'];
   const TAGSP = ['Deine App · Vollbild','Explosionsansicht','Ebene 01 · Deine App','Ebene 02 · Automatik','Ebene 03 · KI','Ebene 04 · Daten','Bereit · Ganz deine'];
   const TOUR_ORDER = [3, 2, 1, 0];
