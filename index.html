@@ -151,6 +151,7 @@
   .hero h1 .hl { background: linear-gradient(transparent 64%, rgba(200,255,46,.85) 64%, rgba(200,255,46,.85) 92%, transparent 92%); padding: 0 .06em; }
   .hero .sub { margin: 28px auto 0; max-width: 620px; color: var(--ink-dim); font-size: clamp(16px, 2vw, 20px); line-height: 1.55; }
   .hero .sub b { color: var(--ink); font-weight: 600; }
+  .hero-copy-mobile { display: none; }
   .hero .ctas { margin-top: 38px; display: flex; gap: 22px; justify-content: center; align-items: center; flex-wrap: wrap; }
 
   /* Laptop-Render */
@@ -507,7 +508,7 @@
   .floors .f.on { border-color: rgba(246,246,244,.14); background: rgba(255,255,255,.03); }
   .floors .f.on .nm { color: #fff; }
   .floors .f.on .ln2 { width: 46px; background: rgba(255,255,255,.14); }
-  @media (max-width: 900px) {
+  @media (max-width: 760px) {
     .floors { flex-direction: row; gap: 5px; right: auto; left: 50%; top: calc(7.5svh + 32px); bottom: auto;
       transform: translateX(-50%); pointer-events: none; }
     .floors .f { padding: 6px 10px; gap: 8px; border-radius: 100px; }
@@ -1085,6 +1086,7 @@
   .mm-empty { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); text-align: center; width: min(88%, 520px); pointer-events: none;
     font-size: 13px; line-height: 1.7; color: var(--ink-faint); transition: opacity .4s; }
   .mm-empty b { color: var(--ink-dim); font-weight: 650; }
+  .mm-empty-mobile { display: none; }
   .mm-empty.gone { opacity: 0; visibility: hidden; }
 
   .mm-foot { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px 20px; border-top: 1px solid var(--line); background: rgba(255,255,255,.025); }
@@ -1124,6 +1126,7 @@
   .mm-reset { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint);
     border: 1px solid var(--line-2); border-radius: 100px; padding: 7px 13px; background: none; cursor: pointer; transition: .25s; }
   .mm-reset:hover { color: var(--ink); border-color: var(--line-3); }
+  .mm-mobile-step, .mm-label, .mm-suggest, .mm-more { display: none; }
   .mnode { user-select: none; touch-action: none; }
   .mnode.dragging { transition: none; cursor: grabbing; z-index: 5; box-shadow: 0 18px 44px rgba(0,0,0,.8); }
   .mnode:active { cursor: grabbing; }
@@ -1694,12 +1697,208 @@
     .nums-in { gap: 22px 12px; }
   }
 
+  /* ==========================================================
+     MOBILE V2 — eigenständige Oberflächen statt Desktop-Skalierung
+     ========================================================== */
+  @media (max-width: 760px) {
+    /* Kompakte Kopfzeile: Die primäre Aktion bleibt im Hero und im Menü. */
+    .nav-in { height: 56px; padding: 0 12px 0 16px; }
+    .nav-in .brand { gap: 9px; font-size: 15.5px; }
+    .nav-in .brand .flower { width: 25px; height: 25px; }
+    .nav-in .links { gap: 8px; }
+    .nav-in .links a.cta { display: none; }
+    .mburg { width: 42px; height: 42px; border-color: rgba(246,246,244,.28); }
+
+    /* Startseite: normaler Dokumentfluss und eine echte Mobile-Preview. */
+    .dive { height: auto !important; min-height: 0; }
+    .hero { position: relative; top: auto; height: auto; min-height: 0; display: block;
+      padding: calc(84px + env(safe-area-inset-top, 0px)) 18px 30px; text-align: left; overflow: hidden; }
+    #heroIn { transform: none !important; opacity: 1 !important; max-width: 520px; margin: 0 auto; }
+    .hero h1 { font-size: clamp(38px, 11.4vw, 46px); line-height: .98; letter-spacing: -.045em; }
+    .hero .sub { max-width: 420px; margin: 18px 0 0; font-size: 16px; line-height: 1.48; color: #c8c8ce; }
+    .hero-copy-desktop { display: none; }
+    .hero-copy-mobile { display: inline; }
+    .hero .ctas { max-width: 520px; margin: 24px auto 0; align-items: stretch; }
+    .hero .ctas .bttn { min-height: 52px; }
+    .hero .ctas .lnk { width: max-content; padding: 12px 2px 8px; text-align: left; }
+    .hero .bloom { top: -88px; right: -120px; width: 300px; height: 300px; opacity: .24; filter: blur(14px); }
+
+    .stage { width: min(100%, 520px); margin: 28px auto 0; perspective: none; }
+    .scene3, .scene3.in, .scene3.live { transform: none !important; opacity: 1 !important; }
+    .hero .lap-lid { border-radius: 22px; background: linear-gradient(160deg, #15151a, #08080b);
+      border-color: rgba(255,255,255,.2); box-shadow: 0 22px 60px rgba(0,0,0,.7); overflow: hidden; }
+    .hero .ui { display: block; min-height: 0; background: transparent; }
+    .hero .ui-side { display: none; }
+    .hero .ui-main { min-height: 0; padding: 17px; gap: 11px; }
+    .hero .ui-top .t { font-size: 14px; }
+    .hero .ui-top .chip { font-size: 9px; padding: 5px 9px; }
+    .hero .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+    .hero .kpi { padding: 10px 11px; border-radius: 12px; }
+    .hero .kpi:first-child { grid-column: 1 / -1; display: grid;
+      grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px; }
+    .hero .kpi:first-child .l { grid-column: 1; }
+    .hero .kpi:first-child .v { grid-column: 1; }
+    .hero .kpi:first-child .d { grid-column: 2; grid-row: 1 / 3; text-align: right; }
+    .hero .kpi .l { font-size: 8.5px; }
+    .hero .kpi .v { font-size: 19px; }
+    .hero .kpi .d { font-size: 9.5px; }
+    .hero .chart { min-height: 78px; height: 78px; padding: 11px; gap: 5px; }
+    .hero .chart b:nth-child(n+9) { display: none; }
+    .hero .rows { display: none; }
+    body[data-mode="priv"] .hero-ph { width: 174px; }
+    #pcFab { display: none; }
+
+    /* Visionroom: vier verständliche Schritte, mobile Karten und normaler Bildlauf. */
+    #vision { transform: none !important; }
+    .vision .sec-head br { display: none; }
+    .mm { display: flex; flex-direction: column; border-radius: 22px;
+      background: linear-gradient(180deg, #0d0d12, #060608); box-shadow: 0 24px 70px rgba(0,0,0,.68); }
+    .mm-mobile-step { display: flex; align-items: center; gap: 10px; width: 100%;
+      color: var(--ink); font-size: 14px; font-weight: 720; letter-spacing: -.01em; }
+    .mm-mobile-step em { display: grid; place-items: center; width: 25px; height: 25px; flex: none;
+      border-radius: 50%; background: rgba(160,107,255,.16); color: #d7c5ff;
+      font-family: var(--mono); font-size: 9px; font-style: normal; letter-spacing: .06em; }
+    .mm-top { display: grid; grid-template-columns: 1fr auto; gap: 13px 10px; padding: 17px;
+      border-bottom-color: rgba(255,255,255,.1); }
+    .mm-top > .mm-mobile-step { grid-column: 1; }
+    .mm-reset { display: inline-flex; grid-column: 2; grid-row: 1; align-items: center; justify-content: center;
+      min-height: 32px; padding: 7px 10px; font-size: 8.5px; color: var(--ink-dim); }
+    .mm-types { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 7px; }
+    .mt { min-width: 0; min-height: 48px; justify-content: center; gap: 7px; padding: 9px 6px;
+      border-radius: 12px; font-size: 11.5px; line-height: 1.1; text-align: center; }
+    .mt i { width: 7px; height: 7px; }
+    .mm-hint { grid-column: 1 / -1; width: auto; margin: 0; padding: 9px 11px;
+      border-radius: 10px; background: rgba(255,255,255,.035); font-size: 9px; line-height: 1.35;
+      letter-spacing: .09em; text-align: left; text-transform: none; }
+
+    .mm-canvas { display: flex; flex-direction: column; height: auto; overflow: visible; padding: 18px 16px 17px;
+      background: none; }
+    .mm-links, .mc-halo { display: none; }
+    .mm-idea-step { order: 1; margin-bottom: 12px; }
+    .mm-core { order: 2; position: relative; left: auto; top: auto; transform: none; width: 100%; margin: 0;
+      display: grid; grid-template-columns: auto 1fr; gap: 5px 11px; align-items: center;
+      padding: 14px; border-radius: 15px; text-align: left; background: #111116;
+      border-color: rgba(255,255,255,.2); box-shadow: none; }
+    .mc-flower { grid-column: 1; grid-row: 1 / 3; width: 25px; height: 25px; margin: 0; }
+    .mm-label { display: block; grid-column: 2; grid-row: 1; color: var(--ink-faint);
+      font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
+    .mm-core input { grid-column: 2; grid-row: 2; text-align: left; min-width: 0; font-size: 16px; }
+    .mm-suggest { display: inline-flex; grid-column: 1 / -1; grid-row: 3; align-items: center; justify-content: center;
+      min-height: 44px; margin-top: 8px; border: 0; border-radius: 11px; background: #f6f6f4;
+      color: #000; font: 720 14px/1 var(--sans); cursor: pointer; }
+    .mm-suggest:active { transform: scale(.985); background: var(--lime); }
+    .mc-type { grid-column: 1 / -1; grid-row: 4; margin: 5px 0 0; font-size: 8.5px; text-align: left; }
+    .mc-badge { right: -7px; top: -7px; }
+
+    .mm-feature-step { order: 3; display: none; margin: 22px 0 12px; }
+    .mm.has-items .mm-feature-step { display: flex; }
+    .mm-nodes { order: 4; position: relative; inset: auto; display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+    .mnode { position: relative !important; left: auto; top: auto; transform: none !important; width: 100%;
+      max-width: none; min-width: 0; min-height: 66px; justify-content: space-between; align-items: flex-start;
+      padding: 11px; border-radius: 13px; appearance: none; -webkit-appearance: none; font-family: inherit;
+      font-size: 12px; line-height: 1.28; touch-action: pan-y !important; }
+    .mnode span { white-space: normal; overflow: visible; text-overflow: clip; }
+    .mnode u { width: 23px; height: 23px; margin-top: -2px; }
+    .mnode.mobile-hidden { display: none; }
+    .mm-more { order: 5; align-items: center; justify-content: center; min-height: 44px; margin-top: 10px;
+      border: 1px solid var(--line-2); border-radius: 12px; background: rgba(255,255,255,.035);
+      color: var(--ink); font: 650 13px/1 var(--sans); }
+    .mm-more:not([hidden]) { display: inline-flex; }
+    .mm-empty { order: 6; position: relative; left: auto; bottom: auto; transform: none; width: 100%;
+      margin: 14px 0 0; padding: 13px; border-radius: 12px; background: rgba(255,255,255,.03);
+      text-align: left; font-size: 12.5px; line-height: 1.5; }
+    .mm-empty-desktop { display: none; }
+    .mm-empty-mobile { display: inline; }
+    .mm-empty.gone { display: none; }
+
+    .mm-foot { display: none; grid-template-columns: 1fr; gap: 11px; padding: 17px;
+      border-top-color: rgba(255,255,255,.1); background: rgba(255,255,255,.02); }
+    .mm.has-picks .mm-foot { display: grid; }
+    .mm-own, .mm-send { width: 100%; min-width: 0; border-radius: 13px; background: #101014; }
+    .mm-own { min-height: 50px; }
+    .mm-send { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; padding: 7px 7px 7px 13px; }
+    .mm-own input, .mm-send input { min-width: 0; font-size: 16px; }
+    .mm-send .bttn { min-height: 42px; padding: 10px 17px; font-size: 13px; }
+    .mm-sum { order: 4; padding: 13px 17px 16px; border-top: 1px solid rgba(255,255,255,.08);
+      background: rgba(160,107,255,.055); font-size: 12px; line-height: 1.5; }
+    .vr-note { line-height: 1.55; }
+
+    /* Systemmodell: ein festes Gerät, vier Screens, keine sichtbaren Layer-Kanten. */
+    .model-scroll { height: 520svh !important; }
+    .model-stage { height: 100svh; }
+    #system .persp { perspective: none; }
+    #system .iso, #system .layer { transform-style: flat; }
+    #system .layer { transition: none !important; will-change: opacity; }
+    #system .layer .tag, #system .stage-shadow { display: none; }
+    #system .model-stage::before { width: 100vw; height: 62svh; top: 49%;
+      background: radial-gradient(ellipse 56% 48% at 50% 50%, rgba(160,107,255,.1), transparent 72%); }
+    .model-head { top: calc(env(safe-area-inset-top, 0px) + 72px); }
+    .model-head .k { letter-spacing: .16em; }
+    .floors { top: calc(env(safe-area-inset-top, 0px) + 104px); left: 16px; right: 16px; width: auto;
+      transform: none; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 5px; }
+    .floors .f { position: relative; justify-content: center; min-width: 0; padding: 9px 4px 11px;
+      border-radius: 10px; background: rgba(255,255,255,.025); }
+    .floors .f .no { display: none; }
+    .floors .f .nm { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+      color: var(--ink-faint); font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .floors .f .ln2 { position: absolute; left: 6px; right: 6px; bottom: 5px; width: auto; height: 2px; }
+    .floors .f.on .ln2 { width: auto; }
+    .floors .f.on .nm { color: #fff; }
+    .model-cap { bottom: calc(env(safe-area-inset-bottom, 0px) + 76px); height: 74px; }
+    .model-cap .c { width: calc(100vw - 32px); }
+    .model-cap b { font-size: 18px; line-height: 1.12; }
+    .model-cap span.s { max-width: 350px; margin: 6px auto 0; font-size: 12px; line-height: 1.4; }
+    .model-cap .k { margin-bottom: 6px; font-size: 8.5px; letter-spacing: .16em; }
+
+    body[data-mode="biz"] .sys-lap { left: -11px; top: -11px; width: 642px; opacity: 1 !important; visibility: visible !important; }
+    body[data-mode="biz"] .sl-lid { display: block; padding: 10px; border-radius: 20px 20px 5px 5px; }
+    body[data-mode="biz"] .sl-lid::after { border-radius: 20px 20px 5px 5px; }
+    body[data-mode="biz"] .sl-hole { height: 430px; border-radius: 10px; }
+    body[data-mode="biz"] .sl-cam, body[data-mode="biz"] .sl-hinge,
+    body[data-mode="biz"] .sl-base, body[data-mode="biz"] .sl-brand { display: block; }
+    body[data-mode="biz"] .sl-cam { top: 3px; width: 4px; height: 4px; }
+    body[data-mode="biz"] .sl-hinge { height: 4px; margin: 0 38px; }
+    body[data-mode="biz"] .sl-base { height: 15px; }
+    body[data-mode="priv"] .sys-lap { left: -14px; top: -14px; width: 388px; opacity: 1 !important; visibility: visible !important; }
+    body[data-mode="priv"] .sl-lid { padding: 13px; }
+    body[data-mode="priv"] .sl-hole { height: 600px; }
+
+    /* Details bleiben im Modell auch nach der Geräteskalierung lesbar. */
+    #system .l-data .dr { font-size: 14px; }
+    #system .l-data .dh { font-size: 10px; }
+    #system .l-ki .kchip { font-size: 14px; }
+    #system .l-ki .kbar { font-size: 13px; }
+    #system .l-logic .atx b { font-size: 14px; }
+    #system .l-logic .atx span { font-size: 10px; }
+    #system .site3 .s3h1 { font-size: 22px; }
+    #system .site3 .s3sub, #system .site3 .s3btn { font-size: 11px; }
+  }
+
+  @media (max-width: 359px) {
+    .hero { padding-left: 15px; padding-right: 15px; }
+    .hero h1 { font-size: 35px; }
+    .mm-nodes { grid-template-columns: 1fr; }
+    .mt { font-size: 10.5px; }
+    .floors { left: 10px; right: 10px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #intro { display: none; }
     .dive { height: auto; }
     .hero { position: relative; height: auto; min-height: 100svh; padding-bottom: 60px; }
     .rv, .statement .w { opacity: 1 !important; transform: none !important; transition: none !important; }
     .spin, .ticker .tk { animation: none !important; }
+  }
+
+  @media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+    #system { height: auto !important; }
+    #system .model-stage { position: relative; min-height: 640px; height: auto; padding: 150px 0 150px; }
+    #system .floors { display: none; }
+    #system .layer { opacity: 0 !important; pointer-events: none !important; transform: none !important; }
+    #system #ly3 { opacity: 1 !important; pointer-events: auto !important; }
+    #system .model-cap .c { display: none; }
+    #system .model-cap .c:first-child { display: block; opacity: 1; transform: translate(-50%,0); }
   }
 </style>
 </head>
@@ -1785,7 +1984,10 @@
   <span class="bloom2 spin" style="animation-direction: reverse;"><svg viewBox="0 0 100 100" width="480" height="480"><use href="#flowerP"/></svg></span>
   <div class="hero-in" id="heroIn">
     <h1>Software, die<br><span class="hl">mitwächst.</span></h1>
-    <p class="sub">FlowerTech baut Websites und Web-Apps, die sich bewegen: <b>Änderungen jede Woche.</b> KI dort, wo sie nützt. Und jede Person im Team stellt sich ihr Programm <b>selbst zusammen.</b></p>
+    <p class="sub">
+      <span class="hero-copy-desktop">FlowerTech baut Websites und Web-Apps, die sich bewegen: <b>Änderungen jede Woche.</b> KI dort, wo sie nützt. Und jede Person im Team stellt sich ihr Programm <b>selbst zusammen.</b></span>
+      <span class="hero-copy-mobile">Websites und Web-Apps, die jede Woche besser werden. <b>Mit KI, wo sie wirklich nützt.</b></span>
+    </p>
     <div class="ctas">
       <a class="bttn" href="#kontakt">Projekt starten</a>
       <a class="lnk" href="#system">Wie es funktioniert&nbsp;↓</a>
@@ -2032,36 +2234,46 @@
 
   <div class="mm rv" id="mm">
     <div class="mm-top">
+      <div class="mm-mobile-step"><em>01</em><span>Was möchten Sie bauen?</span></div>
       <div class="mm-types">
         <button type="button" class="mt" data-t="Website"><i style="background:var(--lime)"></i>Website</button>
         <button type="button" class="mt" data-t="Web-Programm"><i style="background:var(--cyan)"></i>Web-Programm</button>
         <button type="button" class="mt" data-t="Web-App"><i style="background:var(--orange)"></i>Web-App</button>
       </div>
       <div class="mm-hint" id="mmHint">Idee eintippen → Funktionen anhängen</div>
-      <button type="button" class="mm-reset" id="mmReset" title="Anordnung zurücksetzen">Anordnung zurücksetzen</button>
+      <button type="button" class="mm-reset" id="mmReset" title="Visionroom neu starten">Neu starten</button>
     </div>
 
     <div class="mm-canvas" id="mmCanvas">
       <svg class="mm-links" id="mmLinks" aria-hidden="true"></svg>
+      <div class="mm-mobile-step mm-idea-step"><em>02</em><span>Beschreiben Sie Ihre Idee</span></div>
       <div class="mm-core" id="mmCore">
         <span class="mc-halo"></span>
         <span class="mc-flower"><svg viewBox="0 0 100 100" width="26" height="26"><use href="#flowerG"/></svg></span>
+        <label class="mm-label" for="vrIdea">Ihre Idee</label>
         <input id="vrIdea" placeholder="Ihre Idee …" maxlength="46" autocomplete="off" aria-label="Ihre Idee">
+        <button type="button" class="mm-suggest" id="vrSuggest">Vorschläge anzeigen</button>
         <span class="mc-type" id="mmType">Art wählen</span>
         <span class="mc-badge" id="mmBadge">0</span>
       </div>
+      <div class="mm-mobile-step mm-feature-step"><em>03</em><span>Passende Funktionen wählen</span></div>
       <div class="mm-nodes" id="mmNodes"></div>
-      <div class="mm-empty" id="mmEmpty">Tippen Sie Ihre Idee ins Zentrum —<br>z.&nbsp;B. <b>Buchhaltungsprogramm</b>, <b>Fitnesstracker</b>, <b>Restaurant-Website</b></div>
+      <button type="button" class="mm-more" id="mmMore" hidden>Weitere Vorschläge anzeigen</button>
+      <div class="mm-empty" id="mmEmpty">
+        <span class="mm-empty-desktop">Tippen Sie Ihre Idee ins Zentrum —<br>z.&nbsp;B. <b>Buchhaltungsprogramm</b>, <b>Fitnesstracker</b>, <b>Restaurant-Website</b></span>
+        <span class="mm-empty-mobile">Wählen Sie zuerst eine Art, beschreiben Sie Ihre Idee und lassen Sie passende Funktionen vorschlagen.</span>
+      </div>
     </div>
 
     <div class="mm-foot">
-      <div class="mm-own"><input id="vrOwn" placeholder="Eigene Funktion anhängen …" maxlength="70" autocomplete="off"><button type="button" id="vrAdd" aria-label="Hinzufügen">+</button></div>
+      <div class="mm-mobile-step"><em>04</em><span>Auswahl senden</span></div>
+      <div class="mm-own"><input id="vrOwn" placeholder="Eigene Funktion anhängen …" maxlength="70" autocomplete="off" aria-label="Eigene Funktion"><button type="button" id="vrAdd" aria-label="Funktion hinzufügen">+</button></div>
       <div class="mm-send">
-        <input id="vrMail" type="email" placeholder="Ihre E-Mail für die Antwort" autocomplete="email">
+        <input id="vrMail" type="email" placeholder="Ihre E-Mail für die Antwort" autocomplete="email" aria-label="E-Mail für die Antwort">
         <a class="bttn" id="vrSend" href="#">Senden</a>
       </div>
     </div>
-    <div class="mm-sum" id="vrSum">Noch nichts gewählt.</div>
+    <div class="mm-sum" id="vrSum" aria-live="polite">Noch nichts gewählt.</div>
   </div>
   <p class="vr-note rv">Die Vorschläge entstehen live aus Ihrer Eingabe — die fertige Zusammenstellung geht direkt an uns. Unverbindlich, Antwort innert 24 h.</p>
 </section>
@@ -3014,6 +3226,7 @@
 
   /* 3D */
   const modelScroll = document.getElementById('system');
+  const modelStage = modelScroll ? modelScroll.querySelector('.model-stage') : null;
   const iso = document.getElementById('iso');
   const scaleWrap = document.getElementById('scaleWrap');
   const layers = [0,1,2,3].map(i => document.getElementById('ly' + i));
@@ -3079,14 +3292,16 @@
   let baseB = 1, baseP = 1, fullK = 1.5;
   const isPhone = () => window.innerWidth <= 760;
   function resize() {
-    /* Am Handy steht das Modell frontal, braucht also keinen Zuschlag für die
-       Drehung und darf entsprechend grösser ausfallen. */
     const ph = isPhone();
-    const wB = ph ? .84 : .94, wP = ph ? .72 : .92;
-    /* Hochformat-Ebene muss zwischen Etagenanzeige und Bildtext passen */
-    const hB = ph ? .52 : .66, hP = ph ? .56 : .7;
-    baseB = Math.min(1.14, (window.innerWidth * wB) / 620, (window.innerHeight * hB) / 430);
-    baseP = Math.min(1.05, (window.innerWidth * wP) / 360, (window.innerHeight * hP) / 600);
+    if (ph) {
+      /* Mobile skaliert das vollständige Gerät, nicht nur seine innere Ebene. */
+      const mh = modelStage ? modelStage.clientHeight : window.innerHeight;
+      baseB = Math.max(.35, Math.min(1, (window.innerWidth - 28) / 642, (mh - 300) / 470));
+      baseP = Math.max(.35, Math.min(1, (window.innerWidth - 56) / 388, (mh - 250) / 628));
+    } else {
+      baseB = Math.min(1.14, (window.innerWidth * .94) / 620, (window.innerHeight * .66) / 430);
+      baseP = Math.min(1.05, (window.innerWidth * .92) / 360, (window.innerHeight * .7) / 600);
+    }
   }
   function calcFullK() {
     const priv = document.body.dataset.mode === 'priv';
@@ -3140,107 +3355,144 @@
       if (q.last !== 0) { q.last = 0; q.el.style.transform = ''; }
     }
 
-    const total = Math.max(1, modelScroll.offsetHeight - vh);
-    const p = clamp((y - modelScroll.offsetTop) / total, 0, 1);
-    const tShrink = easeIO(norm(p, P_SHRINK[0], P_SHRINK[1]));
-    const tTilt = easeIO(norm(p, P_TILT[0], P_TILT[1]));
-    const tTour = norm(p, P_TOUR[0], P_TOUR[1]);
-    const tCol = easeIO(norm(p, P_COL[0], P_COL[1]));
-    const tReveal = easeIO(norm(p, P_SHRINK[1] - .03, P_TILT[1]));
-
-    /* Vollbild-Laptop -> schrumpft in Position -> kippt in die Iso-Ansicht */
-    /* Am Handy bleibt das Modell flach. Gekippt und weichgezeichnet sind die
-       Ebeneninhalte auf 390 px nicht mehr lesbar — stattdessen zeigen wir sie
-       frontal als Kartenstapel und blenden pro Schritt eine Ebene ein. */
     const phone = isPhone();
-    let rx = phone ? 0 : 44 * tTilt;
-    let rz = phone ? 0 : (-22 - 12 * clamp((p - P_EXP[0]) / (P_COL[0] - P_EXP[0]), 0, 1)) * tTilt;
-    fullK = calcFullK();
-    let sc = mix(fullK, 1.0, tShrink) + .06 * tTilt;
-    const lift = [0,0,0,0];
+    const modelViewport = phone && modelStage ? modelStage.clientHeight : vh;
+    const total = Math.max(1, modelScroll.offsetHeight - modelViewport);
+    const p = clamp((y - modelScroll.offsetTop) / total, 0, 1);
     let floor = -1, sy = 0, stepK = -1, stepT = 0;
-    if (p >= P_TOUR[0] && p < P_TOUR[1]) {
-      const k = clamp(Math.floor(tTour * 4 - 1e-6), 0, 3);
-      floor = TOUR_ORDER[k];
-      lift[floor] = 26;
-      sc += .05;
-      sy = phone ? -20 : (1.5 - k) * 34;
-      stepK = k; stepT = clamp(tTour * 4 - k, 0, 1);
-    }
-    rx = mix(rx, 0, tCol); rz = mix(rz, 0, tCol);
-    sc = mix(sc, 1.12, tCol); sy = mix(sy, 12, tCol);
-    sy += (document.body.dataset.mode === 'priv' ? -6 : -46) * (1 - tShrink);
+    let cap = 0;
 
-    /* Ebenen-Ziele: Frontstapel -> gestaffelte Explosion -> frontal verschmolzen */
-    for (let i = 0; i < 4; i++) {
-      const back = 3 - i;
-      let zy, zz;
-      if (phone) {
-        /* Ohne Tiefe: die Ebenen fächern nach oben auf wie ein Kartenstapel,
-           in der Tour rückt die aktive nach vorn und die übrigen weichen aus. */
-        const spread = easeIO(norm(p, P_EXP[0], P_EXP[1])) * tTilt;
-        zy = -back * (12 + 30 * spread);
-        if (floor >= 0) zy = i === floor ? 0 : -back * 30 - 70;
-        zy = mix(zy, -back * 5, tCol);
-        zz = 0;
+    if (phone) {
+      /* Auf dem Handy bleibt genau ein Gerät stehen. Die vier Bereiche sind
+         Screens im selben Rahmen — keine Explosion, keine sichtbaren Kanten. */
+      const weights = [0, 0, 0, 0];
+      if (p < .08) {
+        weights[3] = 1; floor = 3; cap = 0; stepK = 0; stepT = norm(p, 0, .08);
+      } else if (p < .88) {
+        const seg = Math.min(3.9999, norm(p, .08, .88) * 4);
+        const k = Math.floor(seg);
+        const local = seg - k;
+        const current = TOUR_ORDER[k];
+        const next = TOUR_ORDER[Math.min(k + 1, 3)];
+        const blend = k < 3 ? easeIO(norm(local, .82, 1)) : 0;
+        weights[current] = 1 - blend;
+        weights[next] += blend;
+        floor = blend > .5 ? next : current;
+        stepK = k; stepT = local;
+        cap = 2 + TOUR_ORDER.indexOf(floor);
+      } else if (p < .97) {
+        const backToUI = easeIO(norm(p, .88, .97));
+        weights[0] = 1 - backToUI;
+        weights[3] = backToUI;
+        floor = backToUI > .5 ? 3 : 0;
+        stepK = 3; stepT = 1;
+        cap = backToUI > .55 ? 6 : 5;
       } else {
+        weights[3] = 1; floor = -1; cap = 6; stepK = 4; stepT = 1;
+      }
+
+      baseScale = document.body.dataset.mode === 'priv' ? baseP : baseB;
+      scaleWrap.style.transform = 'translateY(0) scale(' + baseScale + ')';
+      iso.style.transform = 'none';
+      layers.forEach((ly, i) => {
+        const w = weights[i];
+        ly.style.transform = 'translate3d(0,0,0)';
+        ly.style.opacity = String(w);
+        ly.style.filter = 'none';
+        ly.style.pointerEvents = w > .5 ? 'auto' : 'none';
+        ly.style.setProperty('--tagop', '0');
+        ly.dataset.act = w > .5 ? '1' : '0';
+        ly.classList.toggle('hot', floor === i);
+      });
+      if (sysLap) {
+        sysLap.style.opacity = '1';
+        sysLap.style.visibility = 'visible';
+      }
+      document.documentElement.style.setProperty('--islandop', '0');
+      if (stageUI) stageUI.style.opacity = '1';
+      if (floorsBox) floorsBox.style.opacity = '1';
+      if (clickHint) clickHint.style.opacity = '0';
+      if (stageShadow) stageShadow.style.opacity = '0';
+    } else {
+      const tShrink = easeIO(norm(p, P_SHRINK[0], P_SHRINK[1]));
+      const tTilt = easeIO(norm(p, P_TILT[0], P_TILT[1]));
+      const tTour = norm(p, P_TOUR[0], P_TOUR[1]);
+      const tCol = easeIO(norm(p, P_COL[0], P_COL[1]));
+      const tReveal = easeIO(norm(p, P_SHRINK[1] - .03, P_TILT[1]));
+      let rx = 44 * tTilt;
+      let rz = (-22 - 12 * clamp((p - P_EXP[0]) / (P_COL[0] - P_EXP[0]), 0, 1)) * tTilt;
+      fullK = calcFullK();
+      let sc = mix(fullK, 1.0, tShrink) + .06 * tTilt;
+      const lift = [0,0,0,0];
+      if (p >= P_TOUR[0] && p < P_TOUR[1]) {
+        const k = clamp(Math.floor(tTour * 4 - 1e-6), 0, 3);
+        floor = TOUR_ORDER[k];
+        lift[floor] = 26;
+        sc += .05;
+        sy = (1.5 - k) * 34;
+        stepK = k; stepT = clamp(tTour * 4 - k, 0, 1);
+      }
+      rx = mix(rx, 0, tCol); rz = mix(rz, 0, tCol);
+      sc = mix(sc, 1.12, tCol); sy = mix(sy, 12, tCol);
+      sy += (document.body.dataset.mode === 'priv' ? -6 : -46) * (1 - tShrink);
+
+      for (let i = 0; i < 4; i++) {
+        const back = 3 - i;
         const fy = -back * 16 * (1 - tTilt);                     /* Kartenstapel vorne */
         const fz = -back * 52 * (1 - tTilt);
         const ez = i * 112 * easeIO(norm(p, P_EXP[0] + i * .018, P_EXP[1])) * tTilt;
-        zy = fy; zz = fz + ez + lift[i];
+        let zy = fy, zz = fz + ez + lift[i];
         zy = mix(zy, -back * 3, tCol);
         zz = mix(zz, i * 3, tCol);
+        sm.ly[i] += (zy - sm.ly[i]) * .09;
+        sm.lz[i] += (zz - sm.lz[i]) * .09;
       }
-      sm.ly[i] += (zy - sm.ly[i]) * .09;
-      sm.lz[i] += (zz - sm.lz[i]) * .09;
-    }
 
-    const idle = reduced ? 0 : Math.sin(now * .00045) * (1.1 * tTilt);
-    const mrz = (mouseX - .5) * 4 * tTilt, mrx = (mouseY - .5) * -3 * tTilt;
-    const k2 = .09;
-    sm.rx += (rx + mrx - sm.rx) * k2;
-    sm.rz += (rz + mrz + idle - sm.rz) * k2;
-    sm.sc += (sc - sm.sc) * k2;
-    sm.sy += (sy - sm.sy) * k2;
+      const idle = reduced ? 0 : Math.sin(now * .00045) * (1.1 * tTilt);
+      const mrz = (mouseX - .5) * 4 * tTilt, mrx = (mouseY - .5) * -3 * tTilt;
+      const k2 = .09;
+      sm.rx += (rx + mrx - sm.rx) * k2;
+      sm.rz += (rz + mrz + idle - sm.rz) * k2;
+      sm.sc += (sc - sm.sc) * k2;
+      sm.sy += (sy - sm.sy) * k2;
 
-    if (!reduced) {
-      baseScale = document.body.dataset.mode === 'priv' ? baseP : baseB;
-      scaleWrap.style.transform = 'translateY(' + sm.sy + 'px) scale(' + baseScale + ')';
-      iso.style.transform = 'rotateX(' + sm.rx + 'deg) rotateZ(' + sm.rz + 'deg) scale3d(' + sm.sc + ',' + sm.sc + ',' + sm.sc + ')';
+      if (!reduced) {
+        baseScale = document.body.dataset.mode === 'priv' ? baseP : baseB;
+        scaleWrap.style.transform = 'translateY(' + sm.sy + 'px) scale(' + baseScale + ')';
+        iso.style.transform = 'rotateX(' + sm.rx + 'deg) rotateZ(' + sm.rz + 'deg) scale3d(' + sm.sc + ',' + sm.sc + ',' + sm.sc + ')';
+        layers.forEach((ly,i) => {
+          ly.style.transform = 'translate3d(0,' + sm.ly[i] + 'px,' + sm.lz[i] + 'px)';
+          ly.style.setProperty('--tagop', i === 3 ? easeIO(norm(p, P_TILT[0] - .02, P_TILT[0] + .07)) : tReveal);
+          if (i < 3) ly.style.setProperty('--layop', tReveal);
+        });
+        if (sysLap) {
+          const lo = 1 - easeIO(norm(p, P_SHRINK[1] - .05, P_TILT[0] + .05));
+          document.documentElement.style.setProperty('--islandop', String(1 - lo));
+          sysLap.style.opacity = String(lo);
+          sysLap.style.visibility = lo < .02 ? 'hidden' : 'visible';
+        }
+        const uiOp = easeIO(norm(p, P_SHRINK[0] + .02, P_SHRINK[1] + .03));
+        if (stageUI) stageUI.style.opacity = String(uiOp);
+        if (floorsBox) floorsBox.style.opacity = String(uiOp);
+        if (clickHint) clickHint.style.opacity = String(uiOp);
+        if (stageShadow) stageShadow.style.opacity = String(.55 * tTilt * (1 - tCol));
+      }
+
+      if (p >= P_COL[0]) cap = 6;
+      else if (floor >= 0) cap = 2 + TOUR_ORDER.indexOf(floor);
+      else if (p >= P_TILT[1]) cap = 1;
       layers.forEach((ly,i) => {
-        ly.style.transform = 'translate3d(0,' + sm.ly[i] + 'px,' + sm.lz[i] + 'px)';
-        ly.style.setProperty('--tagop', i === 3 ? easeIO(norm(p, P_TILT[0] - .02, P_TILT[0] + .07)) : tReveal);
-        if (i < 3) ly.style.setProperty('--layop', tReveal);
+        const base = i === 3 ? 1 : tReveal;
+        ly.style.opacity = String(base * (ly.dataset.act === '0' ? .13 : 1));
       });
-      if (sysLap) {
-        const lo = 1 - easeIO(norm(p, P_SHRINK[1] - .05, P_TILT[0] + .05));
-        document.documentElement.style.setProperty('--islandop', String(1 - lo));
-        sysLap.style.opacity = String(lo);
-        sysLap.style.visibility = lo < .02 ? 'hidden' : 'visible';
-      }
-      const uiOp = easeIO(norm(p, P_SHRINK[0] + .02, P_SHRINK[1] + .03));
-      if (stageUI) stageUI.style.opacity = String(uiOp);
-      if (floorsBox) floorsBox.style.opacity = String(uiOp);
-      if (clickHint) clickHint.style.opacity = String(uiOp);
-      if (stageShadow) stageShadow.style.opacity = String(.55 * tTilt * (1 - tCol));
     }
 
-
-    let cap = 0;
-    if (p >= P_COL[0]) cap = 6;
-    else if (floor >= 0) cap = 2 + TOUR_ORDER.indexOf(floor);
-    else if (p >= P_TILT[1]) cap = 1;
-    layers.forEach((ly,i) => {
-      const base = i === 3 ? 1 : tReveal;
-      /* Flach übereinander würden abgeblendete Ebenen durchscheinen und
-         den Inhalt der aktiven unlesbar machen. */
-      ly.style.opacity = String(base * (ly.dataset.act === '0' ? (phone ? 0 : .13) : 1));
-    });
     floorsEls.forEach(f => {
       const bar = f.querySelector('.fbar i');
       if (!bar) return;
       const isOn = +f.dataset.f === floor;
-      bar.style.transform = 'scaleX(' + (isOn ? stepT : (floor !== -1 && TOUR_ORDER.indexOf(+f.dataset.f) < stepK ? 1 : 0)) + ')';
+      const done = floor !== -1 && TOUR_ORDER.indexOf(+f.dataset.f) < stepK;
+      bar.style.transform = 'scaleX(' + (isOn ? stepT : done ? 1 : (phone && stepK >= 4 ? 1 : 0)) + ')';
     });
 
     const priv = document.body.dataset.mode === 'priv';
@@ -3249,12 +3501,12 @@
       capsB.forEach((c,i) => c.classList.toggle('on', i === cap));
       capsP.forEach((c,i) => c.classList.toggle('on', i === cap));
       phaseTag.textContent = (priv ? TAGSP : TAGSB)[cap];
-        floorsEls.forEach(f => f.classList.toggle('on', +f.dataset.f === floor));
-      layers.forEach((ly,i) => {
+      floorsEls.forEach(f => f.classList.toggle('on', +f.dataset.f === floor));
+      if (!phone) layers.forEach((ly,i) => {
         const act = floor === -1 || floor === i;
         ly.dataset.act = act ? '1' : '0';
         ly.classList.toggle('hot', floor === i);
-        ly.style.filter = (act || phone) ? '' : 'blur(4px) saturate(.6)';
+        ly.style.filter = act ? '' : 'blur(4px) saturate(.6)';
       });
     }
 
@@ -3551,14 +3803,15 @@
     const COLORS = ['#c8ff2e', '#25d5ff', '#ff3ea5', '#ff7a1a', '#a06bff', '#3765ff'];
 
     const el = id => document.getElementById(id);
-    const canvas = el('mmCanvas'), nodesWrap = el('mmNodes'), links = el('mmLinks'), core = el('mmCore');
+    const canvas = el('mmCanvas'), nodesWrap = el('mmNodes'), links = el('mmLinks'), core = el('mmCore'), mm = el('mm');
     const vrIdea = el('vrIdea'), vrOwn = el('vrOwn'), vrMail = el('vrMail'), vrSend = el('vrSend'),
-          vrSum = el('vrSum'), badge = el('mmBadge'), mmType = el('mmType'), mmEmpty = el('mmEmpty'), mmHint = el('mmHint');
+          vrSum = el('vrSum'), badge = el('mmBadge'), mmType = el('mmType'), mmEmpty = el('mmEmpty'), mmHint = el('mmHint'),
+          vrSuggest = el('vrSuggest'), mmMore = el('mmMore');
     if (!canvas) return;
 
-    let type = '', idea = '', items = [];   /* {label, on, custom, mx, my} */
+    let type = '', idea = '', items = [], mobileExpanded = false;   /* {label, on, custom, mx, my} */
     const dragHint = () => window.innerWidth <= 860
-      ? 'Antippen zum Anhängen — eigene unten ergänzen'
+      ? 'Funktionen antippen — Ihre Auswahl bleibt sichtbar'
       : 'Ziehen zum Verschieben · Doppelklick zum Umbenennen';
 
     function suggest(txt, tp) {
@@ -3598,66 +3851,77 @@
     function render() {
       nodesWrap.innerHTML = '';
       items.forEach((it, i) => {
-        const b = document.createElement('div');
+        const b = document.createElement('button');
+        b.type = 'button';
         b.className = 'mnode' + (it.on ? ' on' : '');
+        if (window.innerWidth <= 860 && !mobileExpanded && i >= 6 && !it.on) b.classList.add('mobile-hidden');
         b.style.setProperty('--c', COLORS[i % COLORS.length]);
+        b.setAttribute('aria-pressed', it.on ? 'true' : 'false');
+        b.setAttribute('aria-label', it.label + (it.on ? ' entfernen' : ' auswählen'));
         const sp = document.createElement('span'); sp.textContent = it.label; b.appendChild(sp);
-        const u = document.createElement('u'); u.textContent = it.on ? '×' : '+'; b.appendChild(u);
+        const u = document.createElement('u'); u.textContent = it.on ? '×' : '+'; u.setAttribute('aria-hidden', 'true'); b.appendChild(u);
         b.dataset.i = i;
 
+        const toggle = () => {
+          if (!it.on && needType()) return;
+          if (it.on && it.custom) { items = items.filter(o => o !== it); render(); sync(); return; }
+          it.on = !it.on; render(); sync();
+        };
         u.addEventListener('pointerdown', e => e.stopPropagation());
         u.addEventListener('click', e => {
           e.stopPropagation();
-          if (!it.on && needType()) return;
-          if (it.on && it.custom) { items = items.filter(o => o !== it); render(); sync(); return; }
-          it.on = !it.on; render(); sync();
+          toggle();
         });
 
-        /* Umbenennen per Doppelklick */
-        b.addEventListener('dblclick', e => {
-          e.preventDefault();
-          const inp = document.createElement('input');
-          inp.className = 'mn-edit'; inp.value = it.label; inp.maxLength = 70;
-          sp.replaceWith(inp); inp.focus(); inp.select();
-          const done = () => { it.label = inp.value.trim() || it.label; it.custom = true; render(); sync(); };
-          inp.addEventListener('blur', done);
-          inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); } });
-          inp.addEventListener('pointerdown', ev => ev.stopPropagation());
-        });
-
-        /* Verschieben per Ziehen */
         let sx = 0, sy = 0, ox = 0, oy = 0, moved = false;
-        b.addEventListener('pointerdown', e => {
-          if (e.target.tagName === 'INPUT') return;
-          const r = canvas.getBoundingClientRect();
-          sx = e.clientX; sy = e.clientY; moved = false;
-          ox = it.mx !== undefined ? it.mx : (b._x - r.width / 2);
-          oy = it.my !== undefined ? it.my : (b._y - r.height / 2);
-          b.setPointerCapture(e.pointerId);
-          b.classList.add('dragging');
-        });
-        b.addEventListener('pointermove', e => {
-          if (!b.hasPointerCapture || !b.classList.contains('dragging')) return;
-          const dx = e.clientX - sx, dy = e.clientY - sy;
-          if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-          it.mx = ox + dx; it.my = oy + dy;
-          layout();
-        });
-        const endDrag = e => { b.classList.remove('dragging'); if (!moved) { /* Klick ohne Bewegung: nichts */ } };
-        b.addEventListener('pointerup', endDrag);
-        b.addEventListener('pointercancel', endDrag);
+        if (window.innerWidth > 860) {
+          /* Umbenennen und Verschieben gehören ausschliesslich zur Desktop-Mindmap. */
+          b.addEventListener('dblclick', e => {
+            e.preventDefault();
+            const inp = document.createElement('input');
+            inp.className = 'mn-edit'; inp.value = it.label; inp.maxLength = 70;
+            sp.replaceWith(inp); inp.focus(); inp.select();
+            const done = () => { it.label = inp.value.trim() || it.label; it.custom = true; render(); sync(); };
+            inp.addEventListener('blur', done);
+            inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); } });
+            inp.addEventListener('pointerdown', ev => ev.stopPropagation());
+          });
+          b.addEventListener('pointerdown', e => {
+            if (e.target.tagName === 'INPUT') return;
+            const r = canvas.getBoundingClientRect();
+            sx = e.clientX; sy = e.clientY; moved = false;
+            ox = it.mx !== undefined ? it.mx : (b._x - r.width / 2);
+            oy = it.my !== undefined ? it.my : (b._y - r.height / 2);
+            b.setPointerCapture(e.pointerId);
+            b.classList.add('dragging');
+          });
+          b.addEventListener('pointermove', e => {
+            if (!b.hasPointerCapture || !b.classList.contains('dragging')) return;
+            const dx = e.clientX - sx, dy = e.clientY - sy;
+            if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+            it.mx = ox + dx; it.my = oy + dy;
+            layout();
+          });
+          const endDrag = () => b.classList.remove('dragging');
+          b.addEventListener('pointerup', endDrag);
+          b.addEventListener('pointercancel', endDrag);
+        }
 
-        /* Mobil: ganze Pille antippen schaltet die Funktion um */
+        /* Mobil ist die ganze Karte genau eine grosse, scrollfreundliche Aktion. */
         b.addEventListener('click', e => {
-          if (window.innerWidth > 860 || e.target.tagName === 'INPUT') return;
-          if (!it.on && needType()) return;
-          if (it.on && it.custom) { items = items.filter(o => o !== it); render(); sync(); return; }
-          it.on = !it.on; render(); sync();
+          if (window.innerWidth > 860 || e.target.tagName === 'INPUT' || moved) return;
+          toggle();
         });
 
         nodesWrap.appendChild(b);
       });
       mmEmpty.classList.toggle('gone', items.length > 0);
+      mm.classList.toggle('has-items', items.length > 0);
+      if (mmMore) {
+        const hiddenCount = items.filter((it, i) => i >= 6 && !it.on).length;
+        mmMore.hidden = window.innerWidth > 860 || (!mobileExpanded && hiddenCount === 0);
+        mmMore.textContent = mobileExpanded ? 'Weniger Vorschläge anzeigen' : hiddenCount + ' weitere Vorschläge anzeigen';
+      }
       layout();
     }
 
@@ -3702,9 +3966,10 @@
       const mail = (vrMail.value || '').trim();
       const mailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail);
       const ok = type && idea && picked.length && mailOk;
+      mm.classList.toggle('has-picks', picked.length > 0);
       vrSum.innerHTML = (type && idea && picked.length)
         ? '<b>' + type + '</b> — ' + idea + ' · <b>' + picked.length + '</b> Funktionen angehängt' + (mailOk ? ' · bereit zum Senden' : ' · noch E-Mail eintragen')
-        : (!type ? 'Wählen Sie oben die Art.' : !idea ? 'Tippen Sie Ihre Idee ins Zentrum.' : 'Hängen Sie mindestens eine Funktion an.');
+        : (!type ? 'Wählen Sie oben die Art.' : !idea ? 'Beschreiben Sie Ihre Idee.' : 'Wählen Sie mindestens eine Funktion.');
       vrSend.classList.toggle('ready', !!ok);
       if (ok) {
         const body = 'Visionroom-Anfrage%0D%0A%0D%0AArt: ' + type + '%0D%0AIdee: ' + idea + '%0D%0AAbsender: ' + mail +
@@ -3721,10 +3986,16 @@
       document.querySelectorAll('.mt').forEach(o => o.classList.remove('on'));
       b.classList.add('on'); type = name;
       core.style.borderColor = b.querySelector('i').style.background;
-      mmHint.textContent = idea ? dragHint()
-        : (silent ? 'Aus Ihrer Auswahl übernommen — jetzt Idee eintippen' : 'Jetzt Idee ins Zentrum tippen');
-      rebuild(); sync();
-      if (!silent) vrIdea.focus();
+      if (window.innerWidth <= 860) {
+        items = []; mobileExpanded = false; render();
+        mmHint.textContent = idea ? 'Idee prüfen und Vorschläge anzeigen' : 'Als Nächstes: Idee beschreiben';
+      } else {
+        mmHint.textContent = idea ? dragHint()
+          : (silent ? 'Aus Ihrer Auswahl übernommen — jetzt Idee eintippen' : 'Jetzt Idee ins Zentrum tippen');
+        rebuild();
+      }
+      sync();
+      if (!silent && window.innerWidth > 860) vrIdea.focus();
     }
     window.__vrSetType = n => setType(n, true);
     document.querySelectorAll('.mt').forEach(b => b.addEventListener('click', () => setType(b.dataset.t, false)));
@@ -3732,14 +4003,34 @@
     let t0;
     vrIdea.addEventListener('input', () => {
       clearTimeout(t0);
+      idea = vrIdea.value.trim();
+      if (window.innerWidth <= 860) {
+        mmHint.textContent = idea ? 'Tippen Sie jetzt auf «Vorschläge anzeigen»' : 'Beschreiben Sie Ihre Idee';
+        sync();
+        return;
+      }
       t0 = setTimeout(() => {
-        idea = vrIdea.value.trim();
         if (!type) { sync(); return; }
         mmHint.textContent = dragHint();
         rebuild(); sync();
       }, 300);
     });
-    vrIdea.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); idea = vrIdea.value.trim(); if (!needType()) { rebuild(); sync(); } } });
+    function showSuggestions() {
+      idea = vrIdea.value.trim();
+      if (needType()) return;
+      if (!idea) { shake(core); mmHint.textContent = 'Bitte beschreiben Sie zuerst Ihre Idee'; return; }
+      mobileExpanded = false;
+      rebuild(); sync();
+      mmHint.textContent = dragHint();
+    }
+    if (vrSuggest) vrSuggest.addEventListener('click', showSuggestions);
+    if (mmMore) mmMore.addEventListener('click', () => { mobileExpanded = !mobileExpanded; render(); });
+    vrIdea.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      if (window.innerWidth <= 860) showSuggestions();
+      else { idea = vrIdea.value.trim(); if (!needType()) { rebuild(); sync(); } }
+    });
 
     function addOwn() {
       const v = vrOwn.value.trim(); if (!v) return;
@@ -3751,9 +4042,16 @@
     vrOwn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addOwn(); } });
     vrMail.addEventListener('input', sync);
     const rs = el('mmReset');
-    if (rs) rs.addEventListener('click', () => { items.forEach(i => { delete i.mx; delete i.my; }); layout(); });
+    if (rs) rs.addEventListener('click', () => {
+      type = ''; idea = ''; items = []; mobileExpanded = false;
+      vrIdea.value = ''; vrOwn.value = ''; vrMail.value = '';
+      document.querySelectorAll('.mt').forEach(o => o.classList.remove('on'));
+      core.style.borderColor = '';
+      mmHint.textContent = window.innerWidth <= 860 ? 'Wählen Sie zuerst eine Art' : 'Idee eintippen → Funktionen anhängen';
+      render(); sync();
+    });
     window.addEventListener('resize', layout);
-    sync();
+    render(); sync();
   })();
 
   /* ================= Beispiele: Wisch-Karussell (nur Handy) ================= */
@@ -3821,6 +4119,8 @@
     const body = document.body;
     function setMode(m) {
       body.dataset.mode = m;
+      lastCap = -1;
+      lastFloor = -2;
       if (typeof window.__ftResize === 'function') window.__ftResize();
       document.querySelectorAll('.mswitch button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
     }
