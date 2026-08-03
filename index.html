@@ -34,9 +34,7 @@
 
   /* ========== Blume ========== */
   .flower { display: inline-block; }
-  .flower svg { display: block; }
-  .flower .p { mix-blend-mode: screen; }
-  .spin { animation: spin 46s linear infinite; }
+  .flower svg { display: block; }  .spin { animation: spin 46s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ========== Intro ========== */
@@ -144,10 +142,7 @@
     .hero .bloom { width: 320px; height: 320px; top: -120px; right: -140px; opacity: .32; }
     .hero .bloom2 { display: none; }
   }
-  .hero-in { position: relative; z-index: 2; will-change: transform, opacity; }
-  .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .26em; text-transform: uppercase; color: var(--ink-dim); border: 1px solid var(--line-2); border-radius: 100px; padding: 8px 18px; margin-bottom: 32px; background: rgba(255,255,255,.03); }
-  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
-  .hero h1 { font-size: clamp(46px, 8.2vw, 112px); line-height: 1; font-weight: 750; letter-spacing: -.045em; }
+  .hero-in { position: relative; z-index: 2; will-change: transform, opacity; }.hero h1 { font-size: clamp(46px, 8.2vw, 112px); line-height: 1; font-weight: 750; letter-spacing: -.045em; }
   .hero h1 .hl { background: linear-gradient(transparent 64%, rgba(200,255,46,.85) 64%, rgba(200,255,46,.85) 92%, transparent 92%); padding: 0 .06em; }
   .hero .sub { margin: 28px auto 0; max-width: 620px; color: var(--ink-dim); font-size: clamp(16px, 2vw, 20px); line-height: 1.55; }
   .hero .sub b { color: var(--ink); font-weight: 600; }
@@ -225,10 +220,6 @@
     .ui-user { margin: 0 8px 0 0; flex: none; }
     .ui-item { white-space: nowrap; flex: none; }
   }
-
-
-
-
 
 
   /* ========== Webmap (links unten) ========== */
@@ -484,17 +475,7 @@
   .s3c b { display: block; margin-top: 6px; font-size: 8.5px; font-weight: 700; }
   .s3c span { display: block; margin-top: 4px; height: 4px; width: 80%; border-radius: 2px; background: rgba(246,246,244,.16); }
   .s3foot { display: flex; justify-content: space-between; padding: 8px 18px 10px; border-top: 1px solid rgba(255,255,255,.05); }
-  .s3foot span { height: 4px; width: 70px; border-radius: 2px; background: rgba(246,246,244,.14); }
-  .vdim { position: absolute; left: -74px; bottom: 0; width: 1px; transform-origin: bottom left; transform: rotateX(-90deg); }
-  .vdim .lin { position: absolute; left: 0; bottom: 0; width: 1px; height: 100%; background: var(--line-3); }
-  .vdim .tick { position: absolute; left: -7px; width: 15px; height: 1px; background: var(--line-3); }
-  .vdim .tlb { position: absolute; left: -46px; transform: translateY(50%); font-family: var(--mono); font-size: 9px; letter-spacing: .14em; color: var(--ink-faint); }
-  .bdim { position: absolute; left: 0; right: 0; bottom: -44px; height: 1px; background: var(--line-2); }
-  .bdim::before, .bdim::after { content: ""; position: absolute; top: -7px; width: 1px; height: 15px; background: var(--line-2); }
-  .bdim::before { left: 0; } .bdim::after { right: 0; }
-  .bdim span { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); font-family: var(--mono); font-size: 9.5px; letter-spacing: .2em; color: var(--ink-faint); }
-
-  .stage-ui { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+  .s3foot span { height: 4px; width: 70px; border-radius: 2px; background: rgba(246,246,244,.14); }.stage-ui { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
   .stage-ui .model-head { pointer-events: auto; }
   .floors { position: absolute; right: 5vw; top: 50%; transform: translateY(-50%); z-index: 5; display: flex; flex-direction: column; gap: 4px; }
   .floors .f { display: flex; align-items: center; gap: 14px; padding: 11px 16px; border: 1px solid transparent; border-radius: 12px; transition: .35s; }
@@ -545,30 +526,7 @@
   .click-hint .dotc { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 9px var(--cyan); animation: blinkpv 2s infinite; }
   @media (max-width: 900px) { .click-hint { display: none; } }
   #iso [data-app] { cursor: pointer; transition: filter .25s; }
-  #iso [data-app]:hover { filter: brightness(1.3); }
-
-
-  /* ========== Im Einsatz (Laptop-Frame) ========== */
-  .frame-scroll { position: relative; z-index: 1; height: 300vh; }
-  .frame-stage { position: sticky; top: 0; height: 100svh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-  .fr-head { position: absolute; top: 7.5svh; left: 0; right: 0; text-align: center; z-index: 5; }
-  .fr-head .k { font-family: var(--mono); font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink-faint); }
-  .fr-lap { width: min(940px, 90vw); will-change: transform; }
-  .fscreens { position: relative; min-height: 470px; background: #08080a; }
-  .fs { position: absolute; inset: 0; padding: 22px 28px; display: flex; flex-direction: column; gap: 14px; opacity: 0; transition: opacity .55s ease; pointer-events: none; }
-  .fs.on { opacity: 1; }
-  .fs .aw-pos, .fs .aw-tot { font-size: 14px; }
-  .fr-caps { position: absolute; left: 0; right: 0; bottom: 6svh; z-index: 5; height: 96px; pointer-events: none; }
-  .fr-grp .fc { position: absolute; left: 50%; transform: translate(-50%, 18px); width: min(92vw, 620px); text-align: center; opacity: 0; transition: .55s ease; }
-  .fr-grp .fc.on { opacity: 1; transform: translate(-50%, 0); }
-  .fr-grp .fc .k { font-family: var(--mono); font-size: 10px; letter-spacing: .3em; display: block; margin-bottom: 8px; }
-  .fr-grp .fc b { font-size: clamp(20px, 3vw, 30px); font-weight: 750; letter-spacing: -.02em; display: block; }
-  .fr-grp .fc .s { display: block; margin-top: 6px; color: var(--ink-dim); font-size: 15px; }
-  @media (prefers-reduced-motion: reduce) { .frame-scroll { height: auto; } .frame-stage { position: relative; height: auto; padding: 80px 0; } }
-
-
-
-  /* ---- Laptop-Rahmen um das Modell ---- */
+  #iso [data-app]:hover { filter: brightness(1.3); }/* ---- Laptop-Rahmen um das Modell ---- */
   .scale-wrap { position: relative; }
   .sys-lap { position: absolute; left: -30px; top: -18px; width: 680px; z-index: 0; pointer-events: none; will-change: opacity, transform; }
   body[data-mode="priv"] .sys-lap { left: -26px; width: 412px; }
@@ -754,99 +712,18 @@
   .chat .inp input { flex: 1; background: none; border: 0; outline: 0; color: var(--ink); font-family: inherit; font-size: 12.5px; }
   .chat .inp input::placeholder { color: var(--ink-faint); }
   .chat .inp .snd { width: 30px; height: 30px; border-radius: 50%; background: var(--cyan); border: 0; flex: none; display: grid; place-items: center; color: #000; font-weight: 800; font-size: 14px; cursor: pointer; transition: .25s; }
-  .chat .inp .snd:hover { background: var(--lime); transform: scale(1.08); }
-
-  /* ========== Works ========== */
-  .works { position: relative; z-index: 2; padding: 12vh 24px 6vh; max-width: 1200px; margin: 0 auto; }
-  .work { display: grid; grid-template-columns: 1fr 1.25fr; gap: clamp(30px, 5vw, 80px); align-items: center; padding: 9vh 0; }
-  .work.flip .w-txt { order: 2; } .work.flip .w-vis { order: 1; }
-  .w-txt .k { font-family: var(--mono); font-size: 10px; letter-spacing: .26em; text-transform: uppercase; }
-  .w-txt h3 { margin-top: 14px; font-size: clamp(26px, 3.4vw, 42px); font-weight: 750; letter-spacing: -.03em; line-height: 1.1; }
-  .w-txt p { margin-top: 16px; color: var(--ink-dim); font-size: 16px; line-height: 1.6; max-width: 420px; }
-  .w-chips { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 9px; }
-  .w-chips span { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; color: var(--ink-dim); border: 1px solid var(--line-2); border-radius: 100px; padding: 7px 14px; }
-  .w-chips span b { font-weight: 650; }
-  .w-vis { position: relative; will-change: transform; }
-  .w-glow { position: absolute; inset: -12%; filter: blur(46px); z-index: 0; pointer-events: none; }
-  @media (max-width: 860px) {
-    .work { grid-template-columns: 1fr; padding: 7vh 0; }
-    .work.flip .w-txt { order: 1; } .work.flip .w-vis { order: 2; }
-  }
-  .lap.small .ui { min-height: 370px; grid-template-columns: 160px 1fr; }
-  .lap.small .ui-main { padding: 16px 18px; gap: 12px; }
-
-  /* Der Träger um die Beispiele ist am Desktop für das Layout nicht vorhanden;
-     erst am Handy wird er zur waagerechten Wisch-Spur. */
-  .works-track { display: contents; }
-  .works-dots { display: none; }
-
-  .phone-wrap { display: flex; justify-content: center; }
-  .ph { position: relative; z-index: 2; width: min(300px, 74vw); border-radius: 48px; padding: 11px;
+  .chat .inp .snd:hover { background: var(--lime); transform: scale(1.08); }.ph { position: relative; z-index: 2; width: min(300px, 74vw); border-radius: 48px; padding: 11px;
     background: linear-gradient(160deg, #3c3c42, #141418 30%, #0a0a0c);
     border: 1px solid rgba(255,255,255,.18);
     box-shadow: 0 -1px 0 rgba(255,255,255,.3) inset, 0 60px 140px rgba(0,0,0,.9), 0 26px 90px rgba(255,62,165,.12); }
   .ph-scr { border-radius: 38px; overflow: hidden; background: #060608; position: relative; padding-bottom: 18px; }
   .ph-scr::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(125deg, rgba(255,255,255,.08), transparent 30%); }
-  .ph-island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 86px; height: 24px; border-radius: 100px; background: #000; z-index: 3; border: 1px solid rgba(255,255,255,.05); }
-  .ph-head { padding: 48px 20px 12px; }
-  .ph-head .hi { font-size: 11px; color: var(--ink-faint); }
-  .ph-head .tt { font-size: 19px; font-weight: 750; letter-spacing: -.02em; margin-top: 3px; }
-  .ph-cal { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; padding: 10px 20px 4px; }
-  .ph-cal i { aspect-ratio: 1; border-radius: 8px; background: rgba(255,255,255,.05); display: block; }
-  .ph-cal i.x { background: rgba(255,62,165,.4); }
-  .ph-cal i.t { background: var(--pink); box-shadow: 0 0 14px rgba(255,62,165,.7); }
-  .ph-list { padding: 12px 20px 6px; display: flex; flex-direction: column; gap: 8px; }
-  .ph-li { display: flex; align-items: center; gap: 11px; background: rgba(255,255,255,.045); border: 1px solid var(--line); border-radius: 13px; padding: 11px 13px; }
-  .ph-li .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pink); flex: none; box-shadow: 0 0 8px rgba(255,62,165,.8); }
-  .ph-li .l1 { flex: 1; }
-  .ph-li .l1 .a { font-size: 11.5px; font-weight: 650; }
-  .ph-li .l1 .b2 { font-size: 9.5px; color: var(--ink-faint); margin-top: 2px; }
-  .ph-li .tm { font-family: var(--mono); font-size: 10px; color: var(--ink-dim); }
-  .ph-btn { margin: 12px 20px 8px; height: 44px; border-radius: 100px; background: #f6f6f4; color: #000; display: grid; place-items: center; font-size: 12.5px; font-weight: 750; cursor: pointer; transition: .3s; }
+  .ph-island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 86px; height: 24px; border-radius: 100px; background: #000; z-index: 3; border: 1px solid rgba(255,255,255,.05); }.ph-btn { margin: 12px 20px 8px; height: 44px; border-radius: 100px; background: #f6f6f4; color: #000; display: grid; place-items: center; font-size: 12.5px; font-weight: 750; cursor: pointer; transition: .3s; }
   .ph-btn:hover { transform: scale(1.02); }
-  .ph-btn.ok { background: var(--lime); box-shadow: 0 0 26px rgba(200,255,46,.4); }
-  .ph-li { cursor: pointer; transition: border-color .25s, background .25s; }
-  .ph-li.sel { border-color: rgba(200,255,46,.55); background: rgba(200,255,46,.06); }
-  .ph-cal i { cursor: pointer; transition: .25s; }
-  .ui-item { cursor: pointer; }
+  .ph-btn.ok { background: var(--lime); box-shadow: 0 0 26px rgba(200,255,46,.4); }.ui-item { cursor: pointer; }
   .row { cursor: pointer; transition: border-color .3s; }
   .row.hit { border-color: rgba(200,255,46,.6); }
-  .mod { cursor: pointer; }
-  .site-hero { position: relative; }
-  .site-hero .sk-btn { cursor: pointer; transition: .25s; }
-  .site-hero .sk-btn:hover { transform: scale(1.03); }
-  .site-toast { position: absolute; right: 22px; top: 18px; font-size: 10.5px; font-weight: 700; color: #000; background: var(--lime); border-radius: 100px; padding: 7px 13px; opacity: 0; transform: translateY(-8px); transition: .4s; pointer-events: none; }
-  .site-toast.on { opacity: 1; transform: none; }
-
-  .brw { position: relative; z-index: 2; border-radius: 16px; overflow: hidden; background: #0a0a0d; border: 1px solid rgba(255,255,255,.14);
-    box-shadow: 0 -1px 0 rgba(255,255,255,.22) inset, 0 50px 140px rgba(0,0,0,.85); }
-  .brw-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.03); }
-  .brw-url { flex: 1; max-width: 320px; margin: 0 auto; background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 8px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim); padding: 6px 12px; text-align: center; letter-spacing: .06em; }
-  .site-hero { padding: 44px 40px 34px; background:
-    radial-gradient(ellipse 90% 120% at 85% -20%, rgba(255,122,26,.2), transparent 55%),
-    radial-gradient(ellipse 70% 100% at 10% -10%, rgba(255,62,165,.16), transparent 60%); }
-  .site-hero .sk-k { width: 90px; height: 9px; border-radius: 5px; background: rgba(255,122,26,.6); }
-  .site-hero .sk-h { margin-top: 16px; width: 74%; height: 22px; border-radius: 7px; background: rgba(246,246,244,.85); }
-  .site-hero .sk-h2 { margin-top: 10px; width: 52%; height: 22px; border-radius: 7px; background: rgba(246,246,244,.35); }
-  .site-hero .sk-p { margin-top: 16px; width: 62%; height: 9px; border-radius: 5px; background: rgba(246,246,244,.2); }
-  .site-hero .sk-p2 { margin-top: 8px; width: 48%; height: 9px; border-radius: 5px; background: rgba(246,246,244,.14); }
-  .site-hero .sk-btn { margin-top: 22px; width: 128px; height: 32px; border-radius: 100px; background: #f6f6f4; }
-  .site-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; padding: 22px 40px 38px; }
-  .site-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: rgba(255,255,255,.03); }
-  .site-card .im { height: 64px; border-radius: 8px; }
-  .site-card .t1 { margin-top: 12px; width: 70%; height: 8px; border-radius: 4px; background: rgba(246,246,244,.5); }
-  .site-card .t2 { margin-top: 7px; width: 90%; height: 7px; border-radius: 4px; background: rgba(246,246,244,.18); }
-
-  /* ========== Zahlen ========== */
-  .nums { position: relative; z-index: 2; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 13vh 24px; }
-  .nums-in { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 44px 20px; text-align: center; }
-  .num .v { font-size: clamp(44px, 6vw, 84px); font-weight: 800; letter-spacing: -.045em; }
-  .num:nth-child(1) .v { color: var(--lime); } .num:nth-child(2) .v { color: var(--cyan); }
-  .num:nth-child(3) .v { color: var(--pink); } .num:nth-child(4) .v { color: var(--orange); }
-  .num .l { margin-top: 10px; color: var(--ink-dim); font-size: 14px; }
-  @media (max-width: 800px) { .nums-in { grid-template-columns: 1fr 1fr; } }
-
-  /* ========== Ablauf ========== */
+  .mod { cursor: pointer; }/* ========== Ablauf ========== */
   .steps-sec { position: relative; z-index: 2; padding: 17vh 24px; max-width: 1150px; margin: 0 auto; }
   .ph-line { position: relative; height: 1px; background: var(--line); margin-top: 9vh; }
   .ph-line .fill { position: absolute; inset: 0; background: linear-gradient(90deg, var(--lime), var(--cyan), var(--pink)); transform-origin: left; transform: scaleX(0); }
@@ -890,52 +767,21 @@
   footer a { text-decoration: none; }
 
 
-
-
   /* ========== Was wir bauen ========== */
-  .build { position: relative; z-index: 2; padding: 7vh 24px 4vh; max-width: 1180px; margin: 0 auto; }
-  .build-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .bd-card { position: relative; overflow: hidden; display: block; text-decoration: none; color: inherit; cursor: pointer; border: 1px solid var(--line); border-radius: 24px; padding: 26px 28px 30px; background: linear-gradient(180deg, #0e0e12, #060608); transition: transform .35s, border-color .35s, box-shadow .35s; text-align: left; }
-  .bd-card:hover { box-shadow: 0 24px 70px rgba(0,0,0,.6); }
-  .bd-go { display: inline-block; margin-top: 16px; font-size: 13.5px; font-weight: 750; transition: transform .3s; }
-  .bd-card:hover .bd-go { transform: translateX(4px); }
-  .bd-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; }
-  .bd-card:nth-child(1)::before { background: var(--lime); }
-  .bd-card:nth-child(2)::before { background: var(--pink); }
-  .bd-card:nth-child(3)::before { background: var(--orange); }
-  .bd-card:hover { transform: translateY(-5px); border-color: rgba(246,246,244,.24); }
-  .bd-card .k { font-family: var(--mono); font-size: 10px; letter-spacing: .22em; text-transform: uppercase; display: block; margin-top: 22px; }
-  .bd-card h3 { margin-top: 8px; font-size: 26px; font-weight: 800; letter-spacing: -.025em; }
-  .bd-card p { margin-top: 8px; color: var(--ink-dim); font-size: 14px; line-height: 1.55; }
-  .bd-vis { border: 1px solid var(--line); border-radius: 14px; background: #0a0a0d; overflow: hidden; height: 176px; padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; }
+  .build { position: relative; z-index: 2; padding: 7vh 24px 4vh; max-width: 1180px; margin: 0 auto; }.bd-vis { border: 1px solid var(--line); border-radius: 14px; background: #0a0a0d; overflow: hidden; height: 176px; padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; }
   .bv-browser { display: flex; align-items: center; gap: 5px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
   .bv-browser .td { width: 7px; height: 7px; border-radius: 50%; }
-  .bv-browser i { margin: 0 auto; font-style: normal; font-family: var(--mono); font-size: 8px; letter-spacing: .1em; color: var(--ink-faint); background: rgba(0,0,0,.5); border: 1px solid var(--line); border-radius: 6px; padding: 2px 10px; }
-  .bv-hero { padding: 6px 4px 2px; }
-  .bv-hero b { display: block; height: 9px; width: 70%; border-radius: 4px; background: rgba(246,246,244,.75); }
-  .bv-hero b.w2 { width: 45%; margin-top: 6px; background: rgba(246,246,244,.3); }
-  .bv-hero em { display: block; margin-top: 9px; width: 64px; height: 16px; border-radius: 100px; background: #f6f6f4; }
-  .bv-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: auto; }
-  .bv-cards i { display: block; height: 30px; border-radius: 7px; }
-  .bv-appbar { display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 750; padding-bottom: 2px; }
+  .bv-browser i { margin: 0 auto; font-style: normal; font-family: var(--mono); font-size: 8px; letter-spacing: .1em; color: var(--ink-faint); background: rgba(0,0,0,.5); border: 1px solid var(--line); border-radius: 6px; padding: 2px 10px; }.bv-appbar { display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 750; padding-bottom: 2px; }
   .bv-row { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; background: rgba(255,255,255,.035); }
   .bv-row i { width: 14px; height: 14px; border-radius: 50%; flex: none; }
   .bv-row b { flex: 1; height: 6px; border-radius: 3px; background: rgba(246,246,244,.35); }
-  .bv-row b.w2 { max-width: 70%; } .bv-row b.w3 { max-width: 55%; }
-  .bv-row em { font-style: normal; font-size: 8px; font-weight: 800; padding: 3px 7px; border-radius: 100px; flex: none; }
+  .bv-row b.w2 { max-width: 70%; }  .bv-row em { font-style: normal; font-size: 8px; font-weight: 800; padding: 3px 7px; border-radius: 100px; flex: none; }
   .bv-phone { position: relative; width: 84px; margin: 0 auto; border: 1px solid var(--line-2); border-radius: 16px; background: #0c0c10; height: 100%; padding: 14px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
   .bv-island { position: absolute; top: 5px; left: 50%; transform: translateX(-50%); width: 26px; height: 7px; border-radius: 100px; background: #000; border: 1px solid rgba(255,255,255,.06); }
   .bv-ring { width: 44px; height: 44px; margin: 4px auto 0; border-radius: 50%; background: conic-gradient(var(--lime) 0 68%, rgba(255,255,255,.1) 68% 100%); position: relative; }
   .bv-ring::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: #0c0c10; }
   .bv-bars { display: flex; align-items: flex-end; gap: 3px; flex: 1; }
   .bv-bars i { flex: 1; border-radius: 2px; background: linear-gradient(180deg, rgba(37,213,255,.8), rgba(37,213,255,.15)); }
-  @media (max-width: 880px) { .build-grid { grid-template-columns: 1fr; } }
-
-  .websec { position: relative; z-index: 2; padding: 8vh 24px 12vh; max-width: 1200px; margin: 0 auto; }
-  .websec .ctas { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-
-
-
   /* ---- Echte Inhalte in den Grafiken ---- */
   .rw-nav { display: flex; align-items: center; gap: 6px; padding: 2px 2px 0; font-size: 9px; font-weight: 750; }
   .rw-logo { width: 9px; height: 9px; border-radius: 50%; background: conic-gradient(var(--lime), var(--cyan), var(--pink), var(--lime)); flex: none; }
@@ -968,12 +814,7 @@
   /* ---- Bewegte Leistungs-Grafiken ---- */
   .bd-vis { position: relative; }
   .vblob { position: absolute; width: 160px; height: 160px; right: -40px; top: -40px; filter: blur(10px); pointer-events: none; animation: vdrift 9s ease-in-out infinite alternate; }
-  @keyframes vdrift { from { transform: translate(0,0) scale(1); } to { transform: translate(-26px, 22px) scale(1.15); } }
-  .shl { position: relative; overflow: hidden; }
-  .shl::after { content: ""; position: absolute; inset: 0; transform: translateX(-120%);
-    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
-    animation: shsweep 3.2s ease-in-out infinite; }
-  @keyframes shsweep { 0% { transform: translateX(-120%); } 55%, 100% { transform: translateX(130%); } }
+  @keyframes vdrift { from { transform: translate(0,0) scale(1); } to { transform: translate(-26px, 22px) scale(1.15); } }@keyframes shsweep { 0% { transform: translateX(-120%); } 55%, 100% { transform: translateX(130%); } }
   .flt { animation: vfloat 4.2s ease-in-out infinite; }
   @keyframes vfloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   .clickBtn { animation: btnpop 6s cubic-bezier(.3,.8,.3,1) infinite; transform-origin: 40% 50%; }
@@ -1019,11 +860,9 @@
     animation: badgepop 5s cubic-bezier(.3,.9,.3,1.3) infinite; }
   @keyframes badgepop { 0%, 38% { transform: scale(0); opacity: 0; } 46%, 78% { transform: scale(1); opacity: 1; } 86%, 100% { transform: scale(0); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) {
-    .vblob, .shl::after, .flt, .clickBtn, .vcursor, .chipLive, .feed, .bv-ring, .ringGlow, .v-fit .bv-bars i, .fitBadge { animation: none !important; }
+    .vblob, .flt, .clickBtn, .vcursor, .chipLive, .feed, .bv-ring, .ringGlow, .v-fit .bv-bars i, .fitBadge { animation: none !important; }
     .vcursor { display: none; }
   }
-
-
 
 
   /* ========== Visionroom · Mindmap ========== */
@@ -1222,126 +1061,9 @@
   @media (prefers-reduced-motion: reduce) { .dk.ft { animation: none; } }
 
   /* ========== Visionroom ========== */
-  .vision { position: relative; z-index: 2; padding: 12vh 24px; max-width: 1000px; margin: 0 auto; }
-  .vr { border: 1px solid rgba(255,255,255,.14); border-radius: 26px; background: #0a0a0d; overflow: hidden;
-    box-shadow: 0 -1px 0 rgba(255,255,255,.2) inset, 0 50px 140px rgba(0,0,0,.85); }
-  .vr-steps { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.03);
-    font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); flex-wrap: wrap; }
-  .vr-steps i { flex: 1; min-width: 12px; height: 1px; background: var(--line-2); }
-  .vr-steps .vs.on { color: var(--lime); }
-  .vr-steps .vs.done { color: var(--ink-dim); }
-  .vr-body { padding: 24px 22px 8px; display: flex; flex-direction: column; gap: 24px; }
-  .vr-block label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
-  .vr-block label em { font-style: normal; font-weight: 400; color: var(--ink-faint); font-size: 12px; }
-  .vr-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .vt { font-family: inherit; color: inherit; text-align: left; cursor: pointer; border: 1px solid var(--line-2); border-radius: 14px; padding: 14px 16px; background: rgba(255,255,255,.03); transition: .25s; }
-  .vt b { display: block; font-size: 14px; font-weight: 750; }
-  .vt span { display: block; font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
-  .vt:hover { border-color: var(--line-3); }
-  .vt.on { background: var(--lime); border-color: var(--lime); color: #000; }
-  .vt.on span { color: rgba(0,0,0,.6); }
-  @media (max-width: 640px) { .vr-types { grid-template-columns: 1fr; } }
-  .vr-input { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line-2); border-radius: 100px; padding: 7px 7px 7px 18px; }
-  .vr-input input { flex: 1; background: none; border: 0; outline: 0; color: var(--ink); font-family: inherit; font-size: 14px; }
-  .vr-input input::placeholder { color: var(--ink-faint); }
-  .vr-input button { font-family: inherit; font-size: 12.5px; font-weight: 750; cursor: pointer; border: 0; border-radius: 100px; padding: 10px 18px; background: #f6f6f4; color: #000; transition: .25s; }
-  .vr-input button:hover { background: var(--lime); }
-  .vr-input.small button { width: 34px; height: 34px; padding: 0; font-size: 18px; line-height: 1; }
-  .vr-sugs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .sug { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-dim); border: 1px solid var(--line-2); border-radius: 100px; padding: 8px 8px 8px 14px; background: rgba(255,255,255,.03); cursor: pointer; transition: .22s; font-family: inherit; }
-  .sug:hover { border-color: var(--lime); color: var(--ink); }
-  .sug u { text-decoration: none; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.1); display: grid; place-items: center; font-size: 14px; line-height: 1; color: var(--ink); }
-  .sug:hover u { background: var(--lime); color: #000; }
-  .sug.used { opacity: .35; pointer-events: none; }
-  .vr-picked { display: flex; flex-wrap: wrap; gap: 8px; }
-  .pk { display: inline-flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 600; color: #000; background: var(--lime); border-radius: 100px; padding: 8px 8px 8px 14px; }
-  .pk u { text-decoration: none; cursor: pointer; width: 19px; height: 19px; border-radius: 50%; background: rgba(0,0,0,.18); display: grid; place-items: center; font-size: 12px; }
-  .pk u:hover { background: rgba(0,0,0,.4); color: #fff; }
-  .vr-foot { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding: 18px 22px; border-top: 1px solid var(--line); background: rgba(255,255,255,.02); margin-top: 16px; }
-  .vr-sum { font-size: 13px; color: var(--ink-dim); flex: 1; min-width: 200px; }
-  .vr-sum b { color: var(--ink); font-weight: 700; }
-  #vrSend { opacity: .4; pointer-events: none; }
+  .vision { position: relative; z-index: 2; padding: 12vh 24px; max-width: 1000px; margin: 0 auto; }#vrSend { opacity: .4; pointer-events: none; }
   #vrSend.ready { opacity: 1; pointer-events: auto; }
-  .vr-note { margin-top: 16px; text-align: center; font-size: 12.5px; color: var(--ink-faint); }
-
-  /* ========== Von unten / Wunsch-Board ========== */
-  .vonunten, .autosec { position: relative; z-index: 2; padding: 12vh 24px; max-width: 1200px; margin: 0 auto; }
-  .wboard { border: 1px solid rgba(255,255,255,.14); border-radius: 20px; background: #0a0a0d; overflow: hidden;
-    box-shadow: 0 -1px 0 rgba(255,255,255,.2) inset, 0 50px 140px rgba(0,0,0,.85); }
-  .wb-hd { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.03); }
-  .wb-hd b { font-size: 13px; font-weight: 750; }
-  .wb-in { display: flex; align-items: center; gap: 10px; margin: 14px 18px 4px; border: 1px solid var(--line-2); border-radius: 100px; padding: 10px 10px 10px 16px; font-size: 12px; color: var(--ink-faint); }
-  .wb-in b { margin-left: auto; width: 26px; height: 26px; border-radius: 50%; background: var(--lime); color: #000; display: grid; place-items: center; font-size: 13px; flex: none; }
-  .wb-li { display: flex; align-items: center; gap: 12px; margin: 10px 18px 0; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: rgba(255,255,255,.03); }
-  .wb-vote { font-family: var(--mono); font-size: 10px; color: var(--lime); border: 1px solid rgba(200,255,46,.35); border-radius: 8px; padding: 6px 8px; flex: none; }
-  .wb-tx { flex: 1; min-width: 0; }
-  .wb-tx b { display: block; font-size: 13px; font-weight: 700; }
-  .wb-tx span { display: block; font-size: 10.5px; color: var(--ink-faint); margin-top: 2px; }
-  .wb-li em { font-style: normal; font-size: 9px; font-weight: 800; padding: 4px 9px; border-radius: 100px; flex: none; }
-  .wb-ft { padding: 14px 18px 16px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
-  .wb-ft b { color: var(--lime); }
-
-  /* ========== Automatisierung ========== */
-  .auto-flow { position: relative; border: 1px solid rgba(255,255,255,.14); border-radius: 20px; background: #0a0a0d; padding: 26px 26px 26px 30px; box-shadow: 0 -1px 0 rgba(255,255,255,.2) inset, 0 50px 140px rgba(0,0,0,.85); }
-  .af-line { position: absolute; left: 45px; top: 44px; bottom: 44px; width: 2px; background: linear-gradient(180deg, var(--lime), var(--pink), var(--cyan), var(--orange)); opacity: .5; }
-  .af-dot { position: absolute; left: -3px; top: 0; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px #fff; animation: afdot 4s linear infinite; }
-  @keyframes afdot { 0% { top: 0; } 100% { top: 100%; } }
-  .af-node { position: relative; display: flex; gap: 14px; align-items: flex-start; padding: 13px 0; }
-  .af-node .aic { width: 32px; height: 32px; border-radius: 10px; flex: none; display: grid; place-items: center; z-index: 1; }
-  .af-node .aic i { width: 11px; height: 11px; border-radius: 4px; display: block; }
-  .af-node b { display: block; font-size: 15.5px; font-weight: 750; letter-spacing: -.01em; }
-  .af-node span { display: block; margin-top: 3px; font-size: 12.5px; color: var(--ink-dim); line-height: 1.5; }
-  .auto-list { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .al { position: relative; padding-left: 24px; }
-  .al::before { content: ""; position: absolute; left: 0; top: 5px; width: 12px; height: 12px; border-radius: 4px; background: var(--pink); clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 82% 0%, 38% 66%); }
-  .al b { display: block; font-size: 14px; font-weight: 700; }
-  .al span { display: block; margin-top: 3px; font-size: 12px; color: var(--ink-dim); line-height: 1.45; }
-  @media (max-width: 560px) { .auto-list { grid-template-columns: 1fr; } }
-
-  /* ========== Für wen ========== */
-  .aud { position: relative; z-index: 2; padding: 12vh 24px 6vh; max-width: 1180px; margin: 0 auto; }
-  .aud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  .aud-grid.three { grid-template-columns: 1fr 1fr 1fr; }
-  @media (max-width: 1020px) { .aud-grid.three { grid-template-columns: 1fr; } }
-  .tile-vis { margin-top: 26px; height: 168px; }
-  .aud-tile.web::after { background: radial-gradient(520px circle at 80% 0%, rgba(200,255,46,.12), transparent 60%); }
-  .aud-tile.web:hover { border-color: rgba(200,255,46,.45); }
-  .aud-tile.web .k, .aud-tile.web .go { color: var(--lime); }
-  .aud-tile { display: block; text-decoration: none; position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 26px; padding: 40px 36px 36px; background: linear-gradient(180deg, #0e0e12, #060608); transition: transform .35s, border-color .35s; }
-  .aud-tile:hover { transform: translateY(-5px); }
-  .aud-tile::after { content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity .4s; pointer-events: none; }
-  .aud-tile.biz::after { background: radial-gradient(520px circle at 80% 0%, rgba(37,213,255,.12), transparent 60%); }
-  .aud-tile.priv::after { background: radial-gradient(520px circle at 80% 0%, rgba(255,62,165,.13), transparent 60%); }
-  .aud-tile:hover::after { opacity: 1; }
-  .aud-tile.biz:hover { border-color: rgba(37,213,255,.45); }
-  .aud-tile.priv:hover { border-color: rgba(255,62,165,.45); }
-  .aud-tile .k { font-family: var(--mono); font-size: 10px; letter-spacing: .24em; text-transform: uppercase; }
-  .aud-tile.biz .k { color: var(--cyan); } .aud-tile.priv .k { color: var(--pink); }
-  .aud-tile h3 { margin-top: 12px; font-size: clamp(24px, 2.8vw, 34px); font-weight: 750; letter-spacing: -.025em; }
-  .aud-tile p { margin-top: 12px; color: var(--ink-dim); font-size: 15px; line-height: 1.6; max-width: 420px; }
-  .a-chips { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px; }
-  .a-chips span { font-size: 11px; font-weight: 600; color: var(--ink-dim); border: 1px solid var(--line-2); border-radius: 100px; padding: 6px 12px; }
-  .aud-tile .go { display: inline-block; margin-top: 26px; font-size: 14px; font-weight: 700; }
-  .aud-tile.biz .go { color: var(--cyan); } .aud-tile.priv .go { color: var(--pink); }
-  @media (max-width: 860px) { .aud-grid { grid-template-columns: 1fr; } }
-
-
-  .tile-lap { margin-top: 28px; }
-  .tile-lap .lap-lid { border-radius: 14px 14px 0 0; padding: 8px 8px 10px; }
-  .tile-lap .lap-base { height: 10px; border-radius: 0 0 10px 10px; }
-  .u2 { background: #08080a; padding: 14px 15px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-  .u2t { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; }
-  .u2r { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.035); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font-size: 11px; color: var(--ink-dim); }
-  .u2r .av4 { width: 16px; height: 16px; border-radius: 50%; flex: none; }
-  .u2r span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .u2r em { font-style: normal; font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 100px; flex: none; }
-  .u2c { display: flex; align-items: flex-end; gap: 5px; height: 46px; background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
-  .u2c b { flex: 1; border-radius: 3px 3px 1px 1px; background: linear-gradient(180deg, rgba(200,255,46,.9), rgba(200,255,46,.18)); }
-  .u2c b:nth-child(2n) { background: linear-gradient(180deg, rgba(37,213,255,.8), rgba(37,213,255,.15)); }
-  .tile-ph { margin-top: 28px; display: flex; justify-content: center; }
-  .tile-ph .ph.mini { width: 210px; }
-
-  /* ========== Leistungen ========== */
+  .vr-note { margin-top: 16px; text-align: center; font-size: 12.5px; color: var(--ink-faint); }@keyframes afdot { 0% { top: 0; } 100% { top: 100%; } }/* ========== Leistungen ========== */
   .leist { position: relative; z-index: 2; padding: 10vh 24px 8vh; max-width: 1180px; margin: 0 auto; }
   .leist-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; align-items: start; }
   .l-incl { border: 1px solid var(--line); border-radius: 26px; padding: 36px; background: linear-gradient(180deg, #0e0e12, #060608); }
@@ -1359,15 +1081,7 @@
   .l-mini { border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; background: rgba(255,255,255,.02); }
   .l-mini b { display: block; font-size: 15px; font-weight: 700; }
   .l-mini span { display: block; margin-top: 5px; color: var(--ink-dim); font-size: 13px; line-height: 1.55; }
-  @media (max-width: 900px) { .leist-grid { grid-template-columns: 1fr; } .l-incl ul { grid-template-columns: 1fr; } }
-
-  /* ========== CTA-Band ========== */
-  .ctaband { position: relative; z-index: 2; padding: 4vh 24px 12vh; max-width: 1180px; margin: 0 auto; }
-  .cb-in { display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; border: 1px solid var(--line-2); border-radius: 26px; padding: 30px 36px; background: linear-gradient(115deg, rgba(200,255,46,.06), rgba(37,213,255,.05), rgba(255,62,165,.06)); }
-  .cb-t b { display: block; font-size: 21px; font-weight: 750; letter-spacing: -.02em; }
-  .cb-t span { display: block; margin-top: 5px; color: var(--ink-dim); font-size: 14px; }
-
-  .zs { will-change: transform; transform-origin: 50% 14%; }
+  @media (max-width: 900px) { .leist-grid { grid-template-columns: 1fr; } .l-incl ul { grid-template-columns: 1fr; } }.zs { will-change: transform; transform-origin: 50% 14%; }
   .rv { opacity: 0; transform: translateY(40px) scale(.96); transition: opacity .95s cubic-bezier(.16,.7,.2,1), transform .95s cubic-bezier(.16,.7,.2,1); }
   .rv.on { opacity: 1; transform: none; }
   .rv.d1 { transition-delay: .09s; } .rv.d2 { transition-delay: .18s; } .rv.d3 { transition-delay: .27s; }
@@ -1390,8 +1104,8 @@
     .grain { opacity: .03; }
 
     /* Sprungziele dürfen nicht unter der Navigationsleiste landen */
-    #top, #wasbauen, #vision, #system, #dynamik, #ki, #arbeiten, #leistungen,
-    #ablauf, #faq, #kontakt, #einsatz, #automatik, #vonunten, #zahlen { scroll-margin-top: 76px; }
+    #top, #wasbauen, #vision, #system, #dynamik, #ki, #leistungen,
+    #ablauf, #faq, #kontakt { scroll-margin-top: 76px; }
 
     /* Mockups auf Touch-Breiten zwingen. `fr`-Spalten und feste Seitenleisten
        wachsen sonst auf die Mindestbreite ihres Inhalts und schieben die
@@ -1445,16 +1159,16 @@
       padding: 12px 0 10px; font-size: 14.5px; font-weight: 600; color: var(--ink-dim); }
     .ctas .lnk:active, .pn-cta .lnk:active { color: var(--lime); }
 
-    .hero .ctas, .pn-cta, .websec .ctas { flex-direction: column; align-items: stretch; gap: 2px; }
-    .hero .ctas .bttn, .pn-cta .bttn, .websec .ctas .bttn, .cb-in .bttn, .mn-cta .bttn { width: 100%; }
+    .hero .ctas, .pn-cta { flex-direction: column; align-items: stretch; gap: 2px; }
+    .hero .ctas .bttn, .pn-cta .bttn, .mn-cta .bttn { width: 100%; }
 
     .mswitch button { padding: 9px 15px; font-size: 12.5px; min-height: 38px; }
     .faq summary { padding: 17px 2px; font-size: 15px; min-height: 54px; }
     .mt { padding: 10px 15px; font-size: 12.5px; min-height: 42px; }
-    .sug, .mnode { padding: 10px 10px 10px 14px; font-size: 12.5px; min-height: 42px; }
-    .sug u, .mnode u { width: 24px; height: 24px; font-size: 15px; }
+    .mnode { padding: 10px 10px 10px 14px; font-size: 12.5px; min-height: 42px; }
+    .mnode u { width: 24px; height: 24px; font-size: 15px; }
     .chat .sugs button, .pc-sugs button { font-size: 12px; padding: 9px 13px; min-height: 40px; }
-    .chat .inp, .pc-in, .mm-own, .mm-send, .vr-input { padding: 6px 6px 6px 14px; }
+    .chat .inp, .pc-in, .mm-own, .mm-send { padding: 6px 6px 6px 14px; }
     .chat .inp .snd, .pc-in .snd { width: 38px; height: 38px; font-size: 16px; }
     .mm-own button { width: 36px; height: 36px; font-size: 19px; }
     .pc-x { width: 34px; height: 34px; font-size: 17px; }
@@ -1468,13 +1182,11 @@
        390 px plakativ und drücken den Inhalt aus dem Bild. --- */
     .hero h1 { font-size: 34px; line-height: 1.06; letter-spacing: -.03em; }
     .hero .sub { font-size: 14.5px; line-height: 1.5; margin-top: 14px; max-width: 340px; }
-    .hero .ctas { margin-top: 22px; }
-    .eyebrow { font-size: 9.5px; padding: 6px 13px; margin-bottom: 20px; }
-    .sec-head h2 { font-size: 27px; line-height: 1.1; }
+    .hero .ctas { margin-top: 22px; }    .sec-head h2 { font-size: 27px; line-height: 1.1; }
     .sec-head p { font-size: 14px; line-height: 1.55; margin-top: 12px; }
-    .sec-head .k, .dyn-txt .k, .ki-txt .k, .w-txt .k, .pn-txt .k, .aud-tile .k { font-size: 9.5px; }
-    .dyn-txt h3, .ki-txt h3, .w-txt h3, .pn-txt h3 { font-size: 22px; line-height: 1.14; margin-top: 10px; }
-    .dyn-txt p, .ki-txt p, .w-txt p { font-size: 14.5px; line-height: 1.6; margin-top: 12px; }
+    .sec-head .k, .dyn-txt .k, .ki-txt .k, .pn-txt .k { font-size: 9.5px; }
+    .dyn-txt h3, .ki-txt h3, .pn-txt h3 { font-size: 22px; line-height: 1.14; margin-top: 10px; }
+    .dyn-txt p, .ki-txt p { font-size: 14.5px; line-height: 1.6; margin-top: 12px; }
     .dyn-li { margin-top: 20px; gap: 13px; }
     .dyn-li .it b { font-size: 14.5px; }
     .dyn-li .it span { font-size: 13px; line-height: 1.5; }
@@ -1483,16 +1195,8 @@
     .l-incl li b { font-size: 14px; } .l-incl li span { font-size: 12.5px; }
     .l-incl ul { gap: 14px; } .l-incl .t2 { margin-bottom: 16px; }
     .l-hi .big { font-size: 24px; } .l-hi p { font-size: 13px; margin-top: 11px; }
-    .l-mini b { font-size: 14px; } .l-mini span { font-size: 12.5px; }
-    .al b { font-size: 13.5px; } .al span { font-size: 12.5px; }
-    .af-node b { font-size: 14.5px; } .af-node span { font-size: 12.5px; }
-    .af-node { padding: 10px 0; } .af-node .aic { width: 28px; height: 28px; }
-    .st-i b { font-size: 17px; } .st-i span { font-size: 13.5px; }
-    .faq .a { font-size: 14.5px; padding-bottom: 22px; }
-    .num .v { font-size: 34px; } .num .l { font-size: 12.5px; margin-top: 6px; }
-    .aud-tile h3 { font-size: 22px; } .aud-tile p, .final p { font-size: 14.5px; }
-    .cb-t b { font-size: 18px; } .cb-t span { font-size: 13.5px; }
-    .final h2 { font-size: 32px; line-height: 1.06; }
+    .l-mini b { font-size: 14px; } .l-mini span { font-size: 12.5px; }.st-i b { font-size: 17px; } .st-i span { font-size: 13.5px; }
+    .faq .a { font-size: 14.5px; padding-bottom: 22px; }.final p { font-size: 14.5px; }.final h2 { font-size: 32px; line-height: 1.06; }
     .final .k, .final .micro { font-size: 9.5px; }
     .statement h2 { font-size: 24px; line-height: 1.2; }
     /* Dateinamen wie «Offerte_Weber_Badsanierung.pdf» bieten keine Trennstelle */
@@ -1501,65 +1205,19 @@
     .pc-bd .bub { font-size: 13px; }
     .mm-empty { font-size: 13px; }
     .vr-note, .mm-sum { font-size: 12.5px; }
-    footer { font-size: 10px; }
-
-    /* Merkmalslisten laufen seitlich weiter statt umzubrechen — spart Höhe
-       und ist auf dem Telefon die gewohnte Geste. */
-    .w-chips, .a-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-    .w-chips::-webkit-scrollbar, .a-chips::-webkit-scrollbar { display: none; }
-    .w-chips span, .a-chips span { flex: none; }
-    .w-chips span { font-size: 11px; padding: 7px 12px; }
-    .a-chips span { font-size: 11.5px; padding: 7px 12px; }
-
-    /* iOS zoomt bei Eingabefeldern unter 16px automatisch hinein */
-    input, .pc-in input, .chat .inp input, .mm-own input, .mm-send input, .vr-input input, .mm-core input { font-size: 16px; }
+    footer { font-size: 10px; }/* iOS zoomt bei Eingabefeldern unter 16px automatisch hinein */
+    input, .pc-in input, .chat .inp input, .mm-own input, .mm-send input, .mm-core input { font-size: 16px; }
     .mm-core input { font-size: 17px; }
 
     /* --- 5. Raster: dichter Rhythmus in px. Desktop-Weissraum wirkt am
        Telefon wie eine leere Seite zwischen den Abschnitten. --- */
-    .build, .vision, .dyn, .ki-sec, .vonunten, .autosec, .works, .leist, .ctaband, .websec, .aud {
+    .build, .vision, .dyn, .ki-sec, .leist {
       padding-left: 18px; padding-right: 18px; }
-    .dyn, .ki-sec, .vonunten, .autosec, .vision, .build { padding-top: 44px; padding-bottom: 44px; }
-    .works { padding-top: 44px; padding-bottom: 16px; }
-    .leist { padding-top: 40px; padding-bottom: 32px; }
-    .ctaband { padding-top: 16px; padding-bottom: 48px; }
-    .nums { padding: 44px 18px; }
-    .steps-sec { padding: 48px 18px; }
+    .dyn, .ki-sec, .vision, .build { padding-top: 44px; padding-bottom: 44px; }    .leist { padding-top: 40px; padding-bottom: 32px; }.steps-sec { padding: 48px 18px; }
     .faq { padding: 24px 18px 52px; }
     .statement { padding: 80px 20px; }
     .final { padding: 72px 20px 64px; }
-    .sec-head { margin-bottom: 26px; }
-
-    /* --- 5c. Beispiele als Wisch-Karussell. Untereinander gestapelt füllten
-       die vier Beispiele rund vier Bildschirmhöhen; nebeneinander bleibt der
-       Vergleich in Reichweite und die Geste ist am Telefon die gewohnte. --- */
-    .works-track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch; scrollbar-width: none; align-items: stretch; }
-    .works-track::-webkit-scrollbar { display: none; }
-    .work { flex: 0 0 88%; scroll-snap-align: center; padding: 0; gap: 14px;
-      border: 1px solid var(--line); border-radius: 18px; padding: 18px 16px 20px;
-      background: linear-gradient(180deg, #0e0e12, #060608); }
-    /* In der Karte steht der Text oben, unabhängig vom Wechselrhythmus */
-    .work.flip .w-txt, .work .w-txt { order: 1; }
-    .work.flip .w-vis, .work .w-vis { order: 2; }
-    .w-txt p { margin-top: 10px; }
-    .w-chips { margin-top: 16px; }
-    /* Die Mockups sind auf Desktop-Höhen ausgelegt; in einer Wisch-Karte
-       soll eine Karte ungefähr eine Bildschirmhöhe belegen. */
-    .work .lap.small .ui { min-height: 200px; }
-    .work .u2 { min-height: 200px !important; }   /* überschreibt das Höhen-Attribut im Markup */
-    .work .ui-main { gap: 9px; padding: 12px; }
-    .work .rows { gap: 6px; }
-    .work .chart { min-height: 74px; padding: 10px; }
-    .work .u2 { padding: 12px; gap: 7px; }
-    /* 74vw bezieht sich auf den Bildschirm, nicht auf die schmalere Karte */
-    .work .ph { width: min(200px, 64%); }
-    .works-dots { display: flex; justify-content: center; gap: 7px; margin-top: 18px; }
-    .works-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2);
-      transition: background .3s, transform .3s; }
-    .works-dots i.on { background: var(--lime); transform: scale(1.25); }
-    .nums-in { gap: 26px 14px; }
-    .ph-row { row-gap: 26px; }
+    .sec-head { margin-bottom: 26px; }/* In der Karte steht der Text oben { order: 1; }/* 74vw bezieht sich auf den Bildschirm { width: min(200px, 64%); }.ph-row { row-gap: 26px; }
     .ph-line { margin-top: 40px; }
     .pn-cta { margin-top: 20px; }
     .pn-stats { margin-top: 18px; }
@@ -1605,43 +1263,27 @@
     .pn-stats { gap: 7px; }
     .pn-stats div { padding: 10px 8px; border-radius: 11px; }
     .pn-stats b { font-size: 15px; }
-    .pn-stats span { font-size: 10px; }
-    .auto-flow { padding: 16px 14px 16px 18px; border-radius: 16px; }
-    .af-line { left: 33px; }
-    .l-incl { padding: 20px 16px; border-radius: 18px; }
+    .pn-stats span { font-size: 10px; }.l-incl { padding: 20px 16px; border-radius: 18px; }
     .l-hi { padding: 20px 16px; border-radius: 18px; }
     .l-mini { padding: 16px; border-radius: 14px; }
     .l-side { gap: 10px; }
-    .leist-grid { gap: 10px; }
-    .aud-tile { padding: 22px 18px; border-radius: 18px; }
-    .aud-grid { gap: 10px; }
-    .cb-in { flex-direction: column; align-items: stretch; text-align: center;
-      padding: 20px 16px; border-radius: 18px; gap: 14px; }
-    footer { flex-direction: column; text-align: center; gap: 8px; padding: 22px 18px; }
+    .leist-grid { gap: 10px; }footer { flex-direction: column; text-align: center; gap: 8px; padding: 22px 18px; }
 
     /* --- 7. Gerätemodelle: am Handy zeigen wir das Wesentliche gross --- */
     .kpis { gap: 8px; }
     .kpi { padding: 11px 12px; }
     .kpi .v { font-size: 17px; }
-    .kpi .l { font-size: 9.5px; }
-    .fr-lap { width: 94vw; }
-    .fs { padding: 15px; gap: 11px; }
-    .fscreens { min-height: 420px; }
-    .fs .aw-pos, .fs .aw-tot { font-size: 13px; }
-    .u2r { font-size: 12px; padding: 10px 11px; }
-
-    /* Modell-Kopf unter die Navigationsleiste; Bildtext wächst nach oben,
-       damit er nicht unter den schwebenden Chat-Knopf läuft */
-    .model-head, .fr-head { top: 74px; }
+    .kpi .l { font-size: 9.5px; }/* Modell-Kopf unter die Navigationsleiste; Bildtext wächst nach oben, damit er nicht unter den schwebenden Chat-Knopf läuft */
+    .model-head { top: 74px; }
     .floors { top: 108px; }
     .layer .tag { left: 0; top: -14px; font-size: 9px; padding: 4px 8px; }
-    .model-cap, .fr-caps { bottom: 96px; height: 0; }
+    .model-cap { bottom: 96px; height: 0; }
     /* Kürzere Blende: sonst stehen beim Wechsel zwei Bildtexte übereinander */
-    .model-cap .c, .fr-grp .fc { width: min(92vw, 660px); bottom: 0; top: auto; transition: opacity .22s ease; }
-    .model-cap b, .fr-grp .fc b { font-size: 18px; }
-    .model-cap span.s, .fr-grp .fc .s { font-size: 12.5px; margin-top: 5px; }
-    .model-cap .k, .fr-grp .fc .k { font-size: 9px; margin-bottom: 7px; }
-    .model-head .k, .fr-head .k { font-size: 9px; }
+    .model-cap .c { width: min(92vw, 660px); bottom: 0; top: auto; transition: opacity .22s ease; }
+    .model-cap b { font-size: 18px; }
+    .model-cap span.s { font-size: 12.5px; margin-top: 5px; }
+    .model-cap .k { font-size: 9px; margin-bottom: 7px; }
+    .model-head .k { font-size: 9px; }
 
     /* Der Marker sass zu tief unter der Zeile */
     .hero h1 .hl, .final h2 .hl {
@@ -1690,12 +1332,9 @@
   @media (max-width: 420px) {
     .hero h1 { font-size: 31px; }
     .sec-head h2 { font-size: 25px; }
-    .dyn-txt h3, .ki-txt h3, .w-txt h3, .pn-txt h3 { font-size: 20.5px; }
+    .dyn-txt h3, .ki-txt h3, .pn-txt h3 { font-size: 20.5px; }
     .final h2 { font-size: 29px; }
-    .pk-tt { font-size: 20px; }
-    .num .v { font-size: 30px; }
-    .nums-in { gap: 22px 12px; }
-  }
+    .pk-tt { font-size: 20px; }}
 
   /* ==========================================================
      MOBILE V2 — eigenständige Oberflächen statt Desktop-Skalierung
@@ -1940,7 +1579,6 @@
       <a href="#vision">Visionroom</a>
       <a href="#dynamik">Dynamik</a>
       <a href="#ki">KI</a>
-      <a href="#arbeiten">Arbeiten</a>
       <a href="#leistungen">Leistungen</a>
       <span class="mswitch" role="group" aria-label="Zielgruppe">
         <button type="button" data-m="biz" class="on">Unternehmen</button>
@@ -1968,10 +1606,9 @@
     <a href="#system"><span class="no">04</span>System</a>
     <a href="#dynamik"><span class="no">05</span>Dynamik</a>
     <a href="#ki"><span class="no">06</span>KI</a>
-    <a href="#arbeiten"><span class="no">07</span>Beispiele</a>
-    <a href="#leistungen"><span class="no">08</span>Leistungen</a>
-    <a href="#ablauf"><span class="no">09</span>Ablauf</a>
-    <a href="#faq"><span class="no">10</span>Fragen</a>
+    <a href="#leistungen"><span class="no">07</span>Leistungen</a>
+    <a href="#ablauf"><span class="no">08</span>Ablauf</a>
+    <a href="#faq"><span class="no">09</span>Fragen</a>
   </nav>
   <div class="mn-cta"><a class="bttn" href="#kontakt">Erstgespräch vereinbaren</a></div>
   <div class="mn-mail"><a href="mailto:contact@laurin-rusterholz.ch">contact@laurin-rusterholz.ch</a></div>
@@ -2456,98 +2093,16 @@
 </section>
 
 
-<!-- ================= IM EINSATZ (Laptop-Frame) ================= -->
-<div class="frame-scroll" id="einsatz">
-  <div class="frame-stage">
-    <div class="fr-head"><span class="k" id="frTag">Ein Tag mit FlowerTech</span></div>
-    <div class="lap fr-lap" id="frameLap">
-      <div class="lap-lid"><span class="lap-cam"></span>
-        <div class="lap-scr">
-          <div class="fscreens">
-            <div class="fs on" data-m="biz" data-i="0">
-              <div class="u2t"><b>Guten Morgen, Marco</b><span class="chip">● Alles bereit</span></div>
-              <div class="kpis">
-                <div class="kpi"><div class="l">Termine heute</div><div class="v">6</div><div class="d a">2 neu</div></div>
-                <div class="kpi"><div class="l">Offerten offen</div><div class="v">7</div><div class="d b">3 von KI</div></div>
-                <div class="kpi"><div class="l">Offene Posten</div><div class="v">4'820</div><div class="d c">↓ 38 %</div></div>
-              </div>
-              <div class="chart"><b style="height:40%"></b><b style="height:56%"></b><b style="height:46%"></b><b style="height:72%"></b><b style="height:60%"></b><b style="height:86%"></b><b style="height:68%"></b><b style="height:100%"></b></div>
-            </div>
-            <div class="fs" data-m="biz" data-i="1">
-              <div class="u2t"><b>Offerte #2041 — Fam. Weber</b><span class="chip">● KI-Entwurf bereit</span></div>
-              <div class="aw-pos"><span>Demontage &amp; Entsorgung</span><em>CHF 2'150</em></div>
-              <div class="aw-pos"><span>Sanitär-Installation</span><em>CHF 6'890</em></div>
-              <div class="aw-pos"><span>Plattenarbeiten</span><em>CHF 5'400</em></div>
-              <div class="aw-tot"><span>Total exkl. MwSt.</span><em>CHF 17'840</em></div>
-              <div class="aw-act"><span class="bttn sm2">Freigeben &amp; senden</span><span class="lnk2">Anpassen</span></div>
-            </div>
-            <div class="fs" data-m="biz" data-i="2">
-              <div class="u2t"><b>Buchhaltung — Juli</b><span class="chip">● Abschluss bereit</span></div>
-              <div class="kpis">
-                <div class="kpi"><div class="l">Einnahmen</div><div class="v">48'250</div><div class="d a">↑ 12 %</div></div>
-                <div class="kpi"><div class="l">Ausgaben</div><div class="v">19'870</div><div class="d b">OK</div></div>
-                <div class="kpi"><div class="l">Gewinn</div><div class="v">28'380</div><div class="d a">↑ 18 %</div></div>
-              </div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--pink),var(--orange))"></i><span>Mahnung #114 vorbereitet</span><em class="st v">1 Klick</em></div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--lime),var(--cyan))"></i><span>14 Belege automatisch verbucht</span><em class="st g">erledigt</em></div>
-            </div>
-            <div class="fs" data-m="priv" data-i="0">
-              <div class="u2t"><b>Posteingang</b><span class="chip">● sortiert um 08:00</span></div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--lime),var(--cyan))"></i><span>Vermieterin — Nebenkosten</span><em class="st g">wichtig</em></div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--cyan),var(--blue))"></i><span>Verein — Training Samstag</span><em class="st b">Zusage?</em></div>
-              <div class="u2r" style="opacity:.55"><i class="av4" style="background:rgba(255,255,255,.2)"></i><span>Newsletter (12)</span><em class="st b">abgelegt</em></div>
-            </div>
-            <div class="fs" data-m="priv" data-i="1">
-              <div class="u2t"><b>Antwort — Vermieterin</b><span class="chip">● dein Ton</span></div>
-              <p class="aw-mailtxt">«Guten Tag Frau Huber, danke für die Abrechnung. Ich schaue die Unterlagen bis Freitag an und melde mich bei Fragen. Freundliche Grüsse»</p>
-              <div class="aw-act"><span class="bttn sm2">Senden</span><span class="lnk2">Anpassen</span></div>
-            </div>
-            <div class="fs" data-m="priv" data-i="2">
-              <div class="u2t"><b>FlowerFit — Abend</b><span class="chip">● Ziel erreicht</span></div>
-              <div class="fa-main" style="padding:0">
-                <div class="fit-ring big"><i></i><em><b>12'804</b><span>Schritte</span></em></div>
-                <div class="fa-stats">
-                  <div><b>734</b><span>kcal</span></div><div><b>9.8</b><span>km</span></div>
-                  <div><b>61</b><span>Aktiv-Min.</span></div><div><b>4/4</b><span>Wochenziel</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="lap-base"></div>
-      <div class="lap-shadow"></div>
-    </div>
-    <div class="fr-caps">
-      <div class="fr-grp" data-only="biz">
-        <div class="fc on"><span class="k" style="color:var(--lime)">07:30</span><b>Ihre Übersicht steht.</b><span class="s">Alles Wichtige, bevor der Tag beginnt.</span></div>
-        <div class="fc"><span class="k" style="color:var(--pink)">10:12</span><b>Offerte in 30 Sekunden.</b><span class="s">KI entwirft — Sie geben frei.</span></div>
-        <div class="fc"><span class="k" style="color:var(--cyan)">17:00</span><b>Monat abgeschlossen.</b><span class="s">Buchhaltung inklusive Mahnungen — erledigt.</span></div>
-      </div>
-      <div class="fr-grp" data-only="priv">
-        <div class="fc on"><span class="k" style="color:var(--lime)">08:00</span><b>Posteingang sortiert.</b><span class="s">Wichtiges oben, Rest abgelegt.</span></div>
-        <div class="fc"><span class="k" style="color:var(--pink)">08:02</span><b>Antwort liegt bereit.</b><span class="s">In deinem Ton — du gibst nur frei.</span></div>
-        <div class="fc"><span class="k" style="color:var(--cyan)">18:30</span><b>Training geloggt.</b><span class="s">Wochenziel erreicht — automatisch erfasst.</span></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ================= DYNAMIK ================= -->
 <section class="dyn zs" id="dynamik">
-  <div class="sec-head rv">
-    <span class="k" style="color:var(--lime)">Software, die mitwächst</span>
-    <h2>Software, die sich<br>jede Woche bewegt.</h2>
-    <p>Ihr Betrieb ändert sich ständig. Ihre Software sollte das auch.</p>
-  </div>
   <div class="dyn-grid">
     <div class="dyn-txt rv">
-      <span class="k">Dynamik statt Stillstand</span>
-      <h3>Am Montag gewünscht. Am Freitag live.</h3>
-      <p>FlowerTech-Apps sind auf Veränderung gebaut: Neue Felder, neue Ansichten, neue Automatik — Änderungen werden im Wochentakt umgesetzt, ohne Projektanträge und ohne Wartezeit.</p>
+      <span class="k" style="color:var(--lime)">Software, die mitwächst</span>
+      <h3>Am Montag gewünscht.<br>Am Freitag live.</h3>
+      <p>Ihr Betrieb ändert sich ständig — Ihre Software sollte das auch. Neue Felder, neue Ansichten, neue Automatik: Änderungen laufen im Wochentakt, ohne Projektanträge und ohne Wartezeit.</p>
       <div class="dyn-li">
-        <div class="it"><span class="n">01</span><div><b>Wöchentlicher Änderungstakt</b><span>Kleine Anpassungen laufend, grössere gebündelt — Ihre App bleibt nie stehen.</span></div></div>
-        <div class="it"><span class="n">02</span><div><b>Jede Person, eigenes Programm</b><span>Module ein- und ausschalten, Ansichten verfeinern — pro Mitarbeiter, ohne Entwickler.</span></div></div>
+        <div class="it"><span class="n">01</span><div><b>Jede Person, eigenes Programm</b><span>Module ein- und ausschalten, Ansichten verfeinern — pro Mitarbeiter, ohne Entwickler.</span></div></div>
+        <div class="it"><span class="n">02</span><div><b>Wünsche direkt aus dem Team</b><span>Jede Person schreibt ins Wunsch-Board, was im Alltag fehlt. Wir bündeln, priorisieren, liefern.</span></div></div>
         <div class="it"><span class="n">03</span><div><b>Wächst mit dem Betrieb</b><span>Neues Team, neues Angebot, neuer Standort? Die App zieht einfach mit.</span></div></div>
       </div>
     </div>
@@ -2587,76 +2142,6 @@
 </section>
 
 
-<!-- ================= VON UNTEN ================= -->
-<section class="vonunten zs" id="vonunten">
-  <div class="sec-head rv">
-    <span class="k" style="color:var(--lime)">So entsteht Ihr Programm</span>
-    <h2>Von unten gebaut.<br>Nicht von oben verordnet.</h2>
-    <p>FlowerTech beginnt nicht beim Wunschzettel der Chefetage — sondern bei den Leuten, die täglich damit arbeiten.</p>
-  </div>
-  <div class="dyn-grid">
-    <div class="dyn-txt rv">
-      <span class="k">Mitreden statt hinnehmen</span>
-      <h3>Ihr Team schreibt. Wir bauen.</h3>
-      <p>Direkt in der App gibt es ein Wunsch-Board: Jede Person hält fest, was sie im Alltag braucht — vom fehlenden Filter bis zur neuen Automatik. Wir bündeln, priorisieren und liefern im Wochentakt.</p>
-      <div class="dyn-li">
-        <div class="it"><span class="n">01</span><div><b>Jede Person redet mit</b><span>Wer damit arbeitet, weiss am besten, was fehlt — und schreibt es direkt rein.</span></div></div>
-        <div class="it"><span class="n">02</span><div><b>Wir bündeln &amp; priorisieren</b><span>Was vielen hilft, kommt zuerst. Transparent für alle sichtbar.</span></div></div>
-        <div class="it"><span class="n">03</span><div><b>Freitag ist Liefertag</b><span>Wünsche werden im Wochentakt umgesetzt — das Team sieht: Mitreden wirkt.</span></div></div>
-      </div>
-    </div>
-    <div class="rv d1">
-      <div class="wboard">
-        <div class="wb-hd"><b>Wunsch-Board</b><span class="chip">● Team Meier · 3 offen</span></div>
-        <div class="wb-in"><span>Was brauchst du im Alltag? …</span><b>↑</b></div>
-        <div class="wb-li"><span class="wb-vote">▲ 4</span><div class="wb-tx"><b>Fotos direkt am Auftrag speichern</b><span>Anna · Büro</span></div><em class="st g">Kommt Freitag</em></div>
-        <div class="wb-li"><span class="wb-vote">▲ 3</span><div class="wb-tx"><b>Materialliste als PDF für Lieferanten</b><span>Marco · Montage</span></div><em class="st b">Geplant</em></div>
-        <div class="wb-li"><span class="wb-vote">▲ 2</span><div class="wb-tx"><b>Stunden direkt auf der Baustelle erfassen</b><span>Lea · Lernende</span></div><em class="st v">In Abklärung</em></div>
-        <div class="wb-ft">Umgesetzt in den letzten 4 Wochen: <b>11 Wünsche</b></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= AUTOMATISIERUNG ================= -->
-<section class="autosec zs" id="automatik">
-  <div class="sec-head rv">
-    <span class="k" style="color:var(--pink)">Automatisierung</span>
-    <h2>Läuft. Ohne Sie.</h2>
-    <p>Die grössten Zeitfresser übernehmen wir zuerst — jede Automatik entsteht aus einem echten Wunsch aus dem Team.</p>
-  </div>
-  <div class="dyn-grid">
-    <div class="rv">
-      <div class="auto-flow">
-        <div class="af-line"><i class="af-dot"></i></div>
-        <div class="af-node"><span class="aic" style="background:rgba(200,255,46,.16)"><i style="background:var(--lime)"></i></span><div><b>Auslöser</b><span class="vbt">Anfrage kommt rein · Rechnung wird fällig</span><span class="vpt">Training beendet · Mail kommt rein</span></div></div>
-        <div class="af-node"><span class="aic" style="background:rgba(255,62,165,.16)"><i style="background:var(--pink)"></i></span><div><b>FlowerTech handelt</b><span class="vbt">Offerte entworfen, Termin bestätigt, Mahnung vorbereitet</span><span class="vpt">Einheit geloggt, Mail sortiert, Antwort entworfen</span></div></div>
-        <div class="af-node"><span class="aic" style="background:rgba(37,213,255,.15)"><i style="background:var(--cyan)"></i></span><div><b>Sie geben frei</b><span>Ein Klick — oder ganz automatisch, wenn Sie wollen.</span></div></div>
-        <div class="af-node"><span class="aic" style="background:rgba(255,122,26,.16)"><i style="background:var(--orange)"></i></span><div><b>Sauber dokumentiert</b><span>Alles nachvollziehbar in Ihren Daten.</span></div></div>
-      </div>
-    </div>
-    <div class="dyn-txt rv d1">
-      <span class="k">Was bei Ihnen automatisch läuft</span>
-      <div class="auto-list" data-only="biz">
-        <div class="al"><b>Offerten nachfassen</b><span>freundlich, zur richtigen Zeit</span></div>
-        <div class="al"><b>Rechnungen erinnern</b><span>Mahnlauf inklusive Eskalation</span></div>
-        <div class="al"><b>Termine bestätigen &amp; erinnern</b><span>weniger No-Shows</span></div>
-        <div class="al"><b>Belege ablegen &amp; verbuchen</b><span>per Foto, MwSt.-fertig</span></div>
-        <div class="al"><b>Lager melden</b><span>bevor etwas ausgeht</span></div>
-        <div class="al"><b>Wochenreport am Freitag</b><span>Zahlen, Termine, offene Punkte</span></div>
-      </div>
-      <div class="auto-list" data-only="priv">
-        <div class="al"><b>Trainings loggen</b><span>Smartwatch erkennt, App erfasst</span></div>
-        <div class="al"><b>Mails sortieren</b><span>Wichtiges zuerst, Newsletter ins Archiv</span></div>
-        <div class="al"><b>Antworten entwerfen</b><span>in deinem Ton, du gibst frei</span></div>
-        <div class="al"><b>Budget kategorisieren</b><span>Ausgaben automatisch zugeordnet</span></div>
-        <div class="al"><b>Erinnerungen</b><span>Training, Rechnungen, Termine</span></div>
-        <div class="al"><b>Wochenrückblick</b><span>Sonntagabend, automatisch</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ================= KI ================= -->
 <section class="ki-sec zs" id="ki">
   <div class="ki-grid">
@@ -2695,226 +2180,6 @@
   </div>
 </section>
 
-<!-- ================= ARBEITEN ================= -->
-<section class="works zs" id="arbeiten">
-  <div class="sec-head rv">
-    <span class="k" style="color:var(--pink)">Arbeiten</span>
-    <h2>So sieht das<br>in echt aus.</h2>
-    <p>Drei Beispiele, wie mitwachsende Software im Alltag wirkt.</p>
-  </div>
-
-  <!-- Träger: am Desktop per display:contents unsichtbar, am Handy Wisch-Spur -->
-  <div class="works-track" id="worksTrack">
-  <div class="work" data-only="biz">
-    <div class="w-txt rv">
-      <span class="k" style="color:var(--lime)">Beispiel 01 · Handwerk</span>
-      <h3>Auftrags&shy;verwaltung, die mitdenkt.</h3>
-      <p>Von der Anfrage bis zur bezahlten Rechnung in einer App. Die KI entwirft Offerten, die Automatik fasst nach — nichts geht vergessen.</p>
-      <div class="w-chips">
-        <span><b style="color:var(--lime)">30 Sek.</b> pro Offerte</span>
-        <span><b style="color:var(--lime)">KI</b> schreibt Entwürfe</span>
-        <span><b style="color:var(--lime)">0</b> vergessene Nachfassen</span>
-      </div>
-    </div>
-    <div class="w-vis rv d1" data-par="26">
-      <div class="w-glow" style="background: radial-gradient(ellipse 55% 55% at 50% 55%, rgba(200,255,46,.13), transparent 70%);"></div>
-      <div class="lap small">
-        <div class="lap-lid">
-          <span class="lap-cam"></span>
-          <div class="lap-scr">
-            <div class="ui">
-              <div class="ui-side">
-                <div class="traffic"><i></i><i></i><i></i></div>
-                <div class="ui-item on"><span class="ic"></span>Aufträge</div>
-                <div class="ui-item"><span class="ic"></span>Offerten<span class="ki">KI</span></div>
-                <div class="ui-item"><span class="ic"></span>Team</div>
-                <div class="ui-item"><span class="ic"></span>Material</div>
-              </div>
-              <div class="ui-main">
-                <div class="ui-top"><span class="t">Diese Woche</span><span class="chip">● 9 Aufträge</span></div>
-                <div class="rows">
-                  <div class="row"><span class="av"></span><span>Sanierung Bad — Fam. Weber</span><span>Team A</span><span class="st b">Mo–Mi</span></div>
-                  <div class="row"><span class="av" style="background:linear-gradient(135deg,var(--cyan),var(--blue))"></span><span>Küche — Restaurant Adler</span><span>Team B</span><span class="st g">Läuft</span></div>
-                  <div class="row"><span class="av" style="background:linear-gradient(135deg,var(--pink),var(--orange))"></span><span>Offerte — Neubau Garage</span><span>KI-Entwurf</span><span class="st v">Prüfen</span></div>
-                  <div class="row"><span class="av"></span><span>Service — Praxis Brunner</span><span>Team A</span><span class="st b">Do</span></div>
-                </div>
-                <div class="chart">
-                  <b style="height:44%"></b><b style="height:62%"></b><b style="height:50%"></b><b style="height:78%"></b>
-                  <b style="height:66%"></b><b style="height:92%"></b><b style="height:74%"></b><b style="height:100%"></b>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="lap-base"></div>
-        <div class="lap-shadow"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="work flip" data-only="biz">
-    <div class="w-txt rv">
-      <span class="k" style="color:var(--pink)">Beispiel 02 · Praxis</span>
-      <h3>Termine, die sich selbst buchen.</h3>
-      <p>Patienten wählen online ihren Termin — Bestätigung und Erinnerung inklusive. Das Telefon bleibt ruhig, der Kalender voll.</p>
-      <div class="w-chips">
-        <span><b style="color:var(--pink)">24/7</b> buchbar</span>
-        <span><b style="color:var(--pink)">−70 %</b> Telefonaufwand</span>
-        <span><b style="color:var(--pink)">Automatische</b> Erinnerungen</span>
-      </div>
-    </div>
-    <div class="w-vis rv d1" data-par="-22">
-      <div class="w-glow" style="background: radial-gradient(ellipse 50% 55% at 50% 50%, rgba(255,62,165,.16), transparent 70%);"></div>
-      <div class="phone-wrap">
-        <div class="ph">
-          <div class="ph-scr">
-            <span class="ph-island"></span>
-            <div class="ph-head"><div class="hi">Praxis Sonnenberg</div><div class="tt">Termin wählen</div></div>
-            <div class="ph-cal">
-              <i></i><i></i><i class="x"></i><i></i><i class="t"></i><i class="x"></i><i></i>
-              <i class="x"></i><i></i><i></i><i class="x"></i><i></i><i></i><i></i>
-            </div>
-            <div class="ph-list">
-              <div class="ph-li"><span class="dot"></span><span class="l1"><span class="a">Kontrolle</span><span class="b2">Dr. Keller · 20 Min.</span></span><span class="tm">09:40</span></div>
-              <div class="ph-li"><span class="dot" style="background:var(--orange);box-shadow:0 0 8px rgba(255,122,26,.8)"></span><span class="l1"><span class="a">Erstgespräch</span><span class="b2">Dr. Keller · 40 Min.</span></span><span class="tm">11:20</span></div>
-            </div>
-            <div class="ph-btn">Termin bestätigen</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="work" data-only="biz">
-    <div class="w-txt rv">
-      <span class="k" style="color:var(--orange)">Beispiel 03 · Gastronomie</span>
-      <h3>Ein Auftritt, der sich täglich anpasst.</h3>
-      <p>Website mit Speisekarte, Reservation und Aktionen — das Team ändert Inhalte selbst, grössere Wünsche sind im Wochentakt live.</p>
-      <div class="w-chips">
-        <span><b style="color:var(--orange)">Karte ändern</b> in 5 Min.</span>
-        <span><b style="color:var(--orange)">Reservationen</b> direkt</span>
-        <span><b style="color:var(--orange)">Wochentakt</b> für Neues</span>
-      </div>
-    </div>
-    <div class="w-vis rv d1" data-par="24">
-      <div class="w-glow" style="background: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(255,122,26,.14), transparent 70%);"></div>
-      <div class="brw">
-        <div class="brw-bar"><div class="traffic"><i></i><i></i><i></i></div><div class="brw-url">cafe-lumen.ch</div><div style="width:47px"></div></div>
-        <div>
-          <div class="site-hero">
-            <div class="sk-k"></div><div class="sk-h"></div><div class="sk-h2"></div>
-            <div class="sk-p"></div><div class="sk-p2"></div><div class="sk-btn"></div>
-          </div>
-          <div class="site-grid">
-            <div class="site-card"><div class="im" style="background:linear-gradient(135deg,rgba(200,255,46,.5),rgba(37,213,255,.35))"></div><div class="t1"></div><div class="t2"></div></div>
-            <div class="site-card"><div class="im" style="background:linear-gradient(135deg,rgba(37,213,255,.45),rgba(55,101,255,.35))"></div><div class="t1"></div><div class="t2"></div></div>
-            <div class="site-card"><div class="im" style="background:linear-gradient(135deg,rgba(255,62,165,.45),rgba(255,122,26,.35))"></div><div class="t1"></div><div class="t2"></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="work flip" data-only="biz">
-    <div class="w-txt rv">
-      <span class="k" style="color:var(--cyan)">Beispiel 04 · Buchhaltung</span>
-      <h3>Belege rein. Abschluss raus.</h3>
-      <p>Belege per Foto, Zahlungen automatisch abgeglichen, Mahnungen vorbereitet — und der Treuhänder-Export mit einem Klick.</p>
-      <div class="w-chips">
-        <span><b style="color:var(--cyan)">Belege</b> per Foto</span>
-        <span><b style="color:var(--cyan)">MwSt.</b> automatisch</span>
-        <span><b style="color:var(--cyan)">Export</b> für Treuhänder</span>
-      </div>
-    </div>
-    <div class="w-vis rv d1" data-par="-20">
-      <div class="w-glow" style="background: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(37,213,255,.16), transparent 70%);"></div>
-      <div class="lap small" data-app="buchhaltung" style="cursor:pointer">
-        <div class="lap-lid">
-          <span class="lap-cam"></span>
-          <div class="lap-scr">
-            <div class="u2" style="min-height:340px">
-              <div class="u2t"><b>Buchhaltung — Juli</b><span class="chip">● MwSt. bereit</span></div>
-              <div class="kpis">
-                <div class="kpi"><div class="l">Einnahmen</div><div class="v">48'250</div><div class="d a">↑ 12 %</div></div>
-                <div class="kpi"><div class="l">Ausgaben</div><div class="v">19'870</div><div class="d b">OK</div></div>
-                <div class="kpi"><div class="l">Gewinn</div><div class="v">28'380</div><div class="d a">↑ 18 %</div></div>
-              </div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--pink),var(--orange))"></i><span>Rechnung #114 — 6 Tage überfällig</span><em class="st v">Mahnung bereit</em></div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--lime),var(--cyan))"></i><span>14 Belege per Foto erfasst</span><em class="st g">verbucht</em></div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--cyan),var(--blue))"></i><span>Treuhänder-Export Q3</span><em class="st b">1 Klick</em></div>
-            </div>
-          </div>
-        </div>
-        <div class="lap-base"></div>
-        <div class="lap-shadow"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="work" data-only="priv">
-    <div class="w-txt rv">
-      <span class="k" style="color:var(--lime)">Beispiel 01 · Privat</span>
-      <h3>Dein Training. Deine App.</h3>
-      <p>Ein Fitnesstracker, der genau das misst, was dir wichtig ist — automatisch geloggt, mit KI-Wochenplan und ohne Abo.</p>
-      <div class="w-chips">
-        <span><b style="color:var(--lime)">Auto-Logging</b> per Smartwatch</span>
-        <span><b style="color:var(--lime)">KI-Plan</b> jede Woche</span>
-        <span><b style="color:var(--lime)">0.–</b> Abo</span>
-      </div>
-    </div>
-    <div class="w-vis rv d1" data-par="24">
-      <div class="w-glow" style="background: radial-gradient(ellipse 50% 55% at 50% 50%, rgba(200,255,46,.16), transparent 70%);"></div>
-      <div class="phone-wrap">
-        <div class="ph" data-app="training" style="cursor:pointer">
-          <div class="ph-scr">
-            <span class="ph-island"></span>
-            <div class="fit-head"><span class="hi">FlowerFit</span><span class="tt">Heute</span></div>
-            <div class="fit-ring"><i></i><em><b>8'432</b><span>Schritte</span></em></div>
-            <div class="fit-stats"><div><b>512</b><span>kcal</span></div><div><b>6.2</b><span>km</span></div><div><b>42</b><span>Min.</span></div></div>
-            <div class="fit-week"><i style="height:38%"></i><i style="height:62%"></i><i style="height:48%"></i><i style="height:80%"></i><i style="height:56%"></i><i style="height:92%"></i><i style="height:70%"></i></div>
-            <div class="ph-btn">Training starten</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="work flip" data-only="priv">
-    <div class="w-txt rv">
-      <span class="k" style="color:var(--orange)">Beispiel 02 · Privat</span>
-      <h3>Deine Mails, vorsortiert.</h3>
-      <p>Eine Mail-App, die Wichtiges nach oben holt, Newsletter ablegt und Antworten in deinem Ton vorschlägt — du gibst nur noch frei.</p>
-      <div class="w-chips">
-        <span><b style="color:var(--orange)">Wichtiges</b> zuerst</span>
-        <span><b style="color:var(--orange)">Antworten</b> per KI</span>
-        <span><b style="color:var(--orange)">1 Klick</b> statt 10 Minuten</span>
-      </div>
-    </div>
-    <div class="w-vis rv d1" data-par="-20">
-      <div class="w-glow" style="background: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(255,122,26,.15), transparent 70%);"></div>
-      <div class="lap small" data-app="mail" style="cursor:pointer">
-        <div class="lap-lid">
-          <span class="lap-cam"></span>
-          <div class="lap-scr">
-            <div class="u2" style="min-height:340px">
-              <div class="u2t"><b>Posteingang</b><span class="chip">● 3 wichtig · 12 abgelegt</span></div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--lime),var(--cyan))"></i><span>Vermieterin — Nebenkosten</span><em class="st g">Antwort bereit</em></div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--cyan),var(--blue))"></i><span>Verein — Training am Samstag</span><em class="st b">Zusage · 1 Klick</em></div>
-              <div class="u2r"><i class="av4" style="background:linear-gradient(135deg,var(--pink),var(--orange))"></i><span>Krankenkasse — Police 2027</span><em class="st v">zusammengefasst</em></div>
-              <div class="u2r" style="opacity:.55"><i class="av4" style="background:rgba(255,255,255,.2)"></i><span>Newsletter (12)</span><em class="st b">automatisch abgelegt</em></div>
-            </div>
-          </div>
-        </div>
-        <div class="lap-base"></div>
-        <div class="lap-shadow"></div>
-      </div>
-    </div>
-  </div>
-  </div>
-  <div class="works-dots" id="worksDots" aria-hidden="true"></div>
-</section>
-
-
 <!-- ================= LEISTUNGEN ================= -->
 <section class="leist zs" id="leistungen">
   <div class="sec-head rv">
@@ -2929,10 +2194,8 @@
         <li><b>Konzept &amp; Design</b><span>Struktur, Look und Texte — auf Ihre Zielgruppe zugeschnitten.</span></li>
         <li><b>Entwicklung</b><span>Website oder Web-App, massgeschneidert statt Baukasten.</span></li>
         <li><b>KI-Integration</b><span>Texte, Offerten, Antworten, Auswertungen — wo es Zeit spart.</span></li>
-        <li><b>Automatisierungen</b><span>Wiederkehrende Abläufe laufen von allein.</span></li>
-        <li><b>Anbindungen</b><span>E-Mail, Kalender, Zahlungen, Buchhaltung.</span></li>
-        <li><b>Schnell auf jedem Gerät</b><span>Handy, Tablet, Desktop — ohne Kompromisse.</span></li>
-        <li><b>Schulung &amp; Übergabe</b><span>Ihr Team kann alles selbst — inklusive Einführung.</span></li>
+        <li><b>Automatisierung &amp; Anbindungen</b><span>Wiederkehrende Abläufe laufen von allein — verbunden mit E-Mail, Kalender, Zahlungen, Buchhaltung.</span></li>
+        <li><b>Schulung &amp; Übergabe</b><span>Ihr Team kann alles selbst — auf Handy, Tablet und Desktop.</span></li>
         <li><b>Alles gehört Ihnen</b><span>Code, Design und Daten — keine Abhängigkeit.</span></li>
       </ul>
     </div>
@@ -2945,24 +2208,6 @@
       <div class="l-mini rv d2"><b>Danach flexibel</b><span>Änderungs-Abo im Wochentakt — monatlich kündbar, kein Zwang.</span></div>
       <div class="l-mini rv d3"><b>Hosting unabhängig</b><span>Wir klären es gemeinsam ab — es läuft direkt auf Sie, nicht über uns.</span></div>
     </div>
-  </div>
-</section>
-
-<!-- ================= CTA-BAND ================= -->
-<section class="ctaband zs rv">
-  <div class="cb-in">
-    <div class="cb-t"><b>Eine Idee im Kopf?</b><span>Erzählen Sie uns davon — Antwort innert 24 Stunden.</span></div>
-    <a class="bttn" href="mailto:contact@laurin-rusterholz.ch">Unverbindlich anfragen</a>
-  </div>
-</section>
-
-<!-- ================= ZAHLEN ================= -->
-<section class="nums zs" id="zahlen">
-  <div class="nums-in">
-    <div class="num rv"><div class="v" data-n="7" data-s=" Tage">0</div><div class="l">von der Idee zum Update</div></div>
-    <div class="num rv d1"><div class="v" data-n="10" data-s="+ h">0</div><div class="l">gespart — pro Woche</div></div>
-    <div class="num rv d2"><div class="v" data-n="100" data-s=" %">0</div><div class="l">Fixpreis. Keine Überraschungen.</div></div>
-    <div class="num rv d3"><div class="v" data-n="1" data-s="">0</div><div class="l">Ansprechpartner. Direkt.</div></div>
   </div>
 </section>
 
@@ -2999,10 +2244,6 @@
     <details>
       <summary>Was kostet das?<span class="pl"></span></summary>
       <div class="a">Jedes Projekt erhält nach dem Erstgespräch einen Fixpreis, abhängig vom Umfang. Im ersten Jahr sind Änderungen im Wochentakt gratis inklusive — danach als monatlich kündbares Paket. Keine versteckten Kosten.</div>
-    </details>
-    <details>
-      <summary>Wer betreibt die App — und wem gehört sie?<span class="pl"></span></summary>
-      <div class="a">FlowerTech entwickelt. Das Hosting klären wir gemeinsam ab — es läuft direkt auf Sie, nicht über uns. So bleiben Sie unabhängig: Code, Design und Daten gehören vollständig Ihnen.</div>
     </details>
     <details>
       <summary>Wie kann mein Team mitreden?<span class="pl"></span></summary>
@@ -3125,20 +2366,6 @@
         </div>
       </div>
 
-      <div class="as" data-s="buchhaltung">
-        <div class="aw-dh"><b>Buchhaltung — Juli 2026</b><span class="chip">● MwSt. vorbereitet</span></div>
-        <div class="kpis">
-          <div class="kpi"><div class="l">Einnahmen</div><div class="v">48'250</div><div class="d a">↑ 12 %</div></div>
-          <div class="kpi"><div class="l">Ausgaben</div><div class="v">19'870</div><div class="d b">im Rahmen</div></div>
-          <div class="kpi"><div class="l">Gewinn</div><div class="v">28'380</div><div class="d a">↑ 18 %</div></div>
-        </div>
-        <div class="aw-list" style="margin-top:12px">
-          <div class="aw-li"><b>Rechnung #114 — Café Lumen</b><span>überfällig seit 6 Tagen</span><em class="st v">Mahnung bereit</em></div>
-          <div class="aw-li"><b>Beleg-Import</b><span>14 Belege per Foto erfasst</span><em class="st g">verbucht</em></div>
-          <div class="aw-li"><b>Treuhänder-Export</b><span>Quartal Q3</span><em class="st b">1 Klick</em></div>
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
@@ -3152,7 +2379,7 @@
   <a href="#system" data-sec="system"><i></i>System</a>
   <a href="#dynamik" data-sec="dynamik"><i></i>Dynamik</a>
   <a href="#ki" data-sec="ki"><i></i>KI</a>
-  <a href="#arbeiten" data-sec="arbeiten"><i></i>Beispiele</a>
+  <a href="#leistungen" data-sec="leistungen"><i></i>Angebot</a>
   <a href="#ablauf" data-sec="ablauf"><i></i>Ablauf</a>
   <a href="#kontakt" data-sec="kontakt"><i></i>Kontakt</a>
 </nav>
@@ -3200,19 +2427,6 @@
   }), { threshold: .15 });
   document.querySelectorAll('.rv').forEach(el => io.observe(el));
 
-  const cio = new IntersectionObserver(es => es.forEach(e => {
-    if (!e.isIntersecting) return;
-    const el = e.target, n = +el.dataset.n, s = el.dataset.s || '';
-    const t0 = performance.now();
-    (function tk(t) {
-      const p = clamp((t-t0)/1300, 0, 1);
-      el.textContent = Math.round(n * easeIO(p)) + s;
-      if (p < 1) requestAnimationFrame(tk);
-    })(t0);
-    cio.unobserve(el);
-  }), { threshold: .6 });
-  document.querySelectorAll('[data-n]').forEach(el => cio.observe(el));
-
   /* Statement */
   const stmt = document.getElementById('stmt');
   stmt.innerHTML = stmt.textContent.trim().split(/\s+/).map(w => {
@@ -3239,11 +2453,8 @@
   const phFill = document.getElementById('phFill');
   const phSecEl = document.getElementById('ablauf');
   const stEls = [0,1,2,3].map(i => document.getElementById('st' + i));
-  let lastPh = -1, lastCap = -1, lastFloor = -2, lastStepF = -1;
+  let lastPh = -1, lastCap = -1, lastFloor = -2;
   const capsB = Array.from(document.querySelectorAll('#modelCap .c'));
-  const frameScroll = document.getElementById('einsatz');
-  const frameLap = document.getElementById('frameLap');
-  const fsEls = Array.from(document.querySelectorAll('.fs'));
   const capsP = Array.from(document.querySelectorAll('#modelCapP .c'));
   const phaseTag = document.getElementById('modelPhaseTag');
   const heroIn = document.getElementById('heroIn');
@@ -3265,7 +2476,6 @@
     loTops = {
       dive: dive.offsetTop, diveH: dive.offsetHeight,
       model: modelScroll.offsetTop, modelH: modelScroll.offsetHeight,
-      fr: frameScroll.offsetTop, frH: frameScroll.offsetHeight,
       stmt: stmtSec.offsetTop, stmtH: stmtSec.offsetHeight,
       ph: phSecEl.offsetTop, phH: phSecEl.offsetHeight
     };
@@ -3533,19 +2743,6 @@
       });
     }
 
-    /* Im Einsatz: Screens wechseln, Laptop atmet */
-    const frTot = Math.max(1, frameScroll.offsetHeight - vh);
-    const fp = clamp((y - frameScroll.offsetTop) / frTot, 0, 1);
-    const stepF = fp < .38 ? 0 : fp < .72 ? 1 : 2;
-    if (!reduced) frameLap.style.transform = 'scale(' + (.94 + easeIO(clamp(fp * 1.3, 0, 1)) * .1) + ')';
-    const privF = document.body.dataset.mode === 'priv';
-    if (stepF !== lastStepF) {
-      lastStepF = stepF;
-      fsEls.forEach(f => f.classList.toggle('on', f.dataset.m === (privF ? 'priv' : 'biz') && +f.dataset.i === stepF));
-      document.querySelectorAll('.fr-grp .fc').forEach((c) => c.classList.remove('on'));
-      document.querySelectorAll('.fr-grp[data-only="' + (privF ? 'priv' : 'biz') + '"] .fc').forEach((c, i) => c.classList.toggle('on', i === stepF));
-    }
-
     const tPh = clamp((vh*.75 - (phSecEl.offsetTop - y)) / Math.max(1, phSecEl.offsetHeight*.9), 0, 1);
     if (Math.abs(tPh - lastPh) > .003) {
       lastPh = tPh;
@@ -3689,34 +2886,13 @@
     document.querySelectorAll('.row').forEach(r => r.addEventListener('click', () => {
       r.classList.add('hit'); setTimeout(() => r.classList.remove('hit'), 650);
     }));
-    /* Phone: Slots wählbar, Tage wählbar, Bestätigen-Button */
-    document.querySelectorAll('.ph').forEach(ph => {
-      const lis = Array.from(ph.querySelectorAll('.ph-li'));
-      lis.forEach(li => li.addEventListener('click', () => {
-        lis.forEach(o => o.classList.remove('sel')); li.classList.add('sel');
-      }));
-      const days = Array.from(ph.querySelectorAll('.ph-cal i'));
-      days.forEach(dy => dy.addEventListener('click', () => {
-        days.forEach(o => o.classList.remove('t')); dy.classList.add('t');
-      }));
-      const btn = ph.querySelector('.ph-btn');
-      if (btn) btn.addEventListener('click', () => {
+    /* Phone im Hero: Knopf quittiert kurz */
+    document.querySelectorAll('.ph .ph-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
         if (btn.classList.contains('ok')) return;
         const orig = btn.textContent;
-        btn.classList.add('ok'); btn.textContent = '✓ Termin bestätigt';
+        btn.classList.add('ok'); btn.textContent = '✓ Training läuft';
         setTimeout(() => { btn.classList.remove('ok'); btn.textContent = orig; }, 2600);
-      });
-    });
-    /* Website-Render: Reservations-Toast */
-    document.querySelectorAll('.site-hero').forEach(sh => {
-      const btn = sh.querySelector('.sk-btn');
-      if (!btn) return;
-      const toast = document.createElement('span');
-      toast.className = 'site-toast'; toast.textContent = 'Reservation eingegangen ✓';
-      sh.appendChild(toast);
-      btn.addEventListener('click', () => {
-        toast.classList.add('on');
-        setTimeout(() => toast.classList.remove('on'), 2200);
       });
     });
     /* Builder: einzelne Module direkt schaltbar */
@@ -3737,8 +2913,7 @@
       if (!rest.classList.contains('locked')) return;
       rest.classList.remove('locked');
       document.body.classList.remove('locked');
-      /* Vorher sind die Karten unsichtbar und liefern keine Masse */
-      if (typeof window.__ftWorks === 'function') window.__ftWorks();
+      /* Erst nach dem Einblenden stehen die Höhen fest */
       setTimeout(() => { if (typeof window.__ftRefresh === 'function') window.__ftRefresh(); }, 120);
       setTimeout(() => { if (typeof window.__ftRefresh === 'function') window.__ftRefresh(); }, 900);
     }
@@ -4077,45 +3252,6 @@
     render(); sync();
   })();
 
-  /* ================= Beispiele: Wisch-Karussell (nur Handy) ================= */
-  (function () {
-    const track = document.getElementById('worksTrack');
-    const dots = document.getElementById('worksDots');
-    if (!track || !dots) return;
-    const cards = Array.from(track.querySelectorAll('.work'));
-    const sichtbar = () => cards.filter(c => c.offsetParent !== null);
-
-    function build() {
-      const v = sichtbar();
-      dots.innerHTML = '';
-      if (window.innerWidth > 760 || v.length < 2) return;
-      v.forEach(() => dots.appendChild(document.createElement('i')));
-      mark();
-    }
-    function mark() {
-      const v = sichtbar();
-      if (!dots.children.length || !v.length) return;
-      const mitte = track.scrollLeft + track.clientWidth / 2;
-      let nah = 0, best = Infinity;
-      v.forEach((c, i) => {
-        const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mitte);
-        if (d < best) { best = d; nah = i; }
-      });
-      Array.from(dots.children).forEach((d, i) => d.classList.toggle('on', i === nah));
-    }
-    let tick = false;
-    track.addEventListener('scroll', () => {
-      if (tick) return; tick = true;
-      requestAnimationFrame(() => { tick = false; mark(); });
-    }, { passive: true });
-    window.addEventListener('resize', build);
-    /* Beim Zielgruppen-Wechsel wechselt der Kartensatz komplett */
-    document.querySelectorAll('.mswitch button, [data-setmode]').forEach(b =>
-      b.addEventListener('click', () => setTimeout(() => { track.scrollLeft = 0; build(); }, 60)));
-    build();
-    window.__ftWorks = build;
-  })();
-
   /* ================= Mobile-Menü ================= */
   (function () {
     const burg = document.getElementById('mBurg');
@@ -4153,7 +3289,7 @@
     const ov = document.getElementById('appOv');
     const title = document.getElementById('awTitle');
     const screens = Array.from(ov.querySelectorAll('.as'));
-    const NAMES = { offerten: 'Offerten', buchung: 'Online-Buchung', kunden: 'Kundenkarte', training: 'Training', mail: 'Mail — vorsortiert', buchhaltung: 'Buchhaltung' };
+    const NAMES = { offerten: 'Offerten', buchung: 'Online-Buchung', kunden: 'Kundenkarte', training: 'Training', mail: 'Mail — vorsortiert' };
     function openApp(name) {
       if (!NAMES[name]) return;
       screens.forEach(sc => sc.classList.toggle('on', sc.dataset.s === name));
