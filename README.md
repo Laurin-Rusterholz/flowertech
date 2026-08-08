@@ -15,8 +15,10 @@ Die aktuelle Website ist bewusst als eigenständige statische Seite gebaut:
 
 - `index.html` – vollständige Website inklusive Styles, Interaktionen und
   inline SVGs
-- `kunde.html` – Kundenseite je Projekt (Bearer-Link `?t=…`) inklusive
-  Abschnitt „Angaben für Ihre Offerte"
+- `fragebogen.html` – öffentlicher Fragebogen je Einladung (`?e=…`). Er ist der
+  Einstieg: erst das Absenden erzeugt in Quantus einen Vorgang
+- `kunde.html` – Kundenportal je Projekt (Bearer-Link `?t=…`): Vorschau,
+  Änderungswünsche, AGB mit Zustimmung, Rückfragen, Fortschritt
 - `netlify.toml` – Netlify-Build- und Security-Header
 - `SECURITY.md` – Sicherheits- und Meldeprozess
 - `tests/` – Prüfungen ohne Build-Tools (`node tests/<datei>.test.mjs`)
@@ -55,14 +57,15 @@ Publish directory: .
 Ohne Abhängigkeiten, direkt mit Node:
 
 ```bash
+node tests/fragebogen.test.mjs
 node tests/kunde-page.test.mjs
 node tests/visionroom.test.mjs
 ```
 
-Beide führen die Seitenlogik wirklich aus (Skriptblock gegen ein DOM-Doppel)
+Alle drei führen die Seitenlogik wirklich aus (Skriptblock gegen ein DOM-Doppel)
 und prüfen zusätzlich statisch, was NICHT passieren darf: keine Zugangsdaten
-im Browser, kein Mail-Entwurf statt echtem Versand, keine Indexierung der
-Kundenseite.
+im Browser, kein Mail-Entwurf statt echtem Versand, keine Indexierung von
+Fragebogen und Kundenportal, keine Vorschau ausserhalb des sandboxed iframe.
 
 ## Qualität
 
