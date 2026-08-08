@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Ihre Angaben — FlowerTech</title>
+<link rel="icon" href="/favicon.svg">
+<style>
+  /* Eigenständig gehalten: diese Seite lädt bewusst nichts von der Hauptseite
+     nach — sie soll auch dann stehen, wenn dort umgebaut wird. */
+  :root{
+    --bg:#07070a; --card:#101018; --line:#1d1d29; --text:#f4f2f8; --muted:#9a94a8;
+    --lime:#c8ff2e; --cyan:#25d5ff; --violet:#a06bff;
+    --ok:#7bd88f; --err:#ff8181; --r:16px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f7f6fa; --card:#fff; --line:#e6e3ee; --text:#14121a; --muted:#66607a }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text)}
+  body{font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 72px}
+  header{display:flex;gap:14px;align-items:center;margin-bottom:22px;flex-wrap:wrap}
+  .mark{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex:none;
+    background:linear-gradient(135deg,rgba(200,255,46,.18),rgba(160,107,255,.22));
+    border:1px solid rgba(160,107,255,.35);font-size:24px}
+  h1{font-size:clamp(21px,4vw,28px);margin:0;letter-spacing:-.02em}
+  h2{font-size:17px;margin:0 0 12px}
+  .sub{color:var(--muted);font-size:14px;margin:3px 0 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:14px}
+  label{display:block;margin-bottom:18px}
+  .lbl{display:block;font-weight:600;margin-bottom:5px;font-size:14px}
+  .req{color:var(--violet);font-weight:700}
+  .hint{display:block;margin-top:6px;font-size:13px;line-height:1.5;color:var(--muted)}
+  input,textarea,select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;
+    background:var(--bg);color:var(--text);font:inherit}
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--violet);outline-offset:1px}
+  textarea{resize:vertical;min-height:96px}
+  [aria-invalid="true"]{border-color:rgba(160,107,255,.65)}
+  button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:14px 22px;cursor:pointer;
+    color:#07070a;background:linear-gradient(135deg,var(--lime),var(--cyan))}
+  button[disabled]{opacity:.5;cursor:progress}
+  button[aria-disabled="true"]{background:var(--line);color:var(--muted);cursor:not-allowed}
+  .need{margin:12px 0 0;font-size:14px;font-weight:600;line-height:1.5}
+  .need::before{content:"→ ";color:var(--violet)}
+  .need.done{font-weight:500;color:var(--muted)}
+  .need.done::before{content:"✓ ";color:var(--lime)}
+  .status{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:14px;display:none}
+  .status.show{display:block}
+  .status.err{background:rgba(255,129,129,.12);border:1px solid rgba(255,129,129,.4);color:var(--err)}
+  .status.ok{background:rgba(123,216,143,.12);border:1px solid rgba(123,216,143,.4);color:var(--ok)}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  footer{color:var(--muted);font-size:13px;text-align:center;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark" aria-hidden="true">🌸</div>
+    <div>
+      <h1 id="title">Ihre Angaben</h1>
+      <p class="sub" id="subtitle">FlowerTech</p>
+    </div>
+  </header>
+
+  <div id="loading" class="card">Fragebogen wird geladen …</div>
+
+  <div id="error" class="card" hidden>
+    <h2 id="errorTitle">Dieser Fragebogen ist gerade nicht verfügbar</h2>
+    <p class="sub" id="errorText"></p>
+  </div>
+
+  <main id="content" hidden>
+    <section class="card">
+      <p class="sub" id="intro"></p>
+    </section>
+
+    <form id="form" class="card" novalidate>
+      <div id="fields"></div>
+      <label class="hp" aria-hidden="true">Bitte leer lassen<input id="hp" tabindex="-1" autocomplete="off"></label>
+      <button type="submit" id="submit" aria-disabled="true" aria-describedby="need">Antworten senden</button>
+      <p class="need" id="need" role="status" aria-live="polite"></p>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+      <p class="sub" style="margin-top:12px">Ihre Angaben gehen direkt zu FlowerTech. Unverbindlich —
+        Sie erhalten eine Rückmeldung, keine Rechnung.</p>
+    </form>
+  </main>
+
+  <footer id="footer">FlowerTech</footer>
+</div>
+
+<script>
+/* Der öffentliche Fragebogen.
+   -----------------------------------------------------------------------
+   Er liest den veröffentlichten Fragebogen (Titel, Einleitung, Fragen) und
+   sendet die Antworten an den abgesicherten Eingang. Er kennt kein Projekt,
+   keine Kundendaten und keine internen IDs — es gibt hier schlicht nichts zu
+   holen. Erst das Absenden erzeugt in Quantus einen Vorgang, und zwar genau
+   einmal: der Idempotenz-Schlüssel hängt serverseitig am Einladungstoken. */
+(function () {
+  "use strict";
+
+  var FORM_BASE = "https://jupidu-36804-default-rtdb.europe-west1.firebasedatabase.app";
+  var PORTAL_ENDPOINT = "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-portal";
+
+  var el = function (id) { return document.getElementById(id); };
+  var esc = function (v) {
+    return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  };
+
+  // Der Einladungstoken. Form wird geprüft, bevor irgendetwas geladen wird.
+  var token = (function () {
+    var raw = new URLSearchParams(location.search).get("e") || "";
+    return /^[A-Za-z0-9_-]{24,64}$/.test(raw) ? raw : "";
+  })();
+
+  var questions = [];
+
+  function fail(title, text) {
+    el("loading").hidden = true;
+    el("content").hidden = true;
+    el("error").hidden = false;
+    el("errorTitle").textContent = title;
+    el("errorText").textContent = text;
+  }
+
+  function load() {
+    if (!token) {
+      return fail("Der Link ist unvollständig",
+        "Bitte öffnen Sie den Link genau so, wie Sie ihn von uns bekommen haben.");
+    }
+    fetch(FORM_BASE + "/flowertech/intakeForms/" + encodeURIComponent(token) + ".json",
+      { cache: "no-store", referrerPolicy: "no-referrer" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("http");
+        return r.json();
+      })
+      .then(function (data) {
+        // Der Leerfall verrät nicht, ob es die Einladung je gab.
+        if (!data || !data.questions || !data.questions.length) {
+          return fail("Dieser Link ist nicht mehr gültig",
+            "Möglicherweise wurde er erneuert. Melden Sie sich kurz bei uns, dann schicken wir Ihnen den aktuellen.");
+        }
+        if (data.status === "closed") {
+          return fail("Dieser Fragebogen ist abgeschlossen",
+            "Melden Sie sich bei uns, wenn Sie noch etwas ergänzen möchten.");
+        }
+        if (data.status === "answered") {
+          return fail("Ihre Antworten sind bei uns",
+            "Dieser Fragebogen wurde bereits ausgefüllt. Wir melden uns — und Sie können jederzeit nachfragen.");
+        }
+        render(data);
+      })
+      .catch(function () {
+        fail("Gerade nicht erreichbar",
+          "Der Fragebogen konnte nicht geladen werden. Bitte versuchen Sie es in ein paar Minuten erneut.");
+      });
+  }
+
+  function fieldHtml(q, i) {
+    var id = "q_" + i;
+    var required = q.required
+      ? ' <span class="req">· Pflichtfeld</span>'
+      : ' <span class="sub" style="font-weight:400">· freiwillig</span>';
+    var attrs = 'id="' + id + '" name="' + esc(q.key) + '"' +
+      (q.required ? ' required aria-required="true" aria-invalid="true"' : "") +
+      (q.hint ? ' aria-describedby="' + id + '_h"' : "");
+    var field;
+    if (q.type === "textarea") field = "<textarea " + attrs + " maxlength=\"4000\"></textarea>";
+    else if (q.type === "select") {
+      field = "<select " + attrs + '><option value="">— bitte wählen —</option>' +
+        (q.options || []).map(function (o) { return '<option value="' + esc(o) + '">' + esc(o) + "</option>"; }).join("") +
+        "</select>";
+    } else {
+      var type = q.type === "email" ? "email" : q.type === "tel" ? "tel"
+        : q.type === "date" ? "date" : q.type === "number" ? "number" : "text";
+      field = '<input type="' + type + '" ' + attrs + ' maxlength="400">';
+    }
+    return '<label for="' + id + '"><span class="lbl">' + esc(q.label) + required + "</span>" +
+      field +
+      (q.hint ? '<span class="hint" id="' + id + '_h">' + esc(q.hint) + "</span>" : "") +
+      "</label>";
+  }
+
+  function render(data) {
+    questions = data.questions;
+    el("loading").hidden = true;
+    el("content").hidden = false;
+    el("title").textContent = data.title || "Ihre Angaben";
+    document.title = (data.title || "Ihre Angaben") + " — FlowerTech";
+    el("subtitle").textContent = (data.company && data.company.name) || "FlowerTech";
+    el("intro").textContent = data.intro || "";
+    el("footer").textContent = (data.company && data.company.name) || "FlowerTech";
+    el("fields").innerHTML = questions.map(fieldHtml).join("");
+    questions.forEach(function (q, i) {
+      var node = el("q_" + i);
+      if (node) node.addEventListener("input", sync);
+      if (node && node.tagName === "SELECT") node.addEventListener("change", sync);
+    });
+    sync();
+  }
+
+  function value(i) {
+    var node = el("q_" + i);
+    return node ? String(node.value || "").trim() : "";
+  }
+
+  // Pflicht ist genau das, was als Pflicht gefragt wurde. Keine künstliche
+  // Mindestlänge: geprüft wird, ob nach dem Trimmen etwas dasteht.
+  function missing() {
+    var out = [];
+    questions.forEach(function (q, i) {
+      var filled = !!value(i);
+      var node = el("q_" + i);
+      if (q.required && node) node.setAttribute("aria-invalid", filled ? "false" : "true");
+      if (q.required && !filled) out.push(q.label);
+    });
+    return out;
+  }
+
+  function sync() {
+    var offen = missing();
+    var ready = offen.length === 0;
+    el("submit").setAttribute("aria-disabled", ready ? "false" : "true");
+    el("need").className = ready ? "need done" : "need";
+    el("need").textContent = ready
+      ? "Danke — das genügt uns. Sie können jetzt senden."
+      : offen.length === 1
+        ? "Noch offen: " + offen[0] + ". Danach können Sie senden."
+        : "Noch offen: " + offen.join(", ") + ". Danach können Sie senden.";
+    return ready;
+  }
+
+  function idemKey(parts) {
+    var basis = parts.join("|");
+    var hash = 5381;
+    for (var i = 0; i < basis.length; i++) hash = ((hash << 5) + hash + basis.charCodeAt(i)) >>> 0;
+    return "ft_" + hash.toString(36) + "_" + basis.length.toString(36);
+  }
+
+  el("form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var status = el("status");
+    var btn = el("submit");
+    if (!sync()) {
+      status.className = "status show err";
+      status.textContent = "Bitte noch ergänzen: " + missing().join(", ") + ".";
+      var first = questions.findIndex(function (q, i) { return q.required && !value(i); });
+      if (first >= 0 && el("q_" + first)) el("q_" + first).focus();
+      return;
+    }
+    var answers = questions.map(function (q, i) {
+      return { key: q.key, label: q.label, type: q.type, role: q.role || "", answer: value(i) };
+    });
+    btn.disabled = true;
+    status.className = "status show ok";
+    status.textContent = "Wird gesendet …";
+    fetch(PORTAL_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: token, kind: "intake",
+        payload: { answers: answers },
+        website: el("hp").value,
+        idempotencyKey: idemKey([token, "intake"]),
+      }),
+    })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (data) {
+          if (!r.ok) throw new Error(data.error || "Senden fehlgeschlagen");
+          return data;
+        });
+      })
+      .then(function (data) {
+        el("fields").innerHTML = "";
+        el("need").textContent = "";
+        btn.hidden = true;
+        status.className = "status show ok";
+        status.textContent = data.duplicate
+          ? "Ihre Antworten sind bereits bei FlowerTech eingegangen. Wir melden uns."
+          : "Danke — Ihre Antworten sind bei FlowerTech eingegangen. Wir melden uns innert 24 h.";
+      })
+      .catch(function (e) {
+        status.className = "status show err";
+        status.textContent = e.message + " Bitte versuchen Sie es gleich nochmals.";
+        btn.disabled = false;
+      });
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
