@@ -82,8 +82,20 @@
   .status.err{background:rgba(255,129,129,.12);border:1px solid rgba(255,129,129,.4);color:var(--err)}
   .status.ok{background:rgba(123,216,143,.12);border:1px solid rgba(123,216,143,.4);color:var(--ok)}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  /* Offertenanfrage: die Pflicht steht sichtbar am Feld und beim Knopf.
+     Ein ausgegrauter Knopf allein erklärt nicht, was noch fehlt. */
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 14px}
+  .hint{display:block;margin-top:6px;font-size:13px;line-height:1.5;color:var(--muted)}
+  .hint b{color:var(--text);font-weight:700}
+  .req{color:var(--violet);font-weight:700}
+  .need{margin:12px 0 0;font-size:14px;font-weight:600;line-height:1.5}
+  .need::before{content:"→ ";color:var(--violet)}
+  .need.done{font-weight:500;color:var(--muted)}
+  .need.done::before{content:"✓ ";color:var(--lime)}
+  textarea[aria-invalid="true"]{border-color:rgba(160,107,255,.65)}
+  button[aria-disabled="true"]{background:var(--line);color:var(--muted);cursor:not-allowed}
   footer{color:var(--muted);font-size:13px;text-align:center;margin-top:26px}
-  @media print{ button,#changeForm,.btnlink{display:none} body{background:#fff;color:#000} }
+  @media print{ button,#changeForm,#quoteForm,.btnlink{display:none} body{background:#fff;color:#000} }
 </style>
 </head>
 <body>
@@ -109,6 +121,50 @@
       <div class="steps" id="steps" role="list"></div>
       <div class="bar" aria-hidden="true"><i id="bar" style="width:0"></i></div>
       <p class="sub" id="closedNote" hidden></p>
+    </section>
+
+    <section class="card" id="offerte">
+      <h2>Angaben für Ihre Offerte</h2>
+      <p class="sub" id="qIntro">Damit wir Ihnen eine passende Offerte rechnen können, brauchen wir kurz Ihre
+        Angaben. Was Sie noch nicht wissen, lassen Sie einfach leer — wir fragen nach.</p>
+      <div class="status" id="qDone" role="status"></div>
+      <form id="quoteForm">
+        <div class="grid2">
+          <label for="qCompany"><span class="lbl">Firma / Organisation</span>
+            <input id="qCompany" maxlength="160" autocomplete="organization"></label>
+          <label for="qName"><span class="lbl">Ansprechperson</span>
+            <input id="qName" maxlength="120" autocomplete="name"></label>
+          <label for="qMail"><span class="lbl">E-Mail</span>
+            <input id="qMail" type="email" maxlength="160" autocomplete="email" aria-describedby="qMailHelp">
+            <span class="hint" id="qMailHelp">Nur nötig, wenn wir Ihnen per Mail antworten sollen.</span></label>
+          <label for="qPhone"><span class="lbl">Telefon</span>
+            <input id="qPhone" maxlength="60" autocomplete="tel"></label>
+        </div>
+        <label for="qAddress"><span class="lbl">Adresse (optional)</span>
+          <input id="qAddress" maxlength="200" autocomplete="street-address"></label>
+
+        <label for="qNeed"><span class="lbl">Was brauchen Sie? <span class="req">· Pflichtfeld</span></span>
+          <textarea id="qNeed" maxlength="4000" required aria-required="true"
+            aria-invalid="true" aria-describedby="qNeedHelp"></textarea>
+          <span class="hint" id="qNeedHelp"><b>Beschreiben Sie kurz, was Sie brauchen — dann können Sie senden.</b>
+            Zum Beispiel: «Eine Website für unser Restaurant mit Speisekarte und Tischreservation.»</span></label>
+
+        <div class="grid2">
+          <label for="qBudget"><span class="lbl">Budgetrahmen (optional)</span>
+            <input id="qBudget" maxlength="40" inputmode="decimal" placeholder="z. B. 5000"></label>
+          <label for="qDeadline"><span class="lbl">Wunschdatum</span>
+            <input id="qDeadline" type="date"></label>
+        </div>
+        <label for="qNotes"><span class="lbl">Ergänzungen</span>
+          <textarea id="qNotes" maxlength="3000"></textarea></label>
+        <label class="hp" aria-hidden="true">Bitte leer lassen<input id="qHp" tabindex="-1" autocomplete="off"></label>
+
+        <button type="submit" id="qSubmit" aria-disabled="true" aria-describedby="qNeedNote">Offertenanfrage senden</button>
+        <p class="need" id="qNeedNote" role="status" aria-live="polite">Noch kurz beschreiben, was Sie brauchen, dann können Sie senden.</p>
+        <div class="status" id="qStatus" role="status" aria-live="polite"></div>
+        <p class="sub" style="margin-top:12px">Ihre Angaben gehen direkt zu FlowerTech. Unverbindlich —
+          Sie erhalten eine Offerte, keine Rechnung.</p>
+      </form>
     </section>
 
     <section class="card">
@@ -322,6 +378,51 @@
 
     el("footer").textContent = (d.company && d.company.name ? d.company.name : "FlowerTech") +
       ((d.company && d.company.email) ? " · " + d.company.email : "");
+
+    renderQuote(d.quote || {});
+  }
+
+  /* ── Angaben für Ihre Offerte ─────────────────────────────────────────────
+     Vorbelegt wird nur, was FlowerTech inhaltlich schon weiss (Bedarf, Budget,
+     Wunschdatum). Kontaktangaben stehen bewusst NICHT im Snapshot: der Link
+     ist ein Bearer-Link — wer ihn in die Finger bekommt, soll dort keine
+     Firmen-, Namens- oder Mailangaben vorfinden. Nichts wird erzwungen.
+     --------------------------------------------------------------------- */
+  function renderQuote(q) {
+    var prefill = q.prefill || {};
+    if (prefill.need && !el("qNeed").value) el("qNeed").value = prefill.need;
+    if (prefill.budget != null && !el("qBudget").value) el("qBudget").value = String(prefill.budget);
+    if (prefill.deadline && !el("qDeadline").value) el("qDeadline").value = prefill.deadline;
+
+    if (q.open === false) {
+      // Schon eingegangen: das wird gesagt, statt die Kundschaft raten zu lassen.
+      var done = el("qDone");
+      done.className = "status show ok";
+      done.textContent = "Ihre Offertenanfrage ist bei FlowerTech eingegangen" +
+        (q.submittedAt ? " am " + datum(q.submittedAt) : "") +
+        ". Sie können unten jederzeit ergänzen — wir melden uns.";
+    }
+    syncQuote();
+    // Wer über „…/kunde.html#offerte" kommt, soll direkt beim Formular landen.
+    if (location.hash === "#offerte" && el("offerte").scrollIntoView) {
+      el("offerte").scrollIntoView();
+    }
+  }
+
+  // Pflicht ist allein der Bedarf. Keine künstliche Mindestlänge: geprüft wird,
+  // ob nach dem Trimmen etwas dasteht.
+  function quoteNeed() { return (el("qNeed").value || "").trim(); }
+
+  function syncQuote() {
+    var ready = !!quoteNeed();
+    var btn = el("qSubmit");
+    var note = el("qNeedNote");
+    btn.setAttribute("aria-disabled", ready ? "false" : "true");
+    el("qNeed").setAttribute("aria-invalid", ready ? "false" : "true");
+    note.className = ready ? "need done" : "need";
+    note.textContent = ready
+      ? "Danke — das genügt uns. Sie können jetzt senden."
+      : "Noch kurz beschreiben, was Sie brauchen, dann können Sie senden.";
   }
 
   // Änderungswunsch senden — über denselben abgesicherten Eingang wie bisher.
@@ -372,6 +473,56 @@
       .then(function () { btn.disabled = false; });
   });
 
+  el("qNeed").addEventListener("input", syncQuote);
+
+  /* Der Knopf sendet wirklich — kein mailto, kein Mail-Entwurf. Klappt es
+     nicht, wird das gesagt und der Knopf bleibt bedienbar. */
+  el("quoteForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var status = el("qStatus");
+    var btn = el("qSubmit");
+    var need = quoteNeed();
+    if (!need) {
+      status.className = "status show err";
+      status.textContent = "Bitte beschreiben Sie kurz, was Sie brauchen.";
+      el("qNeed").focus();
+      return;
+    }
+    var payload = {
+      company: el("qCompany").value, contactName: el("qName").value,
+      contactEmail: el("qMail").value, contactPhone: el("qPhone").value,
+      address: el("qAddress").value, need: need,
+      budget: el("qBudget").value, deadline: el("qDeadline").value,
+      notes: el("qNotes").value,
+    };
+    btn.disabled = true;
+    status.className = "status show ok";
+    status.textContent = "Wird gesendet …";
+    fetch(PORTAL_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: token, kind: "quote", payload: payload,
+        website: el("qHp").value,
+        idempotencyKey: idemKey([token, "quote", need, payload.contactEmail, payload.budget]),
+      }),
+    })
+      .then(function (r) { return r.json().catch(function () { return {}; })
+        .then(function (data) { if (!r.ok) throw new Error(data.error || "Senden fehlgeschlagen"); return data; }); })
+      .then(function (data) {
+        status.className = "status show ok";
+        status.textContent = data.duplicate
+          ? "Diese Offertenanfrage ist bereits bei FlowerTech eingegangen."
+          : "Ihre Offertenanfrage ist bei FlowerTech eingegangen. Wir melden uns innert 24 h.";
+      })
+      .catch(function (e) {
+        status.className = "status show err";
+        status.textContent = e.message + " Bitte versuchen Sie es gleich nochmals.";
+      })
+      .then(function () { btn.disabled = false; });
+  });
+
+  syncQuote();
   load();
 })();
 </script>

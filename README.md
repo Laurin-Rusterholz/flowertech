@@ -15,8 +15,11 @@ Die aktuelle Website ist bewusst als eigenständige statische Seite gebaut:
 
 - `index.html` – vollständige Website inklusive Styles, Interaktionen und
   inline SVGs
+- `kunde.html` – Kundenseite je Projekt (Bearer-Link `?t=…`) inklusive
+  Abschnitt „Angaben für Ihre Offerte"
 - `netlify.toml` – Netlify-Build- und Security-Header
 - `SECURITY.md` – Sicherheits- und Meldeprozess
+- `tests/` – Prüfungen ohne Build-Tools (`node tests/<datei>.test.mjs`)
 
 Es werden keine Build-Tools und keine Laufzeit-Abhängigkeiten benötigt.
 
@@ -46,6 +49,20 @@ Publish directory: .
 - Lokale `.env`-Dateien werden durch `.gitignore` ausgeschlossen.
 - Browser-Datenzugriffe werden durch Firebase-Regeln und authentifizierte
   Server-Funktionen geschützt.
+
+## Tests
+
+Ohne Abhängigkeiten, direkt mit Node:
+
+```bash
+node tests/kunde-page.test.mjs
+node tests/visionroom.test.mjs
+```
+
+Beide führen die Seitenlogik wirklich aus (Skriptblock gegen ein DOM-Doppel)
+und prüfen zusätzlich statisch, was NICHT passieren darf: keine Zugangsdaten
+im Browser, kein Mail-Entwurf statt echtem Versand, keine Indexierung der
+Kundenseite.
 
 ## Qualität
 
