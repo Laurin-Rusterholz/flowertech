@@ -938,8 +938,24 @@
   .mm-own button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(255,255,255,.1); color: var(--ink); font-size: 17px; line-height: 1; cursor: pointer; transition: .25s; }
   .mm-own button:hover { background: var(--lime); color: #000; }
   .mm-send .bttn { padding: 10px 22px; font-size: 13px; }
-  #vrSend { opacity: .35; pointer-events: none; }
-  #vrSend.ready { opacity: 1; pointer-events: auto; }
+  /* Der Senden-Knopf bleibt stumm, bis die Idee steht. Damit das nicht raten
+     heisst, steht die Pflicht zweimal sichtbar da: im Zentrum beim Feld und
+     unmittelbar beim Knopf. Ein gedimmter Knopf allein erklaert nichts. */
+  .mm-need { margin-top: 11px; font-size: 11.5px; line-height: 1.5; }
+  .mm-need b { display: block; color: var(--ink); font-weight: 700; }
+  .mm-need span { display: block; margin-top: 4px; color: var(--ink-dim); font-weight: 500; }
+  .mm-core.filled .mm-need { display: none; }
+  /* Leeres Zentrum: deutlich sichtbare Aufforderung statt blasser Platzhalter. */
+  .mm-core.empty { border-color: rgba(160,107,255,.6);
+    box-shadow: 0 24px 70px rgba(0,0,0,.8), 0 0 0 6px rgba(160,107,255,.1); }
+  .mm-core.empty input::placeholder { color: rgba(246,246,244,.62); }
+  .mm-core:focus-within { border-color: var(--lime);
+    box-shadow: 0 24px 70px rgba(0,0,0,.8), 0 0 0 4px rgba(200,255,46,.3); }
+  .mm-core:focus-within input::placeholder { color: rgba(246,246,244,.5); }
+  .mm-need-send { width: 100%; margin: 0; font-size: 12.5px; line-height: 1.5; font-weight: 600; color: var(--ink); }
+  .mm-need-send::before { content: "→ "; color: var(--violet); }
+  .mm-need-send.done { font-weight: 500; color: var(--ink-dim); }
+  .mm-need-send.done::before { content: "✓ "; color: var(--lime); }
   .mm-sum { padding: 0 20px 18px; font-size: 12.5px; color: var(--ink-faint); }
   .mm-sum b { color: var(--ink); font-weight: 700; }
 
@@ -1061,8 +1077,13 @@
   @media (prefers-reduced-motion: reduce) { .dk.ft { animation: none; } }
 
   /* ========== Visionroom ========== */
-  .vision { position: relative; z-index: 2; padding: 12vh 24px; max-width: 1000px; margin: 0 auto; }#vrSend { opacity: .4; pointer-events: none; }
-  #vrSend.ready { opacity: 1; pointer-events: auto; }
+  .vision { position: relative; z-index: 2; padding: 12vh 24px; max-width: 1000px; margin: 0 auto; }
+  /* Gesperrt heisst lesbar-gesperrt, nicht fast unsichtbar: der Knopf muss als
+     Ziel erkennbar bleiben, damit der Hinweis daneben ueberhaupt Sinn ergibt. */
+  #vrSend { opacity: 1; pointer-events: none; background: rgba(246,246,244,.16); color: var(--ink-dim); }
+  #vrSend:hover { transform: none; box-shadow: none; background: rgba(246,246,244,.16); }
+  #vrSend.ready { pointer-events: auto; background: #fff; color: #000; }
+  #vrSend.ready:hover { background: var(--lime); transform: scale(1.04); box-shadow: 0 10px 44px rgba(200,255,46,.25); }
   .vr-note { margin-top: 16px; text-align: center; font-size: 12.5px; color: var(--ink-faint); }@keyframes afdot { 0% { top: 0; } 100% { top: 100%; } }/* ========== Leistungen ========== */
   .leist { position: relative; z-index: 2; padding: 10vh 24px 8vh; max-width: 1180px; margin: 0 auto; }
   .leist-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; align-items: start; }
@@ -1422,11 +1443,12 @@
     .mm-label { display: block; grid-column: 2; grid-row: 1; color: var(--ink-faint);
       font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
     .mm-core input { grid-column: 2; grid-row: 2; text-align: left; min-width: 0; font-size: 16px; }
-    .mm-suggest { display: inline-flex; grid-column: 1 / -1; grid-row: 3; align-items: center; justify-content: center;
+    .mm-need { grid-column: 1 / -1; grid-row: 3; margin-top: 3px; font-size: 12px; }
+    .mm-suggest { display: inline-flex; grid-column: 1 / -1; grid-row: 4; align-items: center; justify-content: center;
       min-height: 44px; margin-top: 8px; border: 0; border-radius: 11px; background: #f6f6f4;
       color: #000; font: 720 14px/1 var(--sans); cursor: pointer; }
     .mm-suggest:active { transform: scale(.985); background: var(--lime); }
-    .mc-type { grid-column: 1 / -1; grid-row: 4; margin: 5px 0 0; font-size: 8.5px; text-align: left; }
+    .mc-type { grid-column: 1 / -1; grid-row: 5; margin: 5px 0 0; font-size: 8.5px; text-align: left; }
     .mc-badge { right: -7px; top: -7px; }
 
     .mm-feature-step { order: 3; display: none; margin: 22px 0 12px; }
@@ -1453,7 +1475,8 @@
 
     .mm-foot { display: none; grid-template-columns: 1fr; gap: 11px; padding: 17px;
       border-top-color: rgba(255,255,255,.1); background: rgba(255,255,255,.02); }
-    .mm.has-picks .mm-foot { display: grid; }
+    .mm.has-picks .mm-foot, .mm.has-idea .mm-foot { display: grid; }
+    .mm-need-send { order: 3; font-size: 12.5px; }
     .mm-own, .mm-send { width: 100%; min-width: 0; border-radius: 13px; background: #101014; }
     .mm-own { min-height: 50px; }
     .mm-send { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; padding: 7px 7px 7px 13px; }
@@ -1884,11 +1907,16 @@
     <div class="mm-canvas" id="mmCanvas">
       <svg class="mm-links" id="mmLinks" aria-hidden="true"></svg>
       <div class="mm-mobile-step mm-idea-step"><em>02</em><span>Beschreiben Sie Ihre Idee</span></div>
-      <div class="mm-core" id="mmCore">
+      <div class="mm-core empty" id="mmCore">
         <span class="mc-halo"></span>
         <span class="mc-flower"><svg viewBox="0 0 100 100" width="26" height="26"><use href="#flowerG"/></svg></span>
-        <label class="mm-label" for="vrIdea">Ihre Idee</label>
-        <input id="vrIdea" placeholder="Ihre Idee …" maxlength="46" autocomplete="off" aria-label="Ihre Idee">
+        <label class="mm-label" for="vrIdea">Ihre Idee · Pflichtfeld</label>
+        <input id="vrIdea" placeholder="Ihre Idee in einem Satz …" maxlength="90" autocomplete="off"
+               aria-label="Ihre Idee (Pflichtfeld)" aria-required="true" aria-describedby="vrIdeaHelp" aria-invalid="true">
+        <p class="mm-need" id="vrIdeaHelp">
+          <b>Beschreiben Sie kurz Ihre Idee, damit Sie senden können.</b>
+          <span>Zum Beispiel: «Eine App, mit der Familien Aufgaben und Termine gemeinsam organisieren.»</span>
+        </p>
         <button type="button" class="mm-suggest" id="vrSuggest">Vorschläge anzeigen</button>
         <span class="mc-type" id="mmType">Art wählen</span>
         <span class="mc-badge" id="mmBadge">0</span>
@@ -1908,8 +1936,9 @@
       <div class="mm-send">
         <input id="vrMail" type="email" placeholder="Ihre E-Mail für die Antwort" autocomplete="email" aria-label="E-Mail für die Antwort">
         <input id="vrHp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
-        <a class="bttn" id="vrSend" href="#">Senden</a>
+        <a class="bttn" id="vrSend" href="#" role="button" aria-disabled="true" aria-describedby="vrNeed">Senden</a>
       </div>
+      <p class="mm-need-send" id="vrNeed" role="status" aria-live="polite">Noch kurz Ihre Idee beschreiben, dann können Sie senden.</p>
     </div>
     <div class="mm-sum" id="vrSum" aria-live="polite">Noch nichts gewählt.</div>
   </div>
@@ -3005,7 +3034,7 @@
     const canvas = el('mmCanvas'), nodesWrap = el('mmNodes'), links = el('mmLinks'), core = el('mmCore'), mm = el('mm');
     const vrIdea = el('vrIdea'), vrOwn = el('vrOwn'), vrMail = el('vrMail'), vrSend = el('vrSend'),
           vrSum = el('vrSum'), badge = el('mmBadge'), mmType = el('mmType'), mmEmpty = el('mmEmpty'), mmHint = el('mmHint'),
-          vrSuggest = el('vrSuggest'), mmMore = el('mmMore');
+          vrSuggest = el('vrSuggest'), mmMore = el('mmMore'), vrNeed = el('vrNeed');
     if (!canvas) return;
 
     let type = '', idea = '', items = [], mobileExpanded = false;   /* {label, on, custom, mx, my} */
@@ -3157,36 +3186,53 @@
       links.innerHTML = paths;
     }
 
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    /* Pflicht ist allein die Idee. Funktionen sind ein Angebot, keine Huerde —
+       wer nur einen Satz schreibt, muss senden koennen. Keine Mindestlaenge:
+       geprueft wird ausschliesslich, ob nach dem Trimmen etwas dasteht. */
     function sync() {
       const picked = items.filter(i => i.on).map(i => i.label);
       badge.textContent = picked.length;
       badge.classList.toggle('on', picked.length > 0);
       mmType.textContent = type || 'Art wählen';
+      idea = (vrIdea.value || '').trim();
       const mail = (vrMail.value || '').trim();
       const mailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail);
-      const ok = type && idea && picked.length && mailOk;
+      const ok = !!(type && idea && mailOk);
       mm.classList.toggle('has-picks', picked.length > 0);
-      vrSum.innerHTML = (type && idea && picked.length)
-        ? '<b>' + type + '</b> — ' + idea + ' · <b>' + picked.length + '</b> Funktionen angehängt' + (mailOk ? ' · bereit zum Senden' : ' · noch E-Mail eintragen')
-        : (!type ? 'Wählen Sie oben die Art.' : !idea ? 'Beschreiben Sie Ihre Idee.' : 'Wählen Sie mindestens eine Funktion.');
-      vrSend.classList.toggle('ready', !!ok);
-      if (ok) {
-        /* Rueckfall, falls der Versand an Quantus scheitert (offline, blockiert). */
-        const body = 'Visionroom-Anfrage%0D%0A%0D%0AArt: ' + type + '%0D%0AIdee: ' + idea + '%0D%0AAbsender: ' + mail +
-          '%0D%0A%0D%0AGewünschte Funktionen:%0D%0A' + picked.map(p => '- ' + p).join('%0D%0A') +
-          '%0D%0A%0D%0ABitte um eine Einschätzung.%0D%0A';
-        vrSend.dataset.mailto = 'mailto:contact@laurin-rusterholz.ch?subject=' + encodeURIComponent('Visionroom — ' + type + ': ' + idea) + '&body=' + body;
-      } else vrSend.dataset.mailto = '';
+      mm.classList.toggle('has-idea', !!idea);
+      core.classList.toggle('empty', !idea);
+      core.classList.toggle('filled', !!idea);
+      vrIdea.setAttribute('aria-invalid', idea ? 'false' : 'true');
+      if (vrNeed) {
+        /* Der Hinweis nennt immer genau den naechsten Schritt und wird zur
+           Bestaetigung, sobald die Idee steht — auch fuer Vorlese-Software. */
+        vrNeed.textContent = !idea
+          ? 'Noch kurz Ihre Idee beschreiben, dann können Sie senden.'
+          : !type ? 'Ihre Idee ist da — jetzt oben noch die Art wählen, dann können Sie senden.'
+          : !mailOk ? 'Ihre Idee ist da — jetzt noch Ihre E-Mail für die Antwort, dann können Sie senden.'
+          : 'Ihre Idee ist da — Sie können jetzt senden.';
+        vrNeed.classList.toggle('done', !!idea);
+      }
+      vrSum.innerHTML = (type && idea)
+        ? '<b>' + esc(type) + '</b> — ' + esc(idea) +
+          (picked.length ? ' · <b>' + picked.length + '</b> Funktionen angehängt' : ' · Funktionen sind freiwillig') +
+          (mailOk ? ' · bereit zum Senden' : ' · noch E-Mail eintragen')
+        : (!type ? 'Wählen Sie oben die Art.' : 'Beschreiben Sie Ihre Idee.');
+      vrSend.classList.toggle('ready', ok);
+      vrSend.setAttribute('aria-disabled', ok ? 'false' : 'true');
       vrSend.href = '#';
     }
 
     /* ── Versand an Quantus ───────────────────────────────────────────────
-       Die Zusammenstellung geht direkt in FlowerTech/Quantus und loest dort
-       ein Direktprojekt aus — ohne manuelle Nacharbeit.
+       Die Zusammenstellung wird bei FlowerTech zu einer echten
+       Offertenanfrage und erzeugt dort genau EINE Folgeaufgabe. Kein
+       Mail-Entwurf, kein Mail-Programm, kein leeres Angebot.
 
        Zwei Faelle:
-         • ohne ?v=  → neuer Vorgang, Route "Direktprojekt"
-         • mit  ?v=  → Ausarbeitung zu genau der Offerte, an der der Token haengt
+         • ohne ?v=  → neuer Vorgang aus dem Vision Room
+         • mit  ?v=  → die Anfrage haengt an genau dem Vorgang des Tokens
 
        Der Token steht im Link, ist aber nur ein Freigabe-Geheimnis fuer EINEN
        Vorgang: er enthaelt keine Projekt-ID und keinen Zugang zu Quantus.
@@ -3212,7 +3258,8 @@
       if (sending || !vrSend.classList.contains('ready')) return;
       const picked = items.filter(i => i.on).map(i => i.label);
       const mail = (vrMail.value || '').trim();
-      const payload = { type, idea, features: picked, email: mail };
+      /* Der Bedarf ist die Idee; die Funktionen sind eine freiwillige Ergaenzung. */
+      const payload = { type, need: idea, idea, features: picked, email: mail };
       sending = true;
       vrSum.textContent = 'Wird gesendet …';
       try {
@@ -3220,24 +3267,27 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            kind: 'vision',
+            kind: 'quote',
+            source: 'vision-room',
             token: visionToken || undefined,
             payload,
             website: (el('vrHp') || {}).value || '',
-            idempotencyKey: idemKey([visionToken, 'vision', mail, idea, picked.join(',')])
+            idempotencyKey: idemKey([visionToken, 'quote', mail, idea, picked.join(',')])
           })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Senden fehlgeschlagen');
         mm.classList.add('sent');
         vrSum.innerHTML = data.duplicate
-          ? '<b>Bereits angekommen.</b> Wir melden uns.'
-          : '<b>Danke — angekommen!</b> Wir schauen uns Ihre Idee an und melden uns innert 24 h.';
+          ? '<b>Bereits eingegangen.</b> Ihre Offertenanfrage liegt bei FlowerTech.'
+          : '<b>Ihre Offertenanfrage ist bei FlowerTech eingegangen.</b> Wir schauen sie an und melden uns innert 24 h.';
         vrSend.classList.remove('ready');
+        vrSend.setAttribute('aria-disabled', 'true');
+        if (vrNeed) { vrNeed.textContent = 'Ihre Idee ist bei uns — Sie hören innert 24 h von uns.'; vrNeed.classList.add('done'); }
       } catch (e) {
-        /* Nichts verschlucken: der Rueckfall per Mail bleibt bedienbar. */
-        vrSum.innerHTML = 'Direktversand nicht möglich — <a id="vrFallback" href="' +
-          (vrSend.dataset.mailto || '#') + '">per E-Mail senden</a>.';
+        /* Kein Mail-Programm als Ausweg: der Knopf bleibt bedienbar und sagt,
+           was los ist. */
+        vrSum.innerHTML = '<b>Das Senden hat gerade nicht geklappt.</b> Bitte gleich nochmals auf «Senden» tippen.';
       }
       sending = false;
     }
