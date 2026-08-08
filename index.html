@@ -1907,6 +1907,7 @@
       <div class="mm-own"><input id="vrOwn" placeholder="Eigene Funktion anhängen …" maxlength="70" autocomplete="off" aria-label="Eigene Funktion"><button type="button" id="vrAdd" aria-label="Funktion hinzufügen">+</button></div>
       <div class="mm-send">
         <input id="vrMail" type="email" placeholder="Ihre E-Mail für die Antwort" autocomplete="email" aria-label="E-Mail für die Antwort">
+        <input id="vrHp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
         <a class="bttn" id="vrSend" href="#">Senden</a>
       </div>
     </div>
@@ -3170,13 +3171,77 @@
         : (!type ? 'Wählen Sie oben die Art.' : !idea ? 'Beschreiben Sie Ihre Idee.' : 'Wählen Sie mindestens eine Funktion.');
       vrSend.classList.toggle('ready', !!ok);
       if (ok) {
+        /* Rueckfall, falls der Versand an Quantus scheitert (offline, blockiert). */
         const body = 'Visionroom-Anfrage%0D%0A%0D%0AArt: ' + type + '%0D%0AIdee: ' + idea + '%0D%0AAbsender: ' + mail +
           '%0D%0A%0D%0AGewünschte Funktionen:%0D%0A' + picked.map(p => '- ' + p).join('%0D%0A') +
           '%0D%0A%0D%0ABitte um eine Einschätzung.%0D%0A';
-        vrSend.href = 'mailto:contact@laurin-rusterholz.ch?subject=' + encodeURIComponent('Visionroom — ' + type + ': ' + idea) + '&body=' + body;
-        /* Später: stattdessen an eigenen Endpunkt senden (fetch POST). */
-      } else vrSend.href = '#';
+        vrSend.dataset.mailto = 'mailto:contact@laurin-rusterholz.ch?subject=' + encodeURIComponent('Visionroom — ' + type + ': ' + idea) + '&body=' + body;
+      } else vrSend.dataset.mailto = '';
+      vrSend.href = '#';
     }
+
+    /* ── Versand an Quantus ───────────────────────────────────────────────
+       Die Zusammenstellung geht direkt in FlowerTech/Quantus und loest dort
+       ein Direktprojekt aus — ohne manuelle Nacharbeit.
+
+       Zwei Faelle:
+         • ohne ?v=  → neuer Vorgang, Route "Direktprojekt"
+         • mit  ?v=  → Ausarbeitung zu genau der Offerte, an der der Token haengt
+
+       Der Token steht im Link, ist aber nur ein Freigabe-Geheimnis fuer EINEN
+       Vorgang: er enthaelt keine Projekt-ID und keinen Zugang zu Quantus.
+       Der Idempotenz-Schluessel verhindert Doppelanlagen bei Doppelklick oder
+       Wiederholung.
+       ------------------------------------------------------------------- */
+    const QUANTUS_ENDPOINT = 'https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-portal';
+    const visionToken = (() => {
+      const t = new URLSearchParams(location.search).get('v') || '';
+      return /^[A-Za-z0-9_-]{24,64}$/.test(t) ? t : '';
+    })();
+
+    function idemKey(parts) {
+      const basis = parts.join('|');
+      let hash = 5381;
+      for (let i = 0; i < basis.length; i++) hash = ((hash << 5) + hash + basis.charCodeAt(i)) >>> 0;
+      return 'ft_' + hash.toString(36) + '_' + basis.length.toString(36);
+    }
+
+    let sending = false;
+    async function sendVision(ev) {
+      if (ev) ev.preventDefault();
+      if (sending || !vrSend.classList.contains('ready')) return;
+      const picked = items.filter(i => i.on).map(i => i.label);
+      const mail = (vrMail.value || '').trim();
+      const payload = { type, idea, features: picked, email: mail };
+      sending = true;
+      vrSum.textContent = 'Wird gesendet …';
+      try {
+        const res = await fetch(QUANTUS_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            kind: 'vision',
+            token: visionToken || undefined,
+            payload,
+            website: (el('vrHp') || {}).value || '',
+            idempotencyKey: idemKey([visionToken, 'vision', mail, idea, picked.join(',')])
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Senden fehlgeschlagen');
+        mm.classList.add('sent');
+        vrSum.innerHTML = data.duplicate
+          ? '<b>Bereits angekommen.</b> Wir melden uns.'
+          : '<b>Danke — angekommen!</b> Wir schauen uns Ihre Idee an und melden uns innert 24 h.';
+        vrSend.classList.remove('ready');
+      } catch (e) {
+        /* Nichts verschlucken: der Rueckfall per Mail bleibt bedienbar. */
+        vrSum.innerHTML = 'Direktversand nicht möglich — <a id="vrFallback" href="' +
+          (vrSend.dataset.mailto || '#') + '">per E-Mail senden</a>.';
+      }
+      sending = false;
+    }
+    vrSend.addEventListener('click', sendVision);
 
     function setType(name, silent) {
       const b = Array.from(document.querySelectorAll('.mt')).find(o => o.dataset.t === name);
