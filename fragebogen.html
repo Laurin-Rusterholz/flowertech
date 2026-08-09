@@ -54,6 +54,26 @@
   .status.ok{background:rgba(123,216,143,.12);border:1px solid rgba(123,216,143,.4);color:var(--ok)}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
   footer{color:var(--muted);font-size:13px;text-align:center;margin-top:26px}
+  /* ── Vision Room ────────────────────────────────────────────────────────
+     Er ist Teil DIESES Fragebogens, nicht ein zweiter Kanal: Die Idee und die
+     gewählten Funktionen sind zwei Antworten, die mit allen anderen zusammen
+     abgeschickt werden. Deshalb steht er auch in derselben Form-Karte. */
+  .vr{border:1px solid rgba(160,107,255,.4);border-radius:var(--r);padding:18px;margin:6px 0 18px;
+    background:linear-gradient(180deg,rgba(160,107,255,.09),transparent)}
+  .vr h3{margin:0 0 4px;font-size:16px}
+  .vr .vr-lead{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+  .vr-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+  .vr-chip{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:999px;
+    padding:8px 14px;font-size:13.5px;font-weight:600;cursor:pointer;line-height:1.2}
+  .vr-chip:hover{border-color:var(--violet)}
+  .vr-chip.on{background:linear-gradient(135deg,var(--lime),var(--cyan));color:#07070a;border-color:transparent}
+  .vr-chip[aria-pressed="true"]::before{content:"✓ "}
+  .vr-own{display:flex;gap:8px;margin-top:12px}
+  .vr-own input{flex:1}
+  .vr-own button{padding:11px 16px;border-radius:11px}
+  .vr-sum{margin-top:12px;font-size:13.5px;color:var(--muted)}
+  .vr-sum b{color:var(--text)}
+  @media (prefers-reduced-motion:no-preference){.vr-chip{transition:background .15s,border-color .15s}}
 </style>
 </head>
 <body>
@@ -80,6 +100,24 @@
 
     <form id="form" class="card" novalidate>
       <div id="fields"></div>
+
+      <!-- Vision Room — dieselbe Einladung, dieselbe Absendung. Er erzeugt
+           bewusst keinen eigenen Vorgang: Idee und Funktionen sind zwei
+           Antworten dieses Fragebogens. -->
+      <section class="vr" id="visionRoom" hidden aria-labelledby="vrHeading">
+        <h3 id="vrHeading">Vision Room</h3>
+        <p class="vr-lead" id="vrLead">Bauen Sie Ihre Idee zusammen. Das gehört zu denselben Angaben —
+          Sie senden alles in einem Zug.</p>
+        <div id="vrIdeaField"></div>
+        <div class="vr-chips" id="vrChips" role="group" aria-label="Vorgeschlagene Funktionen"></div>
+        <div class="vr-own">
+          <input id="vrOwn" maxlength="90" placeholder="Eigene Funktion anhängen …" aria-label="Eigene Funktion">
+          <button type="button" id="vrAdd">Hinzufügen</button>
+        </div>
+        <p class="vr-sum" id="vrSum" role="status" aria-live="polite">Noch nichts gewählt.</p>
+        <div id="vrFeatureField"></div>
+      </section>
+
       <label class="hp" aria-hidden="true">Bitte leer lassen<input id="hp" tabindex="-1" autocomplete="off"></label>
       <button type="submit" id="submit" aria-disabled="true" aria-describedby="need">Antworten senden</button>
       <p class="need" id="need" role="status" aria-live="polite"></p>
@@ -187,6 +225,105 @@
       "</label>";
   }
 
+  /* ── Vision Room ──────────────────────────────────────────────────────────
+     Zwei Fragen dieses Fragebogens bekommen eine andere Darstellung: die Idee
+     als Zentrum, die Funktionen als anklickbare Vorschläge. Die Werte landen
+     in denselben Feldern wie jede andere Antwort — es gibt keinen zweiten
+     Versandweg und damit auch keinen zweiten Vorgang. */
+  var VISION_SUGGESTIONS = [
+    [/termin|buchung|reserv|kalender/i, ["Terminbuchung", "Kalender-Übersicht", "Erinnerung per E-Mail"]],
+    [/shop|verkauf|produkt|bestell/i, ["Produktkatalog", "Warenkorb", "Online-Zahlung", "Bestellübersicht"]],
+    [/restaurant|menu|menü|speise|cafe|café|tisch|gäste|gaeste|beiz/i,
+      ["Speisekarte", "Tischreservation", "Öffnungszeiten"]],
+    [/kurs|schul|lern|training/i, ["Kursübersicht", "Anmeldung", "Teilnehmerliste"]],
+    [/portfolio|foto|galerie|bilder/i, ["Bildergalerie", "Projektseiten", "Referenzen"]],
+    [/verein|mitglied|club/i, ["Mitgliederbereich", "Login", "Veranstaltungen"]],
+    [/rechnung|buchhalt|offert|verwalt/i, ["Rechnungen erstellen", "Auswertungen", "Datenexport"]],
+    [/blog|news|magazin/i, ["Beitragsübersicht", "Kategorien", "Newsletter-Anmeldung"]],
+  ];
+  var VISION_BASE = ["Kontaktformular", "Mobile Ansicht", "Auffindbarkeit bei Google", "Bildergalerie", "Karte / Anfahrt"];
+
+  var visionIdea = null;      // Index der Ideenfrage
+  var visionFeatures = null;  // Index der Funktionenfrage
+  var picked = [];
+
+  function suggestions() {
+    var idea = visionIdea == null ? "" : value(visionIdea);
+    var out = [];
+    VISION_SUGGESTIONS.forEach(function (pair) {
+      if (pair[0].test(idea)) pair[1].forEach(function (f) { if (out.indexOf(f) < 0) out.push(f); });
+    });
+    VISION_BASE.forEach(function (f) { if (out.indexOf(f) < 0) out.push(f); });
+    picked.forEach(function (f) { if (out.indexOf(f) < 0) out.unshift(f); });
+    return out.slice(0, 14);
+  }
+
+  function renderChips() {
+    el("vrChips").innerHTML = suggestions().map(function (f) {
+      var on = picked.indexOf(f) >= 0;
+      return '<button type="button" class="vr-chip' + (on ? " on" : "") + '" aria-pressed="' +
+        (on ? "true" : "false") + '" data-f="' + esc(f) + '">' + esc(f) + "</button>";
+    }).join("");
+    Array.prototype.forEach.call(el("vrChips").querySelectorAll(".vr-chip"), function (btn) {
+      btn.addEventListener("click", function () { toggleFeature(btn.getAttribute("data-f")); });
+    });
+    el("vrSum").innerHTML = picked.length
+      ? "Gewählt: <b>" + picked.map(esc).join("</b>, <b>") + "</b>"
+      : "Noch nichts gewählt — die Funktionen sind freiwillig.";
+  }
+
+  function toggleFeature(feature) {
+    var at = picked.indexOf(feature);
+    if (at >= 0) picked.splice(at, 1); else picked.push(feature);
+    writeFeatures();
+    renderChips();
+    sync();
+  }
+
+  // Die gewählten Funktionen sind der Wert der Funktionen-Frage. Damit wandern
+  // sie über denselben Weg wie jede andere Antwort.
+  function writeFeatures() {
+    if (visionFeatures == null) return;
+    var node = el("q_" + visionFeatures);
+    if (node) node.value = picked.join("\n");
+  }
+
+  function setupVisionRoom() {
+    if (visionIdea == null && visionFeatures == null) return;
+    el("visionRoom").hidden = false;
+    // Die beiden Felder werden aus der Feldliste in den Vision Room verschoben:
+    // dasselbe Element, derselbe Wert, nur an einem verständlicheren Ort.
+    if (visionIdea != null) {
+      var ideaLabel = el("q_" + visionIdea).closest("label");
+      if (ideaLabel) el("vrIdeaField").appendChild(ideaLabel);
+      el("q_" + visionIdea).addEventListener("input", renderChips);
+    }
+    if (visionFeatures != null) {
+      var featLabel = el("q_" + visionFeatures).closest("label");
+      // Das Textfeld bleibt bedienbar (Tastatur, Vorlesesoftware) und ist
+      // zugleich das Ziel der Chips — keine versteckte Zweitquelle.
+      if (featLabel) el("vrFeatureField").appendChild(featLabel);
+      var node = el("q_" + visionFeatures);
+      node.addEventListener("input", function () {
+        picked = String(node.value || "").split("\n").map(function (v) { return v.trim(); }).filter(Boolean);
+        renderChips();
+      });
+    }
+    el("vrAdd").addEventListener("click", function () {
+      var own = String(el("vrOwn").value || "").trim();
+      if (!own) return;
+      if (picked.indexOf(own) < 0) picked.push(own);
+      el("vrOwn").value = "";
+      writeFeatures();
+      renderChips();
+      sync();
+    });
+    el("vrOwn").addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") { ev.preventDefault(); el("vrAdd").click(); }
+    });
+    renderChips();
+  }
+
   function render(data) {
     questions = data.questions;
     el("loading").hidden = true;
@@ -201,7 +338,10 @@
       var node = el("q_" + i);
       if (node) node.addEventListener("input", sync);
       if (node && node.tagName === "SELECT") node.addEventListener("change", sync);
+      if (q.vision === "idea") visionIdea = i;
+      if (q.vision === "features") visionFeatures = i;
     });
+    setupVisionRoom();
     sync();
   }
 

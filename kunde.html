@@ -294,6 +294,14 @@
           return fail("Dieser Link ist nicht mehr gültig",
             "Möglicherweise wurde er erneuert. Melden Sie sich kurz bei uns, dann schicken wir Ihnen den aktuellen.");
         }
+        // Das Kundenportal entsteht erst mit einer ausdrücklichen Freigabe.
+        // Sollte je ein Snapshot ohne Freigabe hier landen, wird er NICHT
+        // gezeigt — eine halbe Projektseite ist schlechter als eine ehrliche
+        // Auskunft.
+        if (data.published === false) {
+          return fail("Ihr Projektbereich ist noch nicht freigegeben",
+            "Wir bereiten ihn gerade vor und melden uns, sobald Sie Vorschau, Angebot und Vertrag ansehen können.");
+        }
         render(data);
       })
       .catch(function () {

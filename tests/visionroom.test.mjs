@@ -8,8 +8,14 @@
  *      Jetzt steht die Pflicht sichtbar im Zentrum UND beim Knopf — und die
  *      Funktionen sind ausdrücklich freiwillig.
  *
- *   2. „Senden" erzeugt eine echte Offertenanfrage bei FlowerTech. Kein
- *      Mail-Entwurf, kein „Direktversand nicht möglich — per E-Mail senden".
+ *   2. „Senden" erzeugt eine echte ANFRAGE bei FlowerTech. Kein Mail-Entwurf,
+ *      kein „Direktversand nicht möglich — per E-Mail senden".
+ *
+ *   3. Der oeffentliche Vision Room legt KEIN Projekt an. Er ist der Einstieg
+ *      ohne Einladung; der naechste Schritt ist der Fragebogen-Link, den
+ *      FlowerTech zurueckschickt. Wer bereits eine Einladung hat (?e=), wird
+ *      in den Fragebogen geschickt — dort ist der Vision Room Teil derselben
+ *      Absendung, damit kein zweiter Vorgang entsteht.
  *
  * Die Logik wird wirklich ausgeführt: Der Skriptblock der Seite läuft gegen ein
  * DOM-Doppel, und der Vision-Room-Teil wird daraus herausgeschnitten.
@@ -70,18 +76,30 @@ ok(/--lime|--violet|--cyan/.test(/\.mm-core:focus-within[^}]*}/.exec(page)[0]),
 ok(!/#vrSend \{ opacity: \.35/.test(page) && !/#vrSend \{ opacity: \.4;/.test(page),
   "der gesperrte Knopf wird weiterhin nur ausgeblendet");
 
-/* ── 5. Versandvertrag: echte Offertenanfrage, kein Mailprogramm ──────────── */
-ok(/kind: 'quote'/.test(page), "der Vision Room sendet keine Offertenanfrage");
+/* ── 5. Versandvertrag: echte Anfrage, kein Mailprogramm, kein Projekt ────── */
+ok(/kind: 'inquiry'/.test(page), "der Vision Room sendet keine Anfrage");
+ok(!/kind: 'quote'/.test(page),
+  "der Vision Room legt weiterhin direkt eine Offertenanfrage an");
 ok(/source: 'vision-room'/.test(page), "die Herkunft der Anfrage fehlt");
 ok(/flowertech-portal/.test(page), "der abgesicherte Eingang wird nicht aufgerufen");
 ok(/idempotencyKey/.test(page), "Doppeleinreichungen sind nicht abgesichert");
 ok(/id="vrHp"/.test(markup), "der Honeypot fehlt");
-ok(/\{24,64\}/.test(page), "der Zuordnungs-Token wird nicht auf Form geprüft");
+ok(/\{24,64\}/.test(page), "der Einladungstoken wird nicht auf Form geprüft");
 ok(!/dataset\.mailto/.test(page), "es gibt weiterhin einen Rückfall auf ein Mailprogramm");
 ok(!/Direktversand nicht möglich/.test(page), "der Mail-Rückfalltext steht weiterhin auf der Seite");
 ok(!/mailto:[^"']*Visionroom/.test(page), "der Vision Room baut weiterhin einen Mail-Entwurf");
-ok(/Ihre Offertenanfrage ist bei FlowerTech eingegangen/.test(page),
+ok(/Ihre Anfrage ist bei FlowerTech eingegangen/.test(page),
   "die Bestätigung nach erfolgreichem Senden fehlt");
+// Der naechste Schritt wird benannt: der Fragebogen-Link.
+ok(/Fragebogen-Link/.test(page),
+  "die Seite verspricht keinen Fragebogen-Link als nächsten Schritt");
+// Mit Einladung gehoert der Vision Room in den Fragebogen — ein zweiter
+// Eingang wuerde einen zweiten Vorgang erzeugen.
+ok(/URLSearchParams\(location\.search\)\.get\('e'\)/.test(page),
+  "der Vision Room erkennt eine bestehende Einladung nicht");
+ok(/fragebogen\.html\?e=/.test(page), "mit Einladung wird nicht auf den Fragebogen verwiesen");
+// Der oeffentliche Vision Room kennt die Phase 2 nicht.
+ok(!/clientPortals/.test(page), "der Vision Room liest den Kundenportal-Snapshot");
 
 /* ── 6. Die Logik wirklich ausführen ──────────────────────────────────────── */
 {
@@ -229,7 +247,8 @@ ok(/Ihre Offertenanfrage ist bei FlowerTech eingegangen/.test(page),
   await new Promise((r) => setTimeout(r, 0));
   ok(sent, "es wurde nichts gesendet");
   ok(sent.url.includes("flowertech-portal"), `der Eingang stimmt nicht: ${sent.url}`);
-  ok(sent.body.kind === "quote", `die falsche Art wurde gesendet: ${sent.body.kind}`);
+  ok(sent.body.kind === "inquiry", `die falsche Art wurde gesendet: ${sent.body.kind}`);
+  ok(!sent.body.token, "der oeffentliche Vision Room sendet einen Token mit");
   ok(sent.body.source === "vision-room", "die Herkunft fehlt im Versand");
   ok(sent.body.payload.need === "Hofladen", "der Bedarf fehlt im Versand");
   ok(sent.body.payload.email === "familie@muster.ch", "der Rückkanal fehlt im Versand");
