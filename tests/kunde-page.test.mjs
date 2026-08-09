@@ -58,6 +58,18 @@ ok(/Gerade nicht erreichbar/.test(page), "ein Netzfehler wird nicht freundlich b
 ok(!/existiert nicht|unbekanntes Projekt|kein Projekt gefunden/i.test(page),
   "die Fehlermeldung verraet, ob ein Vorgang existiert");
 
+// ── 3b. Ohne Freigabe zeigt die Seite kein halbes Projekt ─────────────────
+// Das Kundenportal ist die PHASE 2. Es entsteht erst nach einer ausdruecklichen
+// Veroeffentlichung; ein Snapshot ohne Freigabe wird nicht gerendert, sondern
+// ehrlich benannt. Zweite Schicht — die erste ist, dass Quantus ohne Freigabe
+// gar nichts schreibt.
+ok(/data\.published === false/.test(page),
+  "die Seite prueft die Freigabe des Snapshots nicht");
+ok(/noch nicht freigegeben/.test(page),
+  "der nicht freigegebene Zustand wird nicht benannt");
+// Und sie bleibt die Phase 2: den Fragebogen liest sie nicht.
+ok(!/intakeForms/.test(page), "die Kundenseite liest den Fragebogen der Phase 1");
+
 // ── 4. Nicht indexieren, nicht zwischenspeichern ───────────────────────────
 ok(/name="robots"[^>]*noindex/.test(page), "die Seite ist nicht auf noindex gesetzt");
 ok(/name="referrer"[^>]*no-referrer/.test(page), "der Token koennte ueber den Referrer abfliessen");

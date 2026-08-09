@@ -1943,7 +1943,8 @@
     </div>
     <div class="mm-sum" id="vrSum" aria-live="polite">Noch nichts gewählt.</div>
   </div>
-  <p class="vr-note rv">Die Vorschläge entstehen live aus Ihrer Eingabe — die fertige Zusammenstellung geht direkt an uns. Unverbindlich, Antwort innert 24 h.</p>
+  <p class="vr-note rv">Die Vorschläge entstehen live aus Ihrer Eingabe — die fertige Zusammenstellung geht direkt an uns.
+    Unverbindlich: Sie erhalten innert 24 h einen persönlichen Fragebogen-Link, mit dem Sie die Angaben vervollständigen.</p>
 </section>
 
 <!-- ================= 3D-SYSTEM ================= -->
@@ -3234,22 +3235,23 @@
     }
 
     /* ── Versand an Quantus ───────────────────────────────────────────────
-       Die Zusammenstellung wird bei FlowerTech zu einer echten
-       Offertenanfrage und erzeugt dort genau EINE Folgeaufgabe. Kein
-       Mail-Entwurf, kein Mail-Programm, kein leeres Angebot.
+       Der oeffentliche Vision Room ist der Einstieg OHNE Einladung. Was hier
+       ankommt, wird bei FlowerTech zu einer ANFRAGE — nicht zu einem Projekt
+       und nicht zu einem Direktauftrag. Der naechste Schritt ist der
+       Fragebogen-Link, den FlowerTech zurueckschickt; erst dessen Absenden
+       erzeugt genau EIN Projekt und genau EINE Aufgabe.
 
-       Zwei Faelle:
-         • ohne ?v=  → neuer Vorgang aus dem Vision Room
-         • mit  ?v=  → die Anfrage haengt an genau dem Vorgang des Tokens
+       Wer bereits eine Einladung hat (?e=<Token>), gehoert nicht hierher: Der
+       Vision Room ist dort Teil des Fragebogens, damit alles in einem Zug
+       abgeschickt wird. Diese Seite verweist dann dorthin, statt einen
+       zweiten Eingang zu oeffnen.
 
-       Der Token steht im Link, ist aber nur ein Freigabe-Geheimnis fuer EINEN
-       Vorgang: er enthaelt keine Projekt-ID und keinen Zugang zu Quantus.
        Der Idempotenz-Schluessel verhindert Doppelanlagen bei Doppelklick oder
        Wiederholung.
        ------------------------------------------------------------------- */
     const QUANTUS_ENDPOINT = 'https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-portal';
-    const visionToken = (() => {
-      const t = new URLSearchParams(location.search).get('v') || '';
+    const inviteToken = (() => {
+      const t = new URLSearchParams(location.search).get('e') || '';
       return /^[A-Za-z0-9_-]{24,64}$/.test(t) ? t : '';
     })();
 
@@ -3266,6 +3268,13 @@
       if (sending || !vrSend.classList.contains('ready')) return;
       const picked = items.filter(i => i.on).map(i => i.label);
       const mail = (vrMail.value || '').trim();
+      /* Mit Einladung gehoert der Vision Room in den Fragebogen — dort wird
+         alles in EINEM Zug abgeschickt. Kein zweiter Eingang, kein zweiter
+         Vorgang. */
+      if (inviteToken) {
+        location.href = '/fragebogen.html?e=' + encodeURIComponent(inviteToken) + '#visionRoom';
+        return;
+      }
       /* Der Bedarf ist die Idee; die Funktionen sind eine freiwillige Ergaenzung. */
       const payload = { type, need: idea, idea, features: picked, email: mail };
       sending = true;
@@ -3275,20 +3284,20 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            kind: 'quote',
+            kind: 'inquiry',
             source: 'vision-room',
-            token: visionToken || undefined,
             payload,
             website: (el('vrHp') || {}).value || '',
-            idempotencyKey: idemKey([visionToken, 'quote', mail, idea, picked.join(',')])
+            idempotencyKey: idemKey(['', 'inquiry', mail, idea, picked.join(',')])
           })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Senden fehlgeschlagen');
         mm.classList.add('sent');
         vrSum.innerHTML = data.duplicate
-          ? '<b>Bereits eingegangen.</b> Ihre Offertenanfrage liegt bei FlowerTech.'
-          : '<b>Ihre Offertenanfrage ist bei FlowerTech eingegangen.</b> Wir schauen sie an und melden uns innert 24 h.';
+          ? '<b>Bereits eingegangen.</b> Ihre Anfrage liegt bei FlowerTech.'
+          : '<b>Ihre Anfrage ist bei FlowerTech eingegangen.</b> Wir schauen sie an und schicken Ihnen ' +
+            'innert 24 h einen persönlichen Fragebogen-Link für die restlichen Angaben.';
         vrSend.classList.remove('ready');
         vrSend.setAttribute('aria-disabled', 'true');
         if (vrNeed) { vrNeed.textContent = 'Ihre Idee ist bei uns — Sie hören innert 24 h von uns.'; vrNeed.classList.add('done'); }
