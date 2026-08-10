@@ -95,11 +95,24 @@ const ohneKommentare = (html) => html
   .replace(/\/\*[\s\S]*?\*\//g, "")
   .replace(/^\s*\/\/.*$/gm, "");
 const lieferbar = ohneKommentare(page);
-[[/\bVertrag\b/, "einen Vertrag"], [/\bAGB\b/, "AGB"],
- [/clientPortals/, "den Kundenportal-Snapshot"], [/kunde\.html/, "das Kundenportal"],
+/* Seit August 2026 gilt die umgekehrte Vorgabe fuer zwei dieser vier Punkte:
+   Vertrag UND zentrale Standard-AGB gehoeren ausdruecklich auf DIESEN einen
+   Link — er ist die vollstaendige Kundensicht und waechst mit dem Projekt.
+   Beide haengen weiterhin an ihrer eigenen Bedingung: der Vertrag an einer
+   ausdruecklichen Freigabe, die AGB an gar keiner (sie sind fuer alle gleich).
+
+   Was NICHT hierher gehoert, bleibt streng verboten: ein ZWEITER Link und
+   alles, was aus dem internen Bereich stammt. */
+[[/clientPortals/, "den Kundenportal-Snapshot"], [/kunde\.html/, "das Kundenportal (ein zweiter Link)"],
+ [/portalToken/, "einen Portaltoken"], [/projectId/, "eine Projekt-ID"],
 ].forEach(([re, was]) => {
   ok(!re.test(lieferbar), `der Fragebogen zeigt ${was} — das gehört nicht an diesen Link`);
 });
+// Und umgekehrt: Beides MUSS die Seite darstellen koennen.
+ok(/tiles\.contract/.test(page), "die Seite kann keinen Vertrag darstellen");
+ok(/tiles\.terms/.test(page), "die Seite kann die Standard-AGB nicht darstellen");
+ok(/renderContract/.test(page) && /renderTerms/.test(page),
+  "es fehlt ein eigener Baustein für Vertrag oder AGB");
 // Die Stufen entstehen ausschliesslich aus dem gelieferten Datensatz — nicht
 // aus einem zweiten Abruf und nicht von einer zweiten Adresse.
 ok(/data\.tiles/.test(page), "die Seite liest die Kacheln nicht aus dem Datensatz");
