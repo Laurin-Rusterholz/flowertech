@@ -7,6 +7,8 @@
 <meta name="referrer" content="no-referrer">
 <title>Ihre Angaben — FlowerTech</title>
 <link rel="icon" href="/favicon.svg">
+<!-- Der Vision Room ist hier derselbe Baustein wie auf flowertech.ch. -->
+<link rel="stylesheet" href="/visionroom.css">
 <style>
   /* Eigenständig gehalten: diese Seite lädt bewusst nichts von der Hauptseite
      nach — sie soll auch dann stehen, wenn dort umgebaut wird. */
@@ -57,23 +59,18 @@
   /* ── Vision Room ────────────────────────────────────────────────────────
      Er ist Teil DIESES Fragebogens, nicht ein zweiter Kanal: Die Idee und die
      gewählten Funktionen sind zwei Antworten, die mit allen anderen zusammen
-     abgeschickt werden. Deshalb steht er auch in derselben Form-Karte. */
-  .vr{border:1px solid rgba(160,107,255,.4);border-radius:var(--r);padding:18px;margin:6px 0 18px;
-    background:linear-gradient(180deg,rgba(160,107,255,.09),transparent)}
+     abgeschickt werden.
+
+     Aussehen und Verhalten kommen aus visionroom.css / visionroom.js — exakt
+     derselbe Baustein wie auf flowertech.ch. Die frühere, vereinfachte
+     Chip-Fassung ist ersatzlos weg: zwei Oberflächen für dieselbe Sache
+     driften auseinander. Hier steht nur noch die Einfassung. */
+  .vr{margin:6px 0 18px}
   .vr h3{margin:0 0 4px;font-size:16px}
   .vr .vr-lead{color:var(--muted);font-size:13.5px;margin:0 0 14px}
-  .vr-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
-  .vr-chip{border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:999px;
-    padding:8px 14px;font-size:13.5px;font-weight:600;cursor:pointer;line-height:1.2}
-  .vr-chip:hover{border-color:var(--violet)}
-  .vr-chip.on{background:linear-gradient(135deg,var(--lime),var(--cyan));color:#07070a;border-color:transparent}
-  .vr-chip[aria-pressed="true"]::before{content:"✓ "}
-  .vr-own{display:flex;gap:8px;margin-top:12px}
-  .vr-own input{flex:1}
-  .vr-own button{padding:11px 16px;border-radius:11px}
-  .vr-sum{margin-top:12px;font-size:13.5px;color:var(--muted)}
-  .vr-sum b{color:var(--text)}
-  @media (prefers-reduced-motion:no-preference){.vr-chip{transition:background .15s,border-color .15s}}
+  /* Die beiden Vision-Fragen bleiben die Wertträger des Bogens — bedient
+     werden sie vom Zentrum der Mindmap, nicht mehr von Hand. */
+  #vrCarriers{display:none}
 </style>
 </head>
 <body>
@@ -106,16 +103,11 @@
            Antworten dieses Fragebogens. -->
       <section class="vr" id="visionRoom" hidden aria-labelledby="vrHeading">
         <h3 id="vrHeading">Vision Room</h3>
-        <p class="vr-lead" id="vrLead">Bauen Sie Ihre Idee zusammen. Das gehört zu denselben Angaben —
-          Sie senden alles in einem Zug.</p>
-        <div id="vrIdeaField"></div>
-        <div class="vr-chips" id="vrChips" role="group" aria-label="Vorgeschlagene Funktionen"></div>
-        <div class="vr-own">
-          <input id="vrOwn" maxlength="90" placeholder="Eigene Funktion anhängen …" aria-label="Eigene Funktion">
-          <button type="button" id="vrAdd">Hinzufügen</button>
-        </div>
-        <p class="vr-sum" id="vrSum" role="status" aria-live="polite">Noch nichts gewählt.</p>
-        <div id="vrFeatureField"></div>
+        <p class="vr-lead" id="vrLead">Bauen Sie Ihre Idee zusammen — genau wie auf flowertech.ch.
+          Das gehört zu denselben Angaben: Sie senden alles in einem Zug, es gibt keinen
+          zweiten Versand.</p>
+        <div id="visionRoomMount"></div>
+        <div id="vrCarriers"></div>
       </section>
 
       <label class="hp" aria-hidden="true">Bitte leer lassen<input id="hp" tabindex="-1" autocomplete="off"></label>
@@ -130,6 +122,7 @@
   <footer id="footer">FlowerTech</footer>
 </div>
 
+<script src="/visionroom.js"></script>
 <script>
 /* Der öffentliche Fragebogen.
    -----------------------------------------------------------------------
@@ -227,101 +220,89 @@
 
   /* ── Vision Room ──────────────────────────────────────────────────────────
      Zwei Fragen dieses Fragebogens bekommen eine andere Darstellung: die Idee
-     als Zentrum, die Funktionen als anklickbare Vorschläge. Die Werte landen
-     in denselben Feldern wie jede andere Antwort — es gibt keinen zweiten
-     Versandweg und damit auch keinen zweiten Vorgang. */
-  var VISION_SUGGESTIONS = [
-    [/termin|buchung|reserv|kalender/i, ["Terminbuchung", "Kalender-Übersicht", "Erinnerung per E-Mail"]],
-    [/shop|verkauf|produkt|bestell/i, ["Produktkatalog", "Warenkorb", "Online-Zahlung", "Bestellübersicht"]],
-    [/restaurant|menu|menü|speise|cafe|café|tisch|gäste|gaeste|beiz/i,
-      ["Speisekarte", "Tischreservation", "Öffnungszeiten"]],
-    [/kurs|schul|lern|training/i, ["Kursübersicht", "Anmeldung", "Teilnehmerliste"]],
-    [/portfolio|foto|galerie|bilder/i, ["Bildergalerie", "Projektseiten", "Referenzen"]],
-    [/verein|mitglied|club/i, ["Mitgliederbereich", "Login", "Veranstaltungen"]],
-    [/rechnung|buchhalt|offert|verwalt/i, ["Rechnungen erstellen", "Auswertungen", "Datenexport"]],
-    [/blog|news|magazin/i, ["Beitragsübersicht", "Kategorien", "Newsletter-Anmeldung"]],
-  ];
-  var VISION_BASE = ["Kontaktformular", "Mobile Ansicht", "Auffindbarkeit bei Google", "Bildergalerie", "Karte / Anfahrt"];
+     als Zentrum, die Funktionen als Mindmap ringsherum.
 
+     Diese Darstellung ist NICHT nachgebaut, sondern derselbe Baustein wie auf
+     flowertech.ch (visionroom.js): dieselbe Wissensbasis, dieselbe Gewichtung
+     der Vorschläge, dieselben Auswahl-, Tastatur- und Touch-Wege. Vorher stand
+     hier eine vereinfachte Chip-Fassung mit einer viel kürzeren eigenen
+     Vorschlagsliste — die Kundschaft sah je nach Weg etwas anderes.
+
+     Was hier NICHT dazukommt: ein zweiter Versandweg. Der Baustein läuft im
+     Fragebogen-Modus, hat also weder E-Mail-Feld noch Senden-Knopf und ruft
+     nichts von sich aus auf. Idee und Funktionen bleiben zwei Antworten dieses
+     Bogens; sie landen in denselben Feldern wie jede andere Antwort und gehen
+     mit ihnen zusammen ab. Deshalb entsteht kein zweiter Vorgang. */
   var visionIdea = null;      // Index der Ideenfrage
   var visionFeatures = null;  // Index der Funktionenfrage
-  var picked = [];
+  var visionRoom = null;      // die Steuerung des gemeinsamen Bausteins
 
-  function suggestions() {
-    var idea = visionIdea == null ? "" : value(visionIdea);
-    var out = [];
-    VISION_SUGGESTIONS.forEach(function (pair) {
-      if (pair[0].test(idea)) pair[1].forEach(function (f) { if (out.indexOf(f) < 0) out.push(f); });
-    });
-    VISION_BASE.forEach(function (f) { if (out.indexOf(f) < 0) out.push(f); });
-    picked.forEach(function (f) { if (out.indexOf(f) < 0) out.unshift(f); });
-    return out.slice(0, 14);
+  // Die Auswahlfrage nach der Art des Vorhabens ist dieselbe Angabe wie die
+  // Art im Vision Room. Sie wird verbunden statt zweimal gefragt.
+  function typeQuestionNode() {
+    for (var i = 0; i < questions.length; i++) {
+      var q = questions[i];
+      if (q.type !== "select" || !Array.isArray(q.options)) continue;
+      var hits = 0;
+      q.options.forEach(function (o) {
+        if (["Website", "Web-Programm", "Web-App"].indexOf(String(o)) >= 0) hits++;
+      });
+      if (hits >= 2) return el("q_" + i);
+    }
+    return null;
   }
-
-  function renderChips() {
-    el("vrChips").innerHTML = suggestions().map(function (f) {
-      var on = picked.indexOf(f) >= 0;
-      return '<button type="button" class="vr-chip' + (on ? " on" : "") + '" aria-pressed="' +
-        (on ? "true" : "false") + '" data-f="' + esc(f) + '">' + esc(f) + "</button>";
-    }).join("");
-    Array.prototype.forEach.call(el("vrChips").querySelectorAll(".vr-chip"), function (btn) {
-      btn.addEventListener("click", function () { toggleFeature(btn.getAttribute("data-f")); });
-    });
-    el("vrSum").innerHTML = picked.length
-      ? "Gewählt: <b>" + picked.map(esc).join("</b>, <b>") + "</b>"
-      : "Noch nichts gewählt — die Funktionen sind freiwillig.";
-  }
-
-  function toggleFeature(feature) {
-    var at = picked.indexOf(feature);
-    if (at >= 0) picked.splice(at, 1); else picked.push(feature);
-    writeFeatures();
-    renderChips();
-    sync();
-  }
-
-  // Die gewählten Funktionen sind der Wert der Funktionen-Frage. Damit wandern
-  // sie über denselben Weg wie jede andere Antwort.
-  function writeFeatures() {
-    if (visionFeatures == null) return;
-    var node = el("q_" + visionFeatures);
-    if (node) node.value = picked.join("\n");
+  function hasOption(node, value) {
+    return !!node && Array.prototype.some.call(node.options, function (o) { return o.value === value; });
   }
 
   function setupVisionRoom() {
     if (visionIdea == null && visionFeatures == null) return;
+    if (!window.FlowerTechVisionRoom) return;   // ohne Baustein bleiben die Fragen normale Fragen
     el("visionRoom").hidden = false;
-    // Die beiden Felder werden aus der Feldliste in den Vision Room verschoben:
-    // dasselbe Element, derselbe Wert, nur an einem verständlicheren Ort.
-    if (visionIdea != null) {
-      var ideaLabel = el("q_" + visionIdea).closest("label");
-      if (ideaLabel) el("vrIdeaField").appendChild(ideaLabel);
-      el("q_" + visionIdea).addEventListener("input", renderChips);
-    }
-    if (visionFeatures != null) {
-      var featLabel = el("q_" + visionFeatures).closest("label");
-      // Das Textfeld bleibt bedienbar (Tastatur, Vorlesesoftware) und ist
-      // zugleich das Ziel der Chips — keine versteckte Zweitquelle.
-      if (featLabel) el("vrFeatureField").appendChild(featLabel);
-      var node = el("q_" + visionFeatures);
-      node.addEventListener("input", function () {
-        picked = String(node.value || "").split("\n").map(function (v) { return v.trim(); }).filter(Boolean);
-        renderChips();
+
+    // Die beiden Fragen bleiben die Wertträger dieses Bogens. Sie wandern in
+    // einen eigenen Behälter und werden vom Zentrum der Mindmap bedient —
+    // eine zweite, von Hand bedienbare Quelle wäre genau die Doppelspurigkeit,
+    // die hier abgeschafft wird.
+    var ideaNode = visionIdea == null ? null : el("q_" + visionIdea);
+    var featNode = visionFeatures == null ? null : el("q_" + visionFeatures);
+    [ideaNode, featNode].forEach(function (node) {
+      if (!node) return;
+      var label = node.closest("label");
+      if (label) el("vrCarriers").appendChild(label);
+    });
+
+    var typeNode = typeQuestionNode();
+    visionRoom = window.FlowerTechVisionRoom.mount(el("visionRoomMount"), {
+      mode: "intake",
+      initial: {
+        idea: ideaNode ? ideaNode.value : "",
+        type: typeNode && hasOption(typeNode, typeNode.value) ? typeNode.value : "",
+        features: featNode
+          ? String(featNode.value || "").split("\n").map(function (v) { return v.trim(); }).filter(Boolean)
+          : [],
+      },
+      // Der einzige Ausgang: die Werte wandern in die Felder des Fragebogens.
+      onChange: function (state) {
+        if (ideaNode) ideaNode.value = state.idea;
+        if (featNode) featNode.value = state.features.join("\n");
+        if (typeNode && state.type && hasOption(typeNode, state.type)) typeNode.value = state.type;
+        sync();
+      },
+    });
+
+    // Wer die Art unten im Bogen ändert, ändert sie auch im Vision Room.
+    if (typeNode && visionRoom && visionRoom.setType) {
+      typeNode.addEventListener("change", function () {
+        if (hasOption(typeNode, typeNode.value)) visionRoom.setType(typeNode.value);
       });
     }
-    el("vrAdd").addEventListener("click", function () {
-      var own = String(el("vrOwn").value || "").trim();
-      if (!own) return;
-      if (picked.indexOf(own) < 0) picked.push(own);
-      el("vrOwn").value = "";
-      writeFeatures();
-      renderChips();
-      sync();
-    });
-    el("vrOwn").addEventListener("keydown", function (ev) {
-      if (ev.key === "Enter") { ev.preventDefault(); el("vrAdd").click(); }
-    });
-    renderChips();
+  }
+
+  // Gehört eine Frage zu den Wertträgern des Vision Rooms? Dann wird nicht
+  // sie angesprungen, sondern das Zentrum der Mindmap.
+  function isVisionCarrier(index) {
+    return index === visionIdea || index === visionFeatures;
   }
 
   function render(data) {
@@ -391,7 +372,10 @@
       status.className = "status show err";
       status.textContent = "Bitte noch ergänzen: " + missing().join(", ") + ".";
       var first = questions.findIndex(function (q, i) { return q.required && !value(i); });
-      if (first >= 0 && el("q_" + first)) el("q_" + first).focus();
+      // Die Wertträger des Vision Rooms sind ausgeblendet — angesprungen wird
+      // das Feld, das die Kundschaft wirklich vor sich hat.
+      var ziel = first >= 0 && isVisionCarrier(first) ? el("vrIdea") : (first >= 0 ? el("q_" + first) : null);
+      if (ziel && ziel.focus) ziel.focus();
       return;
     }
     var answers = questions.map(function (q, i) {

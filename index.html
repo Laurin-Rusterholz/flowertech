@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>FlowerTech — Software, die mitwächst</title>
 <meta name="description" content="FlowerTech entwickelt Websites und Web-Apps mit Automatisierung und KI. Software, die mitwächst: Änderungen jede Woche — und jede Person im Team stellt sich ihr Programm selbst zusammen.">
+<!-- Der Vision Room ist auf dieser Seite und im Fragebogen derselbe Baustein. -->
+<link rel="stylesheet" href="/visionroom.css">
 <style>
   :root {
     --bg: #000;
@@ -865,130 +867,10 @@
   }
 
 
-  /* ========== Visionroom · Mindmap ========== */
+  /* ========== Visionroom · Abschnitt ==========
+     Die Mindmap selbst steht in visionroom.css und visionroom.js — sie ist auf
+     dieser Seite und im Fragebogen dieselbe. Hier bleibt nur der Abschnitt. */
   .vision { max-width: 1120px; }
-  .mm { position: relative; border: 1px solid rgba(255,255,255,.13); border-radius: 28px; overflow: hidden;
-    background: radial-gradient(ellipse 70% 60% at 50% 42%, rgba(160,107,255,.09), transparent 70%), #08080b;
-    box-shadow: 0 -1px 0 rgba(255,255,255,.18) inset, 0 50px 140px rgba(0,0,0,.85); }
-  .mm-top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.025); }
-  .mm-types { display: flex; gap: 8px; flex-wrap: wrap; }
-  .mt { display: inline-flex; align-items: center; gap: 9px; font-family: inherit; font-size: 12.5px; font-weight: 650; color: var(--ink-dim);
-    border: 1px solid var(--line-2); border-radius: 100px; padding: 9px 16px; background: rgba(255,255,255,.03); cursor: pointer; transition: .25s; }
-  .mt i { width: 8px; height: 8px; border-radius: 50%; transition: .25s; }
-  .mt:hover { color: var(--ink); border-color: var(--line-3); }
-  .mt.on { color: #000; background: #f6f6f4; border-color: #f6f6f4; }
-  .mm-hint { margin-left: auto; margin-right: 12px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); }
-
-  .mm-canvas { position: relative; height: 560px; overflow: hidden;
-    background-image: radial-gradient(rgba(255,255,255,.045) 1px, transparent 1px); background-size: 26px 26px; }
-  .mm-links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .mm-links path { fill: none; stroke-linecap: round; }
-  .mm-links path.ghost { stroke: rgba(246,246,244,.16); stroke-width: 1; stroke-dasharray: 3 6; animation: mmdash 22s linear infinite; }
-  @keyframes mmdash { to { stroke-dashoffset: -180; } }
-  .mm-links path.live { stroke-width: 1.6; }
-
-  .mm-core { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 3;
-    width: 264px; padding: 20px 22px 18px; border-radius: 22px; text-align: center;
-    background: linear-gradient(180deg, #16161c, #0b0b0f); border: 1px solid rgba(246,246,244,.3);
-    box-shadow: 0 24px 70px rgba(0,0,0,.8), 0 0 0 6px rgba(255,255,255,.02); }
-  .mc-halo { position: absolute; inset: -26px; border-radius: 34px; pointer-events: none; z-index: -1;
-    background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(160,107,255,.28), transparent 70%); filter: blur(10px);
-    animation: mmpulse 4.5s ease-in-out infinite; }
-  @keyframes mmpulse { 0%,100% { opacity: .55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.07); } }
-  .mc-flower { display: block; margin: 0 auto 10px; width: 26px; height: 26px; animation: spin 30s linear infinite; }
-  .mm-core input { width: 100%; background: none; border: 0; outline: 0; text-align: center; color: var(--ink);
-    font-family: inherit; font-size: 17px; font-weight: 750; letter-spacing: -.02em; }
-  .mm-core input::placeholder { color: rgba(246,246,244,.28); font-weight: 600; }
-  .mc-type { display: block; margin-top: 8px; font-family: var(--mono); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); }
-  .mc-badge { position: absolute; right: -10px; top: -10px; min-width: 26px; height: 26px; border-radius: 100px; display: grid; place-items: center;
-    font-size: 11.5px; font-weight: 800; color: #000; background: var(--lime); box-shadow: 0 0 18px rgba(200,255,46,.5);
-    transform: scale(0); transition: transform .35s cubic-bezier(.3,.9,.3,1.5); }
-  .mc-badge.on { transform: scale(1); }
-
-  .mm-nodes { position: absolute; inset: 0; }
-  .mnode { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 8px; max-width: 212px;
-    font-family: inherit; font-size: 11.5px; font-weight: 600; text-align: left; color: var(--ink-dim); cursor: pointer;
-    border: 1px solid var(--line-2); border-radius: 100px; padding: 8px 8px 8px 13px; background: rgba(12,12,16,.94);
-    transition: transform .6s cubic-bezier(.2,.75,.25,1), color .3s, border-color .3s, background .3s, box-shadow .3s;
-    will-change: transform; }
-  .mnode span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mnode u { text-decoration: none; flex: none; width: 19px; height: 19px; border-radius: 50%; background: rgba(255,255,255,.1);
-    display: grid; place-items: center; font-size: 13px; line-height: 1; color: var(--ink); transition: .25s; }
-  .mnode:hover { color: var(--ink); border-color: var(--line-3); }
-  .mnode:hover u { background: var(--c, var(--lime)); color: #000; }
-  .mnode.on { color: #000; background: var(--c, var(--lime)); border-color: var(--c, var(--lime)); font-weight: 750;
-    box-shadow: 0 0 26px color-mix(in srgb, var(--c, #c8ff2e) 40%, transparent); }
-  .mnode.on u { background: rgba(0,0,0,.2); color: #000; }
-  .mnode.on:hover u { background: rgba(0,0,0,.45); color: #fff; }
-  .mnode.hidden { opacity: 0; pointer-events: none; transform: translate(-50%,-50%) scale(.6); }
-
-  .mm-empty { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); text-align: center; width: min(88%, 520px); pointer-events: none;
-    font-size: 13px; line-height: 1.7; color: var(--ink-faint); transition: opacity .4s; }
-  .mm-empty b { color: var(--ink-dim); font-weight: 650; }
-  .mm-empty-mobile { display: none; }
-  .mm-empty.gone { opacity: 0; visibility: hidden; }
-
-  .mm-foot { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px 20px; border-top: 1px solid var(--line); background: rgba(255,255,255,.025); }
-  .mm-own, .mm-send { display: flex; align-items: center; gap: 9px; border: 1px solid var(--line-2); border-radius: 100px; padding: 6px 6px 6px 16px; }
-  .mm-own { flex: 1; min-width: 240px; }
-  .mm-own input, .mm-send input { background: none; border: 0; outline: 0; color: var(--ink); font-family: inherit; font-size: 12.5px; }
-  .mm-own input { flex: 1; }
-  .mm-send input { width: 200px; }
-  .mm-own input::placeholder, .mm-send input::placeholder { color: var(--ink-faint); }
-  .mm-own button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(255,255,255,.1); color: var(--ink); font-size: 17px; line-height: 1; cursor: pointer; transition: .25s; }
-  .mm-own button:hover { background: var(--lime); color: #000; }
-  .mm-send .bttn { padding: 10px 22px; font-size: 13px; }
-  /* Der Senden-Knopf bleibt stumm, bis die Idee steht. Damit das nicht raten
-     heisst, steht die Pflicht zweimal sichtbar da: im Zentrum beim Feld und
-     unmittelbar beim Knopf. Ein gedimmter Knopf allein erklaert nichts. */
-  .mm-need { margin-top: 11px; font-size: 11.5px; line-height: 1.5; }
-  .mm-need b { display: block; color: var(--ink); font-weight: 700; }
-  .mm-need span { display: block; margin-top: 4px; color: var(--ink-dim); font-weight: 500; }
-  .mm-core.filled .mm-need { display: none; }
-  /* Leeres Zentrum: deutlich sichtbare Aufforderung statt blasser Platzhalter. */
-  .mm-core.empty { border-color: rgba(160,107,255,.6);
-    box-shadow: 0 24px 70px rgba(0,0,0,.8), 0 0 0 6px rgba(160,107,255,.1); }
-  .mm-core.empty input::placeholder { color: rgba(246,246,244,.62); }
-  .mm-core:focus-within { border-color: var(--lime);
-    box-shadow: 0 24px 70px rgba(0,0,0,.8), 0 0 0 4px rgba(200,255,46,.3); }
-  .mm-core:focus-within input::placeholder { color: rgba(246,246,244,.5); }
-  .mm-need-send { width: 100%; margin: 0; font-size: 12.5px; line-height: 1.5; font-weight: 600; color: var(--ink); }
-  .mm-need-send::before { content: "→ "; color: var(--violet); }
-  .mm-need-send.done { font-weight: 500; color: var(--ink-dim); }
-  .mm-need-send.done::before { content: "✓ "; color: var(--lime); }
-  .mm-sum { padding: 0 20px 18px; font-size: 12.5px; color: var(--ink-faint); }
-  .mm-sum b { color: var(--ink); font-weight: 700; }
-
-  @media (max-width: 860px) {
-    .mm-canvas { height: auto; padding: 22px 16px 26px; }
-    .mm-links { display: none; }
-    .mm-core { position: relative; left: auto; top: auto; transform: none; width: 100%; margin-bottom: 18px; }
-    /* Zentriert umbrechende Pillen ergaben ein unruhiges Zickzack —
-       am Handy liest sich eine gleichmässige Spalte deutlich besser. */
-    .mm-nodes { position: relative; inset: auto; display: flex; flex-direction: column; gap: 8px; }
-    .mnode { position: relative !important; transform: none !important; max-width: 100%; width: 100%;
-      justify-content: space-between; touch-action: auto; padding: 9px 9px 9px 14px; }
-    .mnode span { flex: 1; min-width: 0; }
-    .mnode u { width: 24px; height: 24px; }
-    .mnode.hidden { display: none; }
-    .mm-empty { position: relative; left: auto; bottom: auto; transform: none; margin-top: 16px; }
-    .mm-send, .mm-own { width: 100%; }
-    .mm-send input { flex: 1; width: auto; }
-    .mm-reset { display: none; }
-  }
-
-
-  .mm-reset { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint);
-    border: 1px solid var(--line-2); border-radius: 100px; padding: 7px 13px; background: none; cursor: pointer; transition: .25s; }
-  .mm-reset:hover { color: var(--ink); border-color: var(--line-3); }
-  .mm-mobile-step, .mm-label, .mm-suggest, .mm-more { display: none; }
-  .mnode { user-select: none; touch-action: none; }
-  .mnode.dragging { transition: none; cursor: grabbing; z-index: 5; box-shadow: 0 18px 44px rgba(0,0,0,.8); }
-  .mnode:active { cursor: grabbing; }
-  .mn-edit { width: 150px; background: rgba(0,0,0,.35); border: 0; outline: 0; border-radius: 6px; padding: 2px 6px;
-    color: inherit; font-family: inherit; font-size: 11.5px; font-weight: inherit; }
-  .mt.shake { animation: mtshake .45s; }
-  @keyframes mtshake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
 
   /* ========== Auswahl-Tor ========== */
   #rest.locked { display: none; }
@@ -1080,10 +962,6 @@
   .vision { position: relative; z-index: 2; padding: 12vh 24px; max-width: 1000px; margin: 0 auto; }
   /* Gesperrt heisst lesbar-gesperrt, nicht fast unsichtbar: der Knopf muss als
      Ziel erkennbar bleiben, damit der Hinweis daneben ueberhaupt Sinn ergibt. */
-  #vrSend { opacity: 1; pointer-events: none; background: rgba(246,246,244,.16); color: var(--ink-dim); }
-  #vrSend:hover { transform: none; box-shadow: none; background: rgba(246,246,244,.16); }
-  #vrSend.ready { pointer-events: auto; background: #fff; color: #000; }
-  #vrSend.ready:hover { background: var(--lime); transform: scale(1.04); box-shadow: 0 10px 44px rgba(200,255,46,.25); }
   .vr-note { margin-top: 16px; text-align: center; font-size: 12.5px; color: var(--ink-faint); }@keyframes afdot { 0% { top: 0; } 100% { top: 100%; } }/* ========== Leistungen ========== */
   .leist { position: relative; z-index: 2; padding: 10vh 24px 8vh; max-width: 1180px; margin: 0 auto; }
   .leist-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; align-items: start; }
@@ -1185,13 +1063,9 @@
 
     .mswitch button { padding: 9px 15px; font-size: 12.5px; min-height: 38px; }
     .faq summary { padding: 17px 2px; font-size: 15px; min-height: 54px; }
-    .mt { padding: 10px 15px; font-size: 12.5px; min-height: 42px; }
-    .mnode { padding: 10px 10px 10px 14px; font-size: 12.5px; min-height: 42px; }
-    .mnode u { width: 24px; height: 24px; font-size: 15px; }
     .chat .sugs button, .pc-sugs button { font-size: 12px; padding: 9px 13px; min-height: 40px; }
-    .chat .inp, .pc-in, .mm-own, .mm-send { padding: 6px 6px 6px 14px; }
+    .chat .inp, .pc-in { padding: 6px 6px 6px 14px; }
     .chat .inp .snd, .pc-in .snd { width: 38px; height: 38px; font-size: 16px; }
-    .mm-own button { width: 36px; height: 36px; font-size: 19px; }
     .pc-x { width: 34px; height: 34px; font-size: 17px; }
     .aw-x { width: 38px; height: 38px; font-size: 19px; }
     .bttn.sm2 { min-height: 44px; padding: 11px 20px; font-size: 13.5px; }
@@ -1224,11 +1098,9 @@
     .bub { font-size: 13.5px; max-width: 88%; overflow-wrap: anywhere; }
     .bub.ai .doc b, .bub.ai .doc span { overflow-wrap: anywhere; }
     .pc-bd .bub { font-size: 13px; }
-    .mm-empty { font-size: 13px; }
-    .vr-note, .mm-sum { font-size: 12.5px; }
+    .vr-note { font-size: 12.5px; }
     footer { font-size: 10px; }/* iOS zoomt bei Eingabefeldern unter 16px automatisch hinein */
-    input, .pc-in input, .chat .inp input, .mm-own input, .mm-send input, .mm-core input { font-size: 16px; }
-    .mm-core input { font-size: 17px; }
+    input, .pc-in input, .chat .inp input { font-size: 16px; }
 
     /* --- 5. Raster: dichter Rhythmus in px. Desktop-Weissraum wirkt am
        Telefon wie eine leere Seite zwischen den Abschnitten. --- */
@@ -1338,14 +1210,6 @@
     #pchat { left: 10px; right: 10px; width: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); border-radius: 22px; }
     .pc-bd { max-height: 46dvh; }
 
-    /* --- 10. Mindmap --- */
-    .mm { border-radius: 20px; }
-    .mm-top { padding: 14px; gap: 12px; }
-    .mm-hint { margin: 0; width: 100%; font-size: 10px; letter-spacing: .1em; }
-    .mm-canvas { padding: 18px 12px 22px; }
-    .mm-core { padding: 18px 18px 16px; }
-    .mm-foot { padding: 14px; gap: 10px; }
-    .mm-sum { padding: 0 14px 16px; }
   }
 
   @keyframes awsheet { from { transform: translateY(40px); opacity: 0; } }
@@ -1411,79 +1275,6 @@
     /* Visionroom: vier verständliche Schritte, mobile Karten und normaler Bildlauf. */
     #vision { transform: none !important; }
     .vision .sec-head br { display: none; }
-    .mm { display: flex; flex-direction: column; border-radius: 22px;
-      background: linear-gradient(180deg, #0d0d12, #060608); box-shadow: 0 24px 70px rgba(0,0,0,.68); }
-    .mm-mobile-step { display: flex; align-items: center; gap: 10px; width: 100%;
-      color: var(--ink); font-size: 14px; font-weight: 720; letter-spacing: -.01em; }
-    .mm-mobile-step em { display: grid; place-items: center; width: 25px; height: 25px; flex: none;
-      border-radius: 50%; background: rgba(160,107,255,.16); color: #d7c5ff;
-      font-family: var(--mono); font-size: 9px; font-style: normal; letter-spacing: .06em; }
-    .mm-top { display: grid; grid-template-columns: 1fr auto; gap: 13px 10px; padding: 17px;
-      border-bottom-color: rgba(255,255,255,.1); }
-    .mm-top > .mm-mobile-step { grid-column: 1; }
-    .mm-reset { display: inline-flex; grid-column: 2; grid-row: 1; align-items: center; justify-content: center;
-      min-height: 32px; padding: 7px 10px; font-size: 8.5px; color: var(--ink-dim); }
-    .mm-types { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 7px; }
-    .mt { min-width: 0; min-height: 48px; justify-content: center; gap: 7px; padding: 9px 6px;
-      border-radius: 12px; font-size: 11.5px; line-height: 1.1; text-align: center; }
-    .mt i { width: 7px; height: 7px; }
-    .mm-hint { grid-column: 1 / -1; width: auto; margin: 0; padding: 9px 11px;
-      border-radius: 10px; background: rgba(255,255,255,.035); font-size: 9px; line-height: 1.35;
-      letter-spacing: .09em; text-align: left; text-transform: none; }
-
-    .mm-canvas { display: flex; flex-direction: column; height: auto; overflow: visible; padding: 18px 16px 17px;
-      background: none; }
-    .mm-links, .mc-halo { display: none; }
-    .mm-idea-step { order: 1; margin-bottom: 12px; }
-    .mm-core { order: 2; position: relative; left: auto; top: auto; transform: none; width: 100%; margin: 0;
-      display: grid; grid-template-columns: auto 1fr; gap: 5px 11px; align-items: center;
-      padding: 14px; border-radius: 15px; text-align: left; background: #111116;
-      border-color: rgba(255,255,255,.2); box-shadow: none; }
-    .mc-flower { grid-column: 1; grid-row: 1 / 3; width: 25px; height: 25px; margin: 0; }
-    .mm-label { display: block; grid-column: 2; grid-row: 1; color: var(--ink-faint);
-      font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
-    .mm-core input { grid-column: 2; grid-row: 2; text-align: left; min-width: 0; font-size: 16px; }
-    .mm-need { grid-column: 1 / -1; grid-row: 3; margin-top: 3px; font-size: 12px; }
-    .mm-suggest { display: inline-flex; grid-column: 1 / -1; grid-row: 4; align-items: center; justify-content: center;
-      min-height: 44px; margin-top: 8px; border: 0; border-radius: 11px; background: #f6f6f4;
-      color: #000; font: 720 14px/1 var(--sans); cursor: pointer; }
-    .mm-suggest:active { transform: scale(.985); background: var(--lime); }
-    .mc-type { grid-column: 1 / -1; grid-row: 5; margin: 5px 0 0; font-size: 8.5px; text-align: left; }
-    .mc-badge { right: -7px; top: -7px; }
-
-    .mm-feature-step { order: 3; display: none; margin: 22px 0 12px; }
-    .mm.has-items .mm-feature-step { display: flex; }
-    .mm-nodes { order: 4; position: relative; inset: auto; display: grid;
-      grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
-    .mnode { position: relative !important; left: auto; top: auto; transform: none !important; width: 100%;
-      max-width: none; min-width: 0; min-height: 66px; justify-content: space-between; align-items: flex-start;
-      padding: 11px; border-radius: 13px; appearance: none; -webkit-appearance: none; font-family: inherit;
-      font-size: 12px; line-height: 1.28; touch-action: pan-y !important; }
-    .mnode span { white-space: normal; overflow: visible; text-overflow: clip; }
-    .mnode u { width: 23px; height: 23px; margin-top: -2px; }
-    .mnode.mobile-hidden { display: none; }
-    .mm-more { order: 5; align-items: center; justify-content: center; min-height: 44px; margin-top: 10px;
-      border: 1px solid var(--line-2); border-radius: 12px; background: rgba(255,255,255,.035);
-      color: var(--ink); font: 650 13px/1 var(--sans); }
-    .mm-more:not([hidden]) { display: inline-flex; }
-    .mm-empty { order: 6; position: relative; left: auto; bottom: auto; transform: none; width: 100%;
-      margin: 14px 0 0; padding: 13px; border-radius: 12px; background: rgba(255,255,255,.03);
-      text-align: left; font-size: 12.5px; line-height: 1.5; }
-    .mm-empty-desktop { display: none; }
-    .mm-empty-mobile { display: inline; }
-    .mm-empty.gone { display: none; }
-
-    .mm-foot { display: none; grid-template-columns: 1fr; gap: 11px; padding: 17px;
-      border-top-color: rgba(255,255,255,.1); background: rgba(255,255,255,.02); }
-    .mm.has-picks .mm-foot, .mm.has-idea .mm-foot { display: grid; }
-    .mm-need-send { order: 3; font-size: 12.5px; }
-    .mm-own, .mm-send { width: 100%; min-width: 0; border-radius: 13px; background: #101014; }
-    .mm-own { min-height: 50px; }
-    .mm-send { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; padding: 7px 7px 7px 13px; }
-    .mm-own input, .mm-send input { min-width: 0; font-size: 16px; }
-    .mm-send .bttn { min-height: 42px; padding: 10px 17px; font-size: 13px; }
-    .mm-sum { order: 4; padding: 13px 17px 16px; border-top: 1px solid rgba(255,255,255,.08);
-      background: rgba(160,107,255,.055); font-size: 12px; line-height: 1.5; }
     .vr-note { line-height: 1.55; }
 
     /* Systemmodell: ein festes Gerät, vier Screens, keine sichtbaren Layer-Kanten. */
@@ -1541,8 +1332,6 @@
   @media (max-width: 359px) {
     .hero { padding-left: 15px; padding-right: 15px; }
     .hero h1 { font-size: 35px; }
-    .mm-nodes { grid-template-columns: 1fr; }
-    .mt { font-size: 10.5px; }
     .floors { left: 10px; right: 10px; }
   }
 
@@ -1893,56 +1682,10 @@
     <p>Art wählen, Idee beschreiben, Funktionen sammeln — wir schlagen passende vor.</p>
   </div>
 
-  <div class="mm rv" id="mm">
-    <div class="mm-top">
-      <div class="mm-mobile-step"><em>01</em><span>Was möchten Sie bauen?</span></div>
-      <div class="mm-types">
-        <button type="button" class="mt" data-t="Website"><i style="background:var(--lime)"></i>Website</button>
-        <button type="button" class="mt" data-t="Web-Programm"><i style="background:var(--cyan)"></i>Web-Programm</button>
-        <button type="button" class="mt" data-t="Web-App"><i style="background:var(--orange)"></i>Web-App</button>
-      </div>
-      <div class="mm-hint" id="mmHint">Idee eintippen → Funktionen anhängen</div>
-      <button type="button" class="mm-reset" id="mmReset" title="Visionroom neu starten">Neu starten</button>
-    </div>
-
-    <div class="mm-canvas" id="mmCanvas">
-      <svg class="mm-links" id="mmLinks" aria-hidden="true"></svg>
-      <div class="mm-mobile-step mm-idea-step"><em>02</em><span>Beschreiben Sie Ihre Idee</span></div>
-      <div class="mm-core empty" id="mmCore">
-        <span class="mc-halo"></span>
-        <span class="mc-flower"><svg viewBox="0 0 100 100" width="26" height="26"><use href="#flowerG"/></svg></span>
-        <label class="mm-label" for="vrIdea">Ihre Idee · Pflichtfeld</label>
-        <input id="vrIdea" placeholder="Ihre Idee in einem Satz …" maxlength="90" autocomplete="off"
-               aria-label="Ihre Idee (Pflichtfeld)" aria-required="true" aria-describedby="vrIdeaHelp" aria-invalid="true">
-        <p class="mm-need" id="vrIdeaHelp">
-          <b>Beschreiben Sie kurz Ihre Idee, damit Sie senden können.</b>
-          <span>Zum Beispiel: «Eine App, mit der Familien Aufgaben und Termine gemeinsam organisieren.»</span>
-        </p>
-        <button type="button" class="mm-suggest" id="vrSuggest">Vorschläge anzeigen</button>
-        <span class="mc-type" id="mmType">Art wählen</span>
-        <span class="mc-badge" id="mmBadge">0</span>
-      </div>
-      <div class="mm-mobile-step mm-feature-step"><em>03</em><span>Passende Funktionen wählen</span></div>
-      <div class="mm-nodes" id="mmNodes"></div>
-      <button type="button" class="mm-more" id="mmMore" hidden>Weitere Vorschläge anzeigen</button>
-      <div class="mm-empty" id="mmEmpty">
-        <span class="mm-empty-desktop">Tippen Sie Ihre Idee ins Zentrum —<br>z.&nbsp;B. <b>Buchhaltungsprogramm</b>, <b>Fitnesstracker</b>, <b>Restaurant-Website</b></span>
-        <span class="mm-empty-mobile">Wählen Sie zuerst eine Art, beschreiben Sie Ihre Idee und lassen Sie passende Funktionen vorschlagen.</span>
-      </div>
-    </div>
-
-    <div class="mm-foot">
-      <div class="mm-mobile-step"><em>04</em><span>Auswahl senden</span></div>
-      <div class="mm-own"><input id="vrOwn" placeholder="Eigene Funktion anhängen …" maxlength="70" autocomplete="off" aria-label="Eigene Funktion"><button type="button" id="vrAdd" aria-label="Funktion hinzufügen">+</button></div>
-      <div class="mm-send">
-        <input id="vrMail" type="email" placeholder="Ihre E-Mail für die Antwort" autocomplete="email" aria-label="E-Mail für die Antwort">
-        <input id="vrHp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
-        <a class="bttn" id="vrSend" href="#" role="button" aria-disabled="true" aria-describedby="vrNeed">Senden</a>
-      </div>
-      <p class="mm-need-send" id="vrNeed" role="status" aria-live="polite">Noch kurz Ihre Idee beschreiben, dann können Sie senden.</p>
-    </div>
-    <div class="mm-sum" id="vrSum" aria-live="polite">Noch nichts gewählt.</div>
-  </div>
+  <!-- Der Vision Room. Aufbau, Auswahl und Verhalten stehen in visionroom.js,
+       das Aussehen in visionroom.css — beides teilt sich diese Seite mit dem
+       öffentlichen Fragebogen. Es gibt nur EINE Fassung des Vision Rooms. -->
+  <div id="visionRoomMount" class="rv"></div>
   <p class="vr-note rv">Die Vorschläge entstehen live aus Ihrer Eingabe — die fertige Zusammenstellung geht direkt an uns.
     Unverbindlich: Sie erhalten innert 24 h einen persönlichen Fragebogen-Link, mit dem Sie die Angaben vervollständigen.</p>
 </section>
@@ -2440,6 +2183,7 @@
   <form class="pc-in" id="pcForm"><input id="pcInput" placeholder="Frage eingeben …" maxlength="220" autocomplete="off"><button class="snd" type="submit" aria-label="Senden">↑</button></form>
 </div>
 
+<script src="/visionroom.js"></script>
 <script>
 (function () {
   document.documentElement.classList.add('smooth');
@@ -2997,391 +2741,21 @@
     });
   })();
 
-  /* ================= Visionroom · Mindmap ================= */
+  /* ================= Visionroom · Mindmap =================
+     Der Vision Room ist ein eigener Baustein (visionroom.js). Diese Seite
+     setzt ihn im Anfrage-Modus ein: mit eigenem E-Mail-Feld und eigenem
+     Senden-Knopf. Der Fragebogen setzt DENSELBEN Baustein im Fragebogen-Modus
+     ein — dort geht alles in einem Zug mit dem Bogen ab.
+
+     Wer bereits eine Einladung hat (?e=<Token>), gehoert nicht hierher: Der
+     Baustein schickt ihn in den Fragebogen, statt einen zweiten Eingang zu
+     oeffnen. Das verhindert einen zweiten Vorgang. */
   (function () {
-    /* --- Wissensbasis: Domäne -> Funktionen (Treffer werden gewichtet) --- */
-    const KB = [
-      { k:['buchhalt','finanzbuch','rechnungswesen','treuhand','kassenbuch','bilanz','mwst','steuer'], f:['Belege per Foto erfassen','MwSt.-Abrechnung vorbereiten','Offene Posten & Mahnlauf','Bankabgleich automatisch','Export für den Treuhänder','Monatsabschluss & Auswertungen','Wiederkehrende Rechnungen','Spesen erfassen','Kassenbuch','Budget vs. Ist'] },
-      { k:['offert','angebot','kalkul','preisliste','submission'], f:['Offerten-Vorlagen in Ihrem Design','KI-Entwurf aus Stichworten','Positionen aus früheren Projekten','Digitale Unterschrift','Automatisch nachfassen','Aus Offerte wird Rechnung','Rabatte & Staffelpreise','Varianten vergleichen'] },
-      { k:['rechnung','faktur','mahn','zahlung','debitor'], f:['Rechnungen mit QR-Einzahlschein','Zahlungseingang abgleichen','Mahnlauf in drei Stufen','Teilzahlungen','Abo- und Serienrechnungen','Zahlungslink per Mail'] },
-      { k:['termin','kalender','buchung','reservation','sitzung','planung','disposition'], f:['Online-Buchung rund um die Uhr','Automatische Bestätigung','Erinnerung per SMS/E-Mail','Kalender-Synchronisation','Puffer- & Sperrzeiten','Warteliste bei Absagen','Ressourcen & Räume','Serientermine'] },
-      { k:['zeit','stunden','rapport','arbeitszeit','präsenz'], f:['Zeiterfassung per Knopfdruck','Stunden auf Projekt buchen','Überstunden & Saldo','Ferien und Absenzen','Monatsrapport als PDF','Erfassung offline'] },
-      { k:['fitness','training','sport','lauf','gym','workout','muskel'], f:['Trainings automatisch loggen','Wochenziele & Fortschritt','KI-Trainingsplan','Puls- und Schlafdaten','Übungsbibliothek mit Videos','Persönliche Bestleistungen','Fortschrittsfotos','Regenerations-Empfehlung'] },
-      { k:['ernähr','kalorien','diät','abnehm'], f:['Mahlzeiten erfassen','Kalorien & Makros','Barcode-Scan für Produkte','Wasserzufuhr','Wochenauswertung','Rezeptvorschläge'] },
-      { k:['budget','spar','haushalt','ausgab','finanzen privat','geld'], f:['Ausgaben automatisch kategorisieren','Monatsbudget mit Warnung','Sparziele mit Fortschritt','Abos & Daueraufträge erkennen','Auswertung nach Kategorien','Belege fotografieren','Gemeinsame Kasse'] },
-      { k:['mail','post','nachricht','inbox','kommunikation'], f:['Wichtiges automatisch nach oben','Newsletter automatisch ablegen','KI-Antwortvorschläge in Ihrem Ton','Zusammenfassung langer Mails','Erinnerung bei fehlender Antwort','Vorlagen mit einem Klick'] },
-      { k:['lager','material','inventar','bestand','artikel','warenwirtschaft'], f:['Bestände in Echtzeit','Meldung vor dem Ausgehen','Bestellvorschläge','Barcode-Scan per Handy','Lieferanten-Verwaltung','Materialliste als PDF','Seriennummern & Chargen'] },
-      { k:['kunde','crm','kontakt','adress','lead','akquise'], f:['Kundenkarte mit Historie','Notizen & Dokumente pro Kunde','Umsatz je Kunde','Wiedervorlagen','Aufgaben dem Team zuweisen','Datenschutz-konforme Ablage','Pipeline mit Stufen'] },
-      { k:['shop','verkauf','bestell','produkt','e-commerce','laden','kasse'], f:['Produktkatalog mit Varianten','Warenkorb & Kasse','Online-Zahlung (TWINT, Karte)','Versand & Abholung','Lagerabgleich','Gutscheine & Aktionen','Bestellstatus für Kunden'] },
-      { k:['restaurant','gastro','café','cafe','bar','menü','speise','beiz','pizzeria'], f:['Speisekarte in 5 Minuten ändern','Tischreservation online','Tagesmenü automatisch posten','Öffnungszeiten & Feiertage','Google-Eintrag gepflegt','Bewertungen sammeln','Take-away-Bestellung'] },
-      { k:['praxis','arzt','patient','therapie','physio','zahn','coach','beratung'], f:['Online-Terminbuchung','Erinnerungen gegen No-Shows','Digitale Anmeldeformulare','Patientenakte & Verlauf','Rezept- und Berichtvorlagen','Abrechnung vorbereiten','Wartezimmer-Anzeige'] },
-      { k:['handwerk','baustelle','montage','service','installat','reparatur','maler','elektr','sanitär','gartenbau','schreiner'], f:['Aufträge & Einsatzplanung','Stunden auf der Baustelle erfassen','Fotos direkt am Auftrag','Material pro Auftrag','Rapport digital unterschreiben','Offline weiterarbeiten','Fahrzeuge & Werkzeug'] },
-      { k:['verein','mitglied','club','team','jugend'], f:['Mitgliederverwaltung','Beiträge & Mahnungen','Trainings- und Spielplan','An- und Abmeldungen','Newsletter an alle','Fotogalerie','Ämtli-Planung'] },
-      { k:['schul','lern','kurs','bildung','nachhilfe','sprach','prüfung'], f:['Kursübersicht & Anmeldung','Lernfortschritt verfolgen','Aufgaben & Abgaben','Karteikarten mit Wiederholung','Zertifikate ausstellen','Stundenplan'] },
-      { k:['immobil','miete','vermiet','wohnung','liegenschaft','hausverwalt'], f:['Objektübersicht mit Fotos','Mietverträge & Fristen','Nebenkosten abrechnen','Besichtigungstermine','Schadensmeldungen','Dokumentenarchiv','Mieter-Portal'] },
-      { k:['auto','fahrzeug','flotte','garage','werkstatt','velo'], f:['Fahrzeugakte & Service-Historie','Serviceerinnerungen','Kostenübersicht pro Fahrzeug','Fahrtenbuch','Werkstattplanung','Reifen- & Teilelager'] },
-      { k:['projekt','aufgabe','todo','organis','ticket','support'], f:['Aufgaben mit Fristen','Projektübersicht & Status','Zeiterfassung','Dateien pro Projekt','Team-Zuweisungen','Wochenreport','Kanban-Ansicht'] },
-      { k:['rezept','koch','backen','essensplan'], f:['Rezept-Archiv mit Fotos','Wochenplan erstellen','Einkaufsliste automatisch','Nährwerte berechnen','Portionen umrechnen','Rezepte teilen'] },
-      { k:['sammlung','archiv','fotoalbum','musik','bücher','film','vinyl','briefmark'], f:['Sammlung mit Bildern','Filter & schnelle Suche','Wert- und Statistiküberblick','Wunschliste','Import aus Tabelle','Verleih-Übersicht'] },
-      { k:['portfolio','blog','magazin','news','artikel','journal'], f:['Beiträge selbst schreiben','Bildergalerien','Kategorien & Suche','Newsletter-Anmeldung','Kommentare (optional)','Autorenprofile'] },
-      { k:['hochzeit','event','anlass','fest','konzert','messe'], f:['Programm & Ablauf','Gästeliste mit Zusagen','Anmeldeformular','Tischplan','Fotogalerie danach','Ticketverkauf'] },
-      { k:['reise','urlaub','ferien','tour'], f:['Reiseplan mit Karte','Packliste','Ausgaben unterwegs','Fotos pro Tag','Dokumente offline','Ideen sammeln'] },
-      { k:['garten','pflanze','tier','haustier','hund'], f:['Pflege-Erinnerungen','Tagebuch mit Fotos','Kosten im Blick','Termine beim Tierarzt','Futter- und Giessplan'] },
-      { k:['gewohnheit','habit','tagebuch','journal','ziel','produktiv'], f:['Gewohnheiten abhaken','Serien & Streaks','Tagesrückblick','Stimmungsverlauf','Wochenauswertung','Erinnerungen'] },
-      { k:['transport','logistik','lieferung','kurier','tour'], f:['Tourenplanung','Lieferscheine digital','Empfangsbestätigung mit Unterschrift','Live-Status für Kunden','Fahrzeugauslastung'] },
-      { k:['reinigung','facility','hauswart','unterhalt'], f:['Objekt- und Tourenplan','Checklisten pro Einsatz','Fotos als Nachweis','Materialverbrauch','Rapport an Kunden'] },
-      { k:['landwirt','hof','bauern','ernte'], f:['Felder & Kulturen','Ernte- und Ertragsjournal','Maschinen-Einsätze','Direktverkauf-Bestellungen','Wetter-Notizen'] }
-    ];
-    const BASE = {
-      'Website': ['Mobil perfekt dargestellt','Kontaktformular','Google-Auffindbarkeit (SEO)','Bildergalerie','Mehrsprachig','Datenschutz-konform','Inhalte selbst ändern','Google-Maps & Anfahrt'],
-      'Web-Programm': ['Als Programm installierbar','Offline weiterarbeiten','Benutzer & Rechte','Wunsch-Board fürs Team','KI-Assistent','Auswertungen & Export','Anbindung an Buchhaltung','Automatische Erinnerungen','Schweizer Hosting','Mobil auf der Baustelle'],
-      'Web-App': ['Auf dem Handy installierbar','Offline nutzbar','Dunkles Design','Erinnerungen & Mitteilungen','Daten exportieren','Ohne Werbung & Abo','Widget für den Startbildschirm','Mit Familie teilen']
-    };
-    const COLORS = ['#c8ff2e', '#25d5ff', '#ff3ea5', '#ff7a1a', '#a06bff', '#3765ff'];
-
-    const el = id => document.getElementById(id);
-    const canvas = el('mmCanvas'), nodesWrap = el('mmNodes'), links = el('mmLinks'), core = el('mmCore'), mm = el('mm');
-    const vrIdea = el('vrIdea'), vrOwn = el('vrOwn'), vrMail = el('vrMail'), vrSend = el('vrSend'),
-          vrSum = el('vrSum'), badge = el('mmBadge'), mmType = el('mmType'), mmEmpty = el('mmEmpty'), mmHint = el('mmHint'),
-          vrSuggest = el('vrSuggest'), mmMore = el('mmMore'), vrNeed = el('vrNeed');
-    if (!canvas) return;
-
-    let type = '', idea = '', items = [], mobileExpanded = false;   /* {label, on, custom, mx, my} */
-    const dragHint = () => window.innerWidth <= 860
-      ? 'Funktionen antippen — Ihre Auswahl bleibt sichtbar'
-      : 'Ziehen zum Verschieben · Doppelklick zum Umbenennen';
-
-    function suggest(txt, tp) {
-      const x = (txt || '').toLowerCase();
-      const scored = [];
-      KB.forEach(e => {
-        let hits = 0;
-        e.k.forEach(k => { if (x.includes(k)) hits++; });
-        if (hits) scored.push({ hits, f: e.f });
-      });
-      scored.sort((a, b) => b.hits - a.hits);
-      let out = [];
-      scored.forEach(sc => { out = out.concat(sc.f); });
-      if (!out.length) out = ['Übersicht mit Kennzahlen','Suche & Filter','Daten erfassen & bearbeiten','Export als PDF','Benachrichtigungen','KI-Assistent für Texte'];
-      out = out.filter((v, i) => out.indexOf(v) === i).slice(0, 10);
-      (BASE[tp] || []).forEach(b => { if (!out.includes(b)) out.push(b); });
-      return out.slice(0, 15);
-    }
-
-    function shake(node) { node.classList.add('shake'); setTimeout(() => node.classList.remove('shake'), 500); }
-    function needType() {
-      if (type) return false;
-      document.querySelectorAll('.mt').forEach(shake);
-      mmHint.textContent = 'Zuerst die Art wählen';
-      return true;
-    }
-
-    /* --- Items neu bilden: Auswahl und eigene Einträge bleiben erhalten --- */
-    function rebuild() {
-      const keep = items.filter(it => it.on || it.custom);
-      const fresh = suggest(idea, type).filter(f => !keep.some(k => k.label === f));
-      items = keep.concat(fresh.map(f => ({ label: f, on: false, custom: false })));
-      if (items.length > 16) items = items.slice(0, 16);
-      render();
-    }
-
-    function render() {
-      nodesWrap.innerHTML = '';
-      items.forEach((it, i) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'mnode' + (it.on ? ' on' : '');
-        if (window.innerWidth <= 860 && !mobileExpanded && i >= 6 && !it.on) b.classList.add('mobile-hidden');
-        b.style.setProperty('--c', COLORS[i % COLORS.length]);
-        b.setAttribute('aria-pressed', it.on ? 'true' : 'false');
-        b.setAttribute('aria-label', it.label + (it.on ? ' entfernen' : ' auswählen'));
-        const sp = document.createElement('span'); sp.textContent = it.label; b.appendChild(sp);
-        const u = document.createElement('u'); u.textContent = it.on ? '×' : '+'; u.setAttribute('aria-hidden', 'true'); b.appendChild(u);
-        b.dataset.i = i;
-
-        const toggle = () => {
-          if (!it.on && needType()) return;
-          if (it.on && it.custom) { items = items.filter(o => o !== it); render(); sync(); return; }
-          it.on = !it.on; render(); sync();
-        };
-        u.addEventListener('pointerdown', e => e.stopPropagation());
-        u.addEventListener('click', e => {
-          e.stopPropagation();
-          toggle();
-        });
-
-        let sx = 0, sy = 0, ox = 0, oy = 0, moved = false;
-        if (window.innerWidth > 860) {
-          /* Umbenennen und Verschieben gehören ausschliesslich zur Desktop-Mindmap. */
-          b.addEventListener('dblclick', e => {
-            e.preventDefault();
-            const inp = document.createElement('input');
-            inp.className = 'mn-edit'; inp.value = it.label; inp.maxLength = 70;
-            sp.replaceWith(inp); inp.focus(); inp.select();
-            const done = () => { it.label = inp.value.trim() || it.label; it.custom = true; render(); sync(); };
-            inp.addEventListener('blur', done);
-            inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); } });
-            inp.addEventListener('pointerdown', ev => ev.stopPropagation());
-          });
-          b.addEventListener('pointerdown', e => {
-            if (e.target.tagName === 'INPUT') return;
-            const r = canvas.getBoundingClientRect();
-            sx = e.clientX; sy = e.clientY; moved = false;
-            ox = it.mx !== undefined ? it.mx : (b._x - r.width / 2);
-            oy = it.my !== undefined ? it.my : (b._y - r.height / 2);
-            b.setPointerCapture(e.pointerId);
-            b.classList.add('dragging');
-          });
-          b.addEventListener('pointermove', e => {
-            if (!b.hasPointerCapture || !b.classList.contains('dragging')) return;
-            const dx = e.clientX - sx, dy = e.clientY - sy;
-            if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
-            it.mx = ox + dx; it.my = oy + dy;
-            layout();
-          });
-          const endDrag = () => b.classList.remove('dragging');
-          b.addEventListener('pointerup', endDrag);
-          b.addEventListener('pointercancel', endDrag);
-        }
-
-        /* Mobil ist die ganze Karte genau eine grosse, scrollfreundliche Aktion. */
-        b.addEventListener('click', e => {
-          if (window.innerWidth > 860 || e.target.tagName === 'INPUT' || moved) return;
-          toggle();
-        });
-
-        nodesWrap.appendChild(b);
-      });
-      mmEmpty.classList.toggle('gone', items.length > 0);
-      mm.classList.toggle('has-items', items.length > 0);
-      if (mmMore) {
-        const hiddenCount = items.filter((it, i) => i >= 6 && !it.on).length;
-        mmMore.hidden = window.innerWidth > 860 || (!mobileExpanded && hiddenCount === 0);
-        mmMore.textContent = mobileExpanded ? 'Weniger Vorschläge anzeigen' : hiddenCount + ' weitere Vorschläge anzeigen';
-      }
-      layout();
-    }
-
-    function layout() {
-      const nodes = Array.from(nodesWrap.children);
-      if (window.innerWidth <= 860) { links.innerHTML = ''; return; }
-      const w = canvas.clientWidth, h = canvas.clientHeight;
-      const cx = w / 2, cy = h / 2;
-      const rxO = Math.min(w * .375, 405), ryO = h * .375;
-      const rxI = rxO * .56, ryI = ryO * .58;
-      const sel = [], uns = [];
-      nodes.forEach(n => (items[+n.dataset.i].on ? sel : uns).push(n));
-      let paths = '';
-      function place(group, rx, ry, offset) {
-        const n = group.length || 1;
-        group.forEach((b, i) => {
-          const it = items[+b.dataset.i];
-          let x, y;
-          if (it.mx !== undefined) { x = cx + it.mx; y = cy + it.my; }
-          else {
-            const ang = (offset + (360 / n) * i) * Math.PI / 180;
-            x = cx + Math.cos(ang) * rx; y = cy + Math.sin(ang) * ry;
-          }
-          b._x = x; b._y = y;
-          b.style.transform = 'translate(-50%,-50%) translate(' + x + 'px,' + y + 'px)';
-          const mx = cx + (x - cx) * .55, my = cy + (y - cy) * .55 + (it.on ? 0 : 14);
-          const col = b.style.getPropertyValue('--c') || '#c8ff2e';
-          paths += '<path class="' + (it.on ? 'live' : 'ghost') + '" d="M' + cx + ' ' + cy + ' Q' + mx + ' ' + my + ' ' + x + ' ' + y + '"' +
-                   (it.on ? ' stroke="' + col + '" opacity=".8"' : '') + '/>';
-        });
-      }
-      place(uns, rxO, ryO, -86);
-      place(sel, rxI, ryI, -90 + (sel.length > 1 ? 180 / sel.length : 0));
-      links.innerHTML = paths;
-    }
-
-    const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
-    /* Pflicht ist allein die Idee. Funktionen sind ein Angebot, keine Huerde —
-       wer nur einen Satz schreibt, muss senden koennen. Keine Mindestlaenge:
-       geprueft wird ausschliesslich, ob nach dem Trimmen etwas dasteht. */
-    function sync() {
-      const picked = items.filter(i => i.on).map(i => i.label);
-      badge.textContent = picked.length;
-      badge.classList.toggle('on', picked.length > 0);
-      mmType.textContent = type || 'Art wählen';
-      idea = (vrIdea.value || '').trim();
-      const mail = (vrMail.value || '').trim();
-      const mailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail);
-      const ok = !!(type && idea && mailOk);
-      mm.classList.toggle('has-picks', picked.length > 0);
-      mm.classList.toggle('has-idea', !!idea);
-      core.classList.toggle('empty', !idea);
-      core.classList.toggle('filled', !!idea);
-      vrIdea.setAttribute('aria-invalid', idea ? 'false' : 'true');
-      if (vrNeed) {
-        /* Der Hinweis nennt immer genau den naechsten Schritt und wird zur
-           Bestaetigung, sobald die Idee steht — auch fuer Vorlese-Software. */
-        vrNeed.textContent = !idea
-          ? 'Noch kurz Ihre Idee beschreiben, dann können Sie senden.'
-          : !type ? 'Ihre Idee ist da — jetzt oben noch die Art wählen, dann können Sie senden.'
-          : !mailOk ? 'Ihre Idee ist da — jetzt noch Ihre E-Mail für die Antwort, dann können Sie senden.'
-          : 'Ihre Idee ist da — Sie können jetzt senden.';
-        vrNeed.classList.toggle('done', !!idea);
-      }
-      vrSum.innerHTML = (type && idea)
-        ? '<b>' + esc(type) + '</b> — ' + esc(idea) +
-          (picked.length ? ' · <b>' + picked.length + '</b> Funktionen angehängt' : ' · Funktionen sind freiwillig') +
-          (mailOk ? ' · bereit zum Senden' : ' · noch E-Mail eintragen')
-        : (!type ? 'Wählen Sie oben die Art.' : 'Beschreiben Sie Ihre Idee.');
-      vrSend.classList.toggle('ready', ok);
-      vrSend.setAttribute('aria-disabled', ok ? 'false' : 'true');
-      vrSend.href = '#';
-    }
-
-    /* ── Versand an Quantus ───────────────────────────────────────────────
-       Der oeffentliche Vision Room ist der Einstieg OHNE Einladung. Was hier
-       ankommt, wird bei FlowerTech zu einer ANFRAGE — nicht zu einem Projekt
-       und nicht zu einem Direktauftrag. Der naechste Schritt ist der
-       Fragebogen-Link, den FlowerTech zurueckschickt; erst dessen Absenden
-       erzeugt genau EIN Projekt und genau EINE Aufgabe.
-
-       Wer bereits eine Einladung hat (?e=<Token>), gehoert nicht hierher: Der
-       Vision Room ist dort Teil des Fragebogens, damit alles in einem Zug
-       abgeschickt wird. Diese Seite verweist dann dorthin, statt einen
-       zweiten Eingang zu oeffnen.
-
-       Der Idempotenz-Schluessel verhindert Doppelanlagen bei Doppelklick oder
-       Wiederholung.
-       ------------------------------------------------------------------- */
-    const QUANTUS_ENDPOINT = 'https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-portal';
-    const inviteToken = (() => {
-      const t = new URLSearchParams(location.search).get('e') || '';
-      return /^[A-Za-z0-9_-]{24,64}$/.test(t) ? t : '';
-    })();
-
-    function idemKey(parts) {
-      const basis = parts.join('|');
-      let hash = 5381;
-      for (let i = 0; i < basis.length; i++) hash = ((hash << 5) + hash + basis.charCodeAt(i)) >>> 0;
-      return 'ft_' + hash.toString(36) + '_' + basis.length.toString(36);
-    }
-
-    let sending = false;
-    async function sendVision(ev) {
-      if (ev) ev.preventDefault();
-      if (sending || !vrSend.classList.contains('ready')) return;
-      const picked = items.filter(i => i.on).map(i => i.label);
-      const mail = (vrMail.value || '').trim();
-      /* Mit Einladung gehoert der Vision Room in den Fragebogen — dort wird
-         alles in EINEM Zug abgeschickt. Kein zweiter Eingang, kein zweiter
-         Vorgang. */
-      if (inviteToken) {
-        location.href = '/fragebogen.html?e=' + encodeURIComponent(inviteToken) + '#visionRoom';
-        return;
-      }
-      /* Der Bedarf ist die Idee; die Funktionen sind eine freiwillige Ergaenzung. */
-      const payload = { type, need: idea, idea, features: picked, email: mail };
-      sending = true;
-      vrSum.textContent = 'Wird gesendet …';
-      try {
-        const res = await fetch(QUANTUS_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            kind: 'inquiry',
-            source: 'vision-room',
-            payload,
-            website: (el('vrHp') || {}).value || '',
-            idempotencyKey: idemKey(['', 'inquiry', mail, idea, picked.join(',')])
-          })
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || 'Senden fehlgeschlagen');
-        mm.classList.add('sent');
-        vrSum.innerHTML = data.duplicate
-          ? '<b>Bereits eingegangen.</b> Ihre Anfrage liegt bei FlowerTech.'
-          : '<b>Ihre Anfrage ist bei FlowerTech eingegangen.</b> Wir schauen sie an und schicken Ihnen ' +
-            'innert 24 h einen persönlichen Fragebogen-Link für die restlichen Angaben.';
-        vrSend.classList.remove('ready');
-        vrSend.setAttribute('aria-disabled', 'true');
-        if (vrNeed) { vrNeed.textContent = 'Ihre Idee ist bei uns — Sie hören innert 24 h von uns.'; vrNeed.classList.add('done'); }
-      } catch (e) {
-        /* Kein Mail-Programm als Ausweg: der Knopf bleibt bedienbar und sagt,
-           was los ist. */
-        vrSum.innerHTML = '<b>Das Senden hat gerade nicht geklappt.</b> Bitte gleich nochmals auf «Senden» tippen.';
-      }
-      sending = false;
-    }
-    vrSend.addEventListener('click', sendVision);
-
-    function setType(name, silent) {
-      const b = Array.from(document.querySelectorAll('.mt')).find(o => o.dataset.t === name);
-      if (!b) return;
-      document.querySelectorAll('.mt').forEach(o => o.classList.remove('on'));
-      b.classList.add('on'); type = name;
-      core.style.borderColor = b.querySelector('i').style.background;
-      if (window.innerWidth <= 860) {
-        items = []; mobileExpanded = false; render();
-        mmHint.textContent = idea ? 'Idee prüfen und Vorschläge anzeigen' : 'Als Nächstes: Idee beschreiben';
-      } else {
-        mmHint.textContent = idea ? dragHint()
-          : (silent ? 'Aus Ihrer Auswahl übernommen — jetzt Idee eintippen' : 'Jetzt Idee ins Zentrum tippen');
-        rebuild();
-      }
-      sync();
-      if (!silent && window.innerWidth > 860) vrIdea.focus();
-    }
-    window.__vrSetType = n => setType(n, true);
-    document.querySelectorAll('.mt').forEach(b => b.addEventListener('click', () => setType(b.dataset.t, false)));
-
-    let t0;
-    vrIdea.addEventListener('input', () => {
-      clearTimeout(t0);
-      idea = vrIdea.value.trim();
-      if (window.innerWidth <= 860) {
-        mmHint.textContent = idea ? 'Tippen Sie jetzt auf «Vorschläge anzeigen»' : 'Beschreiben Sie Ihre Idee';
-        sync();
-        return;
-      }
-      t0 = setTimeout(() => {
-        if (!type) { sync(); return; }
-        mmHint.textContent = dragHint();
-        rebuild(); sync();
-      }, 300);
-    });
-    function showSuggestions() {
-      idea = vrIdea.value.trim();
-      if (needType()) return;
-      if (!idea) { shake(core); mmHint.textContent = 'Bitte beschreiben Sie zuerst Ihre Idee'; return; }
-      mobileExpanded = false;
-      rebuild(); sync();
-      mmHint.textContent = dragHint();
-    }
-    if (vrSuggest) vrSuggest.addEventListener('click', showSuggestions);
-    if (mmMore) mmMore.addEventListener('click', () => { mobileExpanded = !mobileExpanded; render(); });
-    vrIdea.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return;
-      e.preventDefault();
-      if (window.innerWidth <= 860) showSuggestions();
-      else { idea = vrIdea.value.trim(); if (!needType()) { rebuild(); sync(); } }
-    });
-
-    function addOwn() {
-      const v = vrOwn.value.trim(); if (!v) return;
-      if (needType()) return;
-      if (!items.some(i => i.label.toLowerCase() === v.toLowerCase())) items.unshift({ label: v, on: true, custom: true });
-      vrOwn.value = ''; render(); sync();
-    }
-    el('vrAdd').addEventListener('click', addOwn);
-    vrOwn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addOwn(); } });
-    vrMail.addEventListener('input', sync);
-    const rs = el('mmReset');
-    if (rs) rs.addEventListener('click', () => {
-      type = ''; idea = ''; items = []; mobileExpanded = false;
-      vrIdea.value = ''; vrOwn.value = ''; vrMail.value = '';
-      document.querySelectorAll('.mt').forEach(o => o.classList.remove('on'));
-      core.style.borderColor = '';
-      mmHint.textContent = window.innerWidth <= 860 ? 'Wählen Sie zuerst eine Art' : 'Idee eintippen → Funktionen anhängen';
-      render(); sync();
-    });
-    window.addEventListener('resize', layout);
-    render(); sync();
+    var mount = document.getElementById('visionRoomMount');
+    if (!mount || !window.FlowerTechVisionRoom) return;
+    // Die Einblendung hängt am Behälter, nicht an der Mindmap: Der Beobachter
+    // sammelt die .rv-Elemente, bevor der Baustein eingesetzt wird.
+    window.FlowerTechVisionRoom.mount(mount, { mode: 'inquiry' });
   })();
 
   /* ================= Mobile-Menü ================= */
