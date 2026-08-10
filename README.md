@@ -50,9 +50,12 @@ erfindet nichts dazu und ruft nichts Zweites ab.
 | Stufe | Sichtbar, sobald … | Zeigt |
 | --- | --- | --- |
 | 1 · Fragebogen | immer | Kundendaten, Bestandesaufnahme, Vision Room |
+| Leistung · TEST | `tiles.testService` mit Titel | unverbindliche Übersicht mit Kostenstand statt Betrag |
 | 2 · Offerte | `tiles.offer` mit echtem Versandstatus **und** `sentAt` | Dokument, Betrag, Gültigkeit, Status |
-| 3 · Vorschau | `tiles.preview` mit freigegebener HTTPS-Adresse | Vorschau ansehen · Änderungswunsch senden |
+| 3 · Vorschau | `tiles.preview` mit freigegebener HTTPS-Adresse | die Adresse ausgeschrieben · Vorschau ansehen · Änderungswunsch senden |
+| 3 · Vertrag | `tiles.contract` mit freigegebenem Dokument | Projektauftrag zum Lesen und Drucken |
 | 3 · Verwaltung | `tiles.admin` — und nur mit sichtbarer Vorschau | Verwaltung öffnen |
+| AGB | `tiles.terms` — immer, ohne Freigabe | die zentrale Standard-AGB samt Fassung |
 
 Grundsätze der Seite:
 
@@ -60,17 +63,25 @@ Grundsätze der Seite:
   ein echter Versandstatus und ein Versandzeitpunkt dastehen.
 * **Keine leeren Platzhalter.** Was nicht freigegeben ist, existiert auf der
   Seite nicht — auch nicht als Andeutung.
-* **Drei Schichten um das Offertendokument:** entschärft in Quantus, ein zweites
-  Mal auf der Seite, und eingesperrt in einem `sandbox`-iframe ohne Skripte.
+* **Drei Schichten um Offerten- und Vertragsdokument:** entschärft in Quantus,
+  ein zweites Mal auf der Seite, und eingesperrt in einem `sandbox`-iframe ohne
+  Skripte.
 * **Nur HTTPS** wird verlinkt, mit `rel="noopener noreferrer"`.
+* **Die Vorschau-Adresse steht ausgeschrieben da** — nicht nur im Knopf. Ein
+  Knopf allein ist keine Adresse, die sich lesen oder weitergeben lässt.
+* **Herkunft wird benannt.** Eine Vorschau, die nicht aus der bestätigten
+  Claude-Code-Rückgabe stammt (`provisional: true`), erscheint vollständig,
+  wird aber als **Testvorschau · Zwischenstand** ausgezeichnet — nie als
+  fertige Fassung.
 * **Änderungswünsche** gehen mit demselben Einladungstoken an denselben
   abgesicherten Eingang (`kind: "change"`) — kein zweiter Weg, keine Projekt-ID
-  im Browser.
-* **Ausserhalb dieses Links bleiben** Vertrag, AGB und das Kundenportal
-  (`kunde.html`) — sie haben ihre eigene Freigabe.
+  im Browser. Ohne geöffnete Rückmeldung steht wenigstens der Weg dorthin da.
+* **Ausserhalb dieses Links bleibt** das alte Kundenportal (`kunde.html`) — es
+  hat seinen eigenen Token und seine eigene Freigabe. Diese Seite hängt an
+  nichts davon.
 
-Die Gegenseite (Freigaben, Veröffentlichung, Datenvertrag) liegt in `ai-sync`,
-`docs/flowertech-workflow.md`, Abschnitt 4g.
+Die Gegenseite (Freigaben, Veröffentlichung, Claude-Code-Rückgabe, Datenvertrag)
+liegt in `ai-sync`, `docs/flowertech-workflow.md`, Abschnitte 4g bis 4g-2.
 
 ## Deployment
 
@@ -102,10 +113,11 @@ node tests/run-all.mjs      # alle auf einmal — dasselbe läuft in der CI
 Einzeln geht auch:
 
 ```bash
-node tests/fragebogen.test.mjs      # der Fragebogen selbst
-node tests/kundenbereich.test.mjs   # die Stufen hinter demselben Link
-node tests/kunde-page.test.mjs      # das Kundenportal
-node tests/visionroom.test.mjs      # der gemeinsame Vision Room
+node tests/fragebogen.test.mjs         # der Fragebogen selbst
+node tests/kundenbereich.test.mjs      # die Stufen hinter demselben Link
+node tests/kundenlink-lehner.test.mjs  # der Live-Befund: Vorschau, TEST, AGB
+node tests/kunde-page.test.mjs         # das Kundenportal
+node tests/visionroom.test.mjs         # der gemeinsame Vision Room
 ```
 
 `tests/dom-double.mjs` ist das gemeinsame DOM-Doppel dieser Tests — kein Test.
