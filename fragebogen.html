@@ -393,15 +393,31 @@
     if (!url) return hide("tilePreview");
     var feedback = tile.feedback === true;
 
+    // Eine Vorschau, die nicht aus der bestätigten Claude-Code-Rückgabe stammt,
+    // wird als das benannt, was sie ist: eine manuelle Testvorschau. Sie
+    // erscheint trotzdem vollständig — verschwiegen wird nichts, behauptet
+    // aber auch nichts Fertiges.
+    var vorlaeufig = tile.provisional === true;
+
     el("tilePreview").innerHTML =
       "<h2>Website-Vorschau &amp; Änderungswünsche</h2>" +
+      (vorlaeufig
+        ? '<p class="warn"><b>Testvorschau — Zwischenstand.</b> Dieser Entwurf ist noch nicht ' +
+          "als fertige Fassung freigegeben. Schauen Sie ihn trotzdem gerne an: Ihre " +
+          "Rückmeldung fliesst direkt in die nächste Fassung ein.</p>"
+        : "") +
       '<p class="meta">Das ist der aktuelle Stand Ihrer Website' +
         (tile.releasedAt ? " · freigegeben am <b>" + esc(datum(tile.releasedAt)) + "</b>" : "") +
         ". Schauen Sie in Ruhe durch." + "</p>" +
+      // Die Adresse steht ausgeschrieben da — nicht nur im Knopf. So lässt sie
+      // sich lesen, kopieren und auf einem anderen Gerät öffnen.
+      '<p class="sub" id="previewUrlText">' + esc(url) + "</p>" +
       '<div class="acts"><a class="btnlink" id="previewOpen" href="' + esc(url) +
         '" target="_blank" rel="noopener noreferrer">Vorschau ansehen</a></div>' +
       (feedback
-        ? '<form id="changeForm" novalidate style="margin-top:18px">' +
+        ? '<p class="meta" id="changeIntro">Etwas soll anders sein? Schreiben Sie es hier ' +
+            "direkt auf — der Wunsch landet bei uns an Ihrem Vorhaben.</p>" +
+          '<form id="changeForm" novalidate style="margin-top:18px">' +
             '<label for="crTitle"><span class="lbl">Was soll geändert werden? ' +
               '<span class="req">· Pflichtfeld</span></span>' +
               '<input id="crTitle" maxlength="160" required aria-required="true"></label>' +
@@ -416,7 +432,11 @@
             '<button type="submit" id="crSubmit">Änderungswunsch senden</button>' +
             '<div class="status" id="crStatus" role="status" aria-live="polite"></div>' +
           "</form>"
-        : "");
+        // Ohne geöffnete Rückmeldung bleibt der Einstieg trotzdem benannt: Es
+        // soll nie eine Vorschau ohne Weg zurück geben.
+        : '<p class="meta" id="changeClosed">Änderungswünsche nehmen wir gerne auf — ' +
+          "antworten Sie einfach auf unsere letzte Nachricht, dann tragen wir sie " +
+          "an Ihrem Vorhaben nach.</p>");
     el("tilePreview").hidden = false;
     if (feedback) el("changeForm").addEventListener("submit", sendChange);
     return true;
