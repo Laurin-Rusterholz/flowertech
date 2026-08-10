@@ -65,6 +65,20 @@
   .meta{color:var(--muted);font-size:14px;margin:0 0 14px}
   .meta b{color:var(--text)}
   .warn{color:var(--err);font-weight:600}
+  /* Die Testkachel muss sich auf den ersten Blick von einer Offerte
+     unterscheiden — sie ist unverbindlich und traegt keinen Preis. */
+  #tileTest{border-left-color:var(--err)}
+  /* Die AGB sind Beiwerk, kein Vorgang: ruhiger Rand, eingeklappte
+     Abschnitte. Sie sollen auffindbar sein, nicht die Seite fuellen. */
+  #tileTerms{border-left-color:var(--muted)}
+  .agb{margin-top:12px;border-top:1px solid var(--line)}
+  .agb-sec{border-bottom:1px solid var(--line)}
+  .agb-sec>summary{cursor:pointer;padding:10px 2px;font-weight:600;font-size:15px;list-style:none}
+  .agb-sec>summary::-webkit-details-marker{display:none}
+  .agb-sec>summary::before{content:"+";display:inline-block;width:1.2em;color:var(--muted)}
+  .agb-sec[open]>summary::before{content:"−"}
+  .agb-sec>summary:hover{color:var(--violet)}
+  .agb-sec p{margin:0 0 10px 1.2em;color:var(--muted);font-size:14px;line-height:1.6}
   .doc{width:100%;height:min(70vh,600px);border:1px solid var(--line);border-radius:12px;
     background:#fff;display:block}
   .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
@@ -146,9 +160,12 @@
   <!-- Ihr Bereich: wächst mit dem Vorgang. Jede Kachel steht erst da, wenn sie
        in Quantus ausdrücklich freigegeben wurde — vorher gibt es sie nicht. -->
   <section id="area" hidden aria-label="Ihr Bereich">
+    <article class="card tile" id="tileTest" hidden></article>
     <article class="card tile" id="tileOffer" hidden></article>
     <article class="card tile" id="tilePreview" hidden></article>
+    <article class="card tile" id="tileContract" hidden></article>
     <article class="card tile" id="tileAdmin" hidden></article>
+    <article class="card tile" id="tileTerms" hidden></article>
   </section>
 
   <footer id="footer">FlowerTech</footer>
@@ -299,14 +316,19 @@
 
   function renderArea(data) {
     var tiles = (data && data.tiles) || {};
+    var test = renderTest(tiles.testService);
     var offer = renderOffer(tiles.offer);
     var preview = renderPreview(tiles.preview);
     // Die Verwaltung erscheint nie allein. Sie gehört zur Vorschau — ohne
     // sichtbare Vorschau bleibt sie weg, auch wenn eine Adresse mitkäme.
     var admin = preview ? renderAdmin(tiles.admin) : hide("tileAdmin");
+    // Die AGB stehen zuunterst und sind an keine Stufe gebunden: Sie sind auf
+    // jedem gültigen Kundenlink dieselbe zentrale Fassung.
+    var contract = renderContract(tiles.contract);
+    var terms = renderTerms(tiles.terms);
     var area = el("area");
-    if (area) area.hidden = !(offer || preview || admin);
-    return offer || preview || admin;
+    if (area) area.hidden = !(test || offer || preview || contract || admin || terms);
+    return test || offer || preview || contract || admin || terms;
   }
 
   function hide(id) {
@@ -397,6 +419,86 @@
         : "");
     el("tilePreview").hidden = false;
     if (feedback) el("changeForm").addEventListener("submit", sendChange);
+    return true;
+  }
+
+  /* Der Vertrag — projektindividuell und deshalb hinter einer eigenen
+     Freigabe. Entschaerft aus Quantus, hier zusaetzlich im sandboxed iframe:
+     dieselben Schichten wie beim Offertendokument. */
+  function renderContract(tile) {
+    var html = tile ? entschaerfen(tile.document && tile.document.html) : "";
+    if (!html) return hide("tileContract");
+    el("tileContract").innerHTML =
+      "<h2>" + esc(tile.label || "Vertrag") + "</h2>" +
+      (tile.title ? '<p class="sub">' + esc(tile.title) + "</p>" : "") +
+      '<p class="meta">' + (tile.releasedAt ? "freigegeben am <b>" + esc(datum(tile.releasedAt)) + "</b>" : "") +
+        "</p>" +
+      (tile.notice ? "<p>" + esc(tile.notice) + "</p>" : "") +
+      '<iframe class="doc" id="contractDoc" title="Ihr Vertrag" sandbox loading="lazy"></iframe>' +
+      '<div class="acts"><button type="button" id="contractPrint">Drucken / als PDF speichern</button></div>';
+    el("tileContract").hidden = false;
+    el("contractDoc").srcdoc = html;
+    el("contractPrint").addEventListener("click", function () {
+      var w = window.open("", "_blank", "noopener");
+      if (!w) return;
+      w.document.write(html);
+      w.document.close();
+      if (w.focus) w.focus();
+      if (w.print) w.print();
+    });
+    return true;
+  }
+
+  /* Die zentrale Standard-AGB. Sie hängt an keiner Stufe und an keinem
+     Projekt: dieselbe Fassung auf jedem gültigen Kundenlink. Sie ist reine
+     Anzeige — es gibt hier nichts zu bearbeiten und nichts zu bestätigen.
+     Der individuelle Vertrag ist etwas anderes und steht bewusst NICHT hier;
+     er gehört ins Kundenportal hinter seine eigene Freigabe. */
+  function renderTerms(tile) {
+    if (!tile || !tile.sections || !tile.sections.length) return hide("tileTerms");
+    var abschnitte = [];
+    for (var i = 0; i < tile.sections.length && i < 60; i += 1) {
+      var sec = tile.sections[i] || {};
+      if (!sec.title && !sec.body) continue;
+      abschnitte.push(
+        "<details class=\"agb-sec\"><summary>" + esc(sec.title || "") + "</summary>" +
+        "<p>" + esc(sec.body || "").replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br>") + "</p></details>"
+      );
+    }
+    el("tileTerms").innerHTML =
+      "<h2>" + esc(tile.label || "Standard-AGB") + "</h2>" +
+      '<p class="meta">Fassung <b>' + esc(tile.version || "") + "</b> · gilt unverändert für alle " +
+        "FlowerTech-Projekte · nicht projektbezogen anpassbar</p>" +
+      (tile.notice ? '<p class="warn">' + esc(tile.notice) + "</p>" : "") +
+      (tile.intro ? '<p class="sub">' + esc(tile.intro) + "</p>" : "") +
+      '<div class="agb">' + abschnitte.join("") + "</div>";
+    el("tileTerms").hidden = false;
+    return true;
+  }
+
+  /* Eine ausdrücklich als TEST gekennzeichnete Leistungsübersicht. Sie ist
+     KEINE Offerte: Sie trägt keinen Betrag, keinen Status und kein Versand-
+     datum — diese Felder liefert Quantus für diese Kachel gar nicht erst.
+     Deshalb kann hier auch nie „CHF 0.00" stehen. */
+  function renderTest(tile) {
+    if (!tile || !tile.title) return hide("tileTest");
+    var vorschau = safeUrl(tile.previewUrl);
+    var bestehend = safeUrl(tile.currentUrl);
+    el("tileTest").innerHTML =
+      '<h2>' + esc(tile.label || "Leistungsübersicht · TEST") + "</h2>" +
+      '<p class="warn"><b>Testansicht — unverbindlich.</b> ' + esc(tile.notice || "") + "</p>" +
+      '<p class="sub">' + esc(tile.title) + "</p>" +
+      (tile.summary ? "<p>" + esc(tile.summary) + "</p>" : "") +
+      '<p class="meta">Kosten: <b>' + esc(tile.costStatus || "") + "</b></p>" +
+      ((vorschau || bestehend)
+        ? '<div class="acts">' +
+            (vorschau ? '<a class="btnlink" id="testPreview" href="' + esc(vorschau) +
+              '" target="_blank" rel="noopener noreferrer">Vorschlag ansehen</a>' : "") +
+            (bestehend ? '<a class="btnlink ghost" id="testCurrent" href="' + esc(bestehend) +
+              '" target="_blank" rel="noopener noreferrer">Bestehende Website</a>' : "") +
+          "</div>"
+        : "");
+    el("tileTest").hidden = false;
     return true;
   }
 
@@ -579,7 +681,35 @@
       if (q.vision === "features") visionFeatures = i;
     });
     setupVisionRoom();
+    bedingteFelder();
     sync();
+  }
+
+  /* Bedingte Fragen (showIf). Sie erscheinen nur, wenn eine andere Frage genau
+     den hinterlegten Wert traegt — beim Abschnitt „Domain & Zugang" sind das
+     die Detailfragen zur Uebertragung. Versteckte Felder zaehlen nicht als
+     Pflicht und werden auch nicht mitgesendet: Was nicht sichtbar ist, hat
+     niemand beantwortet. */
+  function sichtbar(q) {
+    if (!q || !q.showIf || !q.showIf.key) return true;
+    var quelle = -1;
+    for (var i = 0; i < questions.length; i++) {
+      if (questions[i].key === q.showIf.key) { quelle = i; break; }
+    }
+    if (quelle < 0) return true;
+    return value(quelle) === String(q.showIf.value || "");
+  }
+
+  function bedingteFelder() {
+    questions.forEach(function (q, i) {
+      if (!q.showIf) return;
+      var node = el("q_" + i);
+      var wrap = node && node.closest ? node.closest("label") : null;
+      var zeigen = sichtbar(q);
+      if (wrap) wrap.hidden = !zeigen;
+      // Ausgeblendet heisst leer — sonst reiste eine alte Eingabe unbemerkt mit.
+      if (!zeigen && node && node.value) node.value = "";
+    });
   }
 
   function value(i) {
@@ -592,6 +722,7 @@
   function missing() {
     var out = [];
     questions.forEach(function (q, i) {
+      if (!sichtbar(q)) return;              // ausgeblendet ist nicht offen
       var filled = !!value(i);
       var node = el("q_" + i);
       if (q.required && node) node.setAttribute("aria-invalid", filled ? "false" : "true");
@@ -601,6 +732,7 @@
   }
 
   function sync() {
+    bedingteFelder();
     var offen = missing();
     var ready = offen.length === 0;
     el("submit").setAttribute("aria-disabled", ready ? "false" : "true");
