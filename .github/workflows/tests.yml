@@ -1,0 +1,26 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seitentests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Ohne Bauschritt und ohne Abhängigkeiten: die Seiten laufen im Test
+      # gegen ein DOM-Doppel, sonst nichts.
+      - name: Alle Prüfungen
+        run: node tests/run-all.mjs

@@ -56,6 +56,22 @@
   .status.ok{background:rgba(123,216,143,.12);border:1px solid rgba(123,216,143,.4);color:var(--ok)}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
   footer{color:var(--muted);font-size:13px;text-align:center;margin-top:26px}
+  /* ── Ihr Bereich ────────────────────────────────────────────────────────
+     Dieselbe Adresse zeigt mit der Zeit mehr: die versendete Offerte, später
+     die freigegebene Vorschau und die Verwaltung. Was nicht freigegeben ist,
+     steht hier NICHT — auch nicht als leerer Platzhalter. */
+  .tile{border-left:3px solid var(--violet)}
+  .tile h2{display:flex;align-items:center;gap:8px}
+  .meta{color:var(--muted);font-size:14px;margin:0 0 14px}
+  .meta b{color:var(--text)}
+  .warn{color:var(--err);font-weight:600}
+  .doc{width:100%;height:min(70vh,600px);border:1px solid var(--line);border-radius:12px;
+    background:#fff;display:block}
+  .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .btnlink{display:inline-block;text-decoration:none;font-weight:700;border-radius:12px;
+    padding:13px 20px;color:#07070a;background:linear-gradient(135deg,var(--lime),var(--cyan))}
+  .btnlink.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .acts button{padding:13px 20px}
   /* ── Vision Room ────────────────────────────────────────────────────────
      Er ist Teil DIESES Fragebogens, nicht ein zweiter Kanal: Die Idee und die
      gewählten Funktionen sind zwei Antworten, die mit allen anderen zusammen
@@ -119,6 +135,22 @@
     </form>
   </main>
 
+  <!-- Der Fragebogen ist beantwortet oder abgeschlossen, aber es gibt schon
+       etwas zu sehen: dann kein Fehlerkasten, sondern eine ruhige Notiz über
+       dem Bereich. -->
+  <div id="answered" class="card" hidden>
+    <h2 id="answeredTitle"></h2>
+    <p class="sub" id="answeredText"></p>
+  </div>
+
+  <!-- Ihr Bereich: wächst mit dem Vorgang. Jede Kachel steht erst da, wenn sie
+       in Quantus ausdrücklich freigegeben wurde — vorher gibt es sie nicht. -->
+  <section id="area" hidden aria-label="Ihr Bereich">
+    <article class="card tile" id="tileOffer" hidden></article>
+    <article class="card tile" id="tilePreview" hidden></article>
+    <article class="card tile" id="tileAdmin" hidden></article>
+  </section>
+
   <footer id="footer">FlowerTech</footer>
 </div>
 
@@ -142,6 +174,40 @@
     return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
+  };
+
+  var chf = function (n) {
+    return n == null || n === "" ? "" : "CHF " + Number(n).toLocaleString("de-CH",
+      { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  var datum = function (v) {
+    try { return new Date(v).toLocaleDateString("de-CH"); } catch (e) { return ""; }
+  };
+  // Nur HTTPS wird verlinkt. Quantus filtert bereits; hier die zweite Schranke,
+  // damit auch ein manipulierter Datensatz nichts einschleusen kann.
+  var safeUrl = function (v) {
+    try {
+      var u = new URL(String(v || ""));
+      return u.protocol === "https:" ? u.toString() : "";
+    } catch (e) { return ""; }
+  };
+
+  /* Das Offertendokument kommt bereits entschärft aus Quantus. Hier wird es ein
+     zweites Mal entschärft und ein drittes Mal eingesperrt (sandboxed iframe
+     ohne allow-scripts). Drei Schichten, nicht eine — das Dokument ist der
+     einzige fremde HTML-Code, der diese Seite je erreicht. */
+  var entschaerfen = function (html) {
+    return String(html == null ? "" : html)
+      .replace(/<script[\s\S]*?<\/script\s*>/gi, "")
+      .replace(/<script\b[^>]*>/gi, "")
+      .replace(/<iframe[\s\S]*?<\/iframe\s*>/gi, "")
+      .replace(/<iframe\b[^>]*>/gi, "")
+      .replace(/<object[\s\S]*?<\/object\s*>/gi, "")
+      .replace(/<embed\b[^>]*>/gi, "")
+      .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "")
+      .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "")
+      .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, "")
+      .replace(/javascript:/gi, "");
   };
 
   // Der Einladungstoken. Form wird geprüft, bevor irgendetwas geladen wird.
@@ -177,13 +243,26 @@
           return fail("Dieser Link ist nicht mehr gültig",
             "Möglicherweise wurde er erneuert. Melden Sie sich kurz bei uns, dann schicken wir Ihnen den aktuellen.");
         }
+        // Der Bereich zuerst: Er gehört zu diesem Link und steht auch dann da,
+        // wenn der Fragebogen längst ausgefüllt ist. Genau deshalb bleibt es
+        // EINE Adresse.
+        var bereich = renderArea(data);
+        var name = (data.company && data.company.name) || "FlowerTech";
         if (data.status === "closed") {
-          return fail("Dieser Fragebogen ist abgeschlossen",
-            "Melden Sie sich bei uns, wenn Sie noch etwas ergänzen möchten.");
+          if (!bereich) {
+            return fail("Dieser Fragebogen ist abgeschlossen",
+              "Melden Sie sich bei uns, wenn Sie noch etwas ergänzen möchten.");
+          }
+          return ruhend(name, "Dieser Fragebogen ist abgeschlossen",
+            "Ihre Unterlagen finden Sie weiterhin hier. Melden Sie sich bei uns, wenn Sie etwas ergänzen möchten.");
         }
         if (data.status === "answered") {
-          return fail("Ihre Antworten sind bei uns",
-            "Dieser Fragebogen wurde bereits ausgefüllt. Wir melden uns — und Sie können jederzeit nachfragen.");
+          if (!bereich) {
+            return fail("Ihre Antworten sind bei uns",
+              "Dieser Fragebogen wurde bereits ausgefüllt. Wir melden uns — und Sie können jederzeit nachfragen.");
+          }
+          return ruhend(name, "Ihre Antworten sind bei uns",
+            "Der Fragebogen ist ausgefüllt. Alles Weitere zu Ihrem Vorhaben finden Sie hier — an derselben Adresse.");
         }
         render(data);
       })
@@ -191,6 +270,183 @@
         fail("Gerade nicht erreichbar",
           "Der Fragebogen konnte nicht geladen werden. Bitte versuchen Sie es in ein paar Minuten erneut.");
       });
+  }
+
+  /* Der Fragebogen ist erledigt, der Bereich nicht: kein Fehlerkasten, sondern
+     eine ruhige Notiz über den Kacheln. */
+  function ruhend(name, titel, text) {
+    el("loading").hidden = true;
+    el("content").hidden = true;
+    el("answered").hidden = false;
+    el("answeredTitle").textContent = titel;
+    el("answeredText").textContent = text;
+    el("subtitle").textContent = name;
+    el("footer").textContent = name;
+  }
+
+  /* ── Ihr Bereich ────────────────────────────────────────────────────────
+     Gelesen wird ausschliesslich `tiles` aus demselben Datensatz, den auch der
+     Fragebogen benutzt — dieselbe Adresse, kein zweiter Abruf, keine zweite
+     Seite. Jede Kachel hat ihre eigene Bedingung; ist sie nicht erfüllt, gibt
+     es die Kachel nicht. Kein leerer Platzhalter, keine Andeutung.
+
+     Was hier NIE steht, weil es gar nicht erst geliefert wird: Kontaktdaten,
+     Projekt-ID, interne Notizen, Vertrag, AGB, Kundenportal. Gelesen werden
+     ausdrücklich nur die unten benannten Felder — was sonst im Datensatz
+     stünde, erreicht die Seite nicht.
+     --------------------------------------------------------------------- */
+  var OFFER_STATES = ["sent", "accepted", "declined", "expired"];
+
+  function renderArea(data) {
+    var tiles = (data && data.tiles) || {};
+    var offer = renderOffer(tiles.offer);
+    var preview = renderPreview(tiles.preview);
+    // Die Verwaltung erscheint nie allein. Sie gehört zur Vorschau — ohne
+    // sichtbare Vorschau bleibt sie weg, auch wenn eine Adresse mitkäme.
+    var admin = preview ? renderAdmin(tiles.admin) : hide("tileAdmin");
+    var area = el("area");
+    if (area) area.hidden = !(offer || preview || admin);
+    return offer || preview || admin;
+  }
+
+  function hide(id) {
+    var node = el(id);
+    if (node) { node.hidden = true; node.innerHTML = ""; }
+    return false;
+  }
+
+  /* Stufe 2 — die Offerte. Ein Entwurf hat hier nichts verloren: Neben der
+     Freigabe in Quantus prüft die Seite selbst, dass ein echter Versandstatus
+     UND ein Versandzeitpunkt dastehen. */
+  function renderOffer(tile) {
+    if (!tile || OFFER_STATES.indexOf(String(tile.status || "")) < 0 || !tile.sentAt) {
+      return hide("tileOffer");
+    }
+    var doc = tile.document || {};
+    var html = entschaerfen(doc.html);
+    var datei = safeUrl(doc.url);
+    var teile = [];
+    if (tile.number) teile.push("Nr. <b>" + esc(tile.number) + "</b>");
+    if (tile.amount != null) teile.push("<b>" + esc(chf(tile.amount)) + "</b>");
+    if (tile.validUntil) teile.push("gültig bis <b>" + esc(datum(tile.validUntil)) + "</b>");
+    if (tile.statusLabel) teile.push("Status: <b>" + esc(tile.statusLabel) + "</b>");
+
+    el("tileOffer").innerHTML =
+      "<h2>Offerte</h2>" +
+      (tile.title ? '<p class="sub">' + esc(tile.title) + "</p>" : "") +
+      '<p class="meta">' + teile.join(" · ") +
+      (tile.expired ? '<br><span class="warn">Die Gültigkeit ist abgelaufen — melden Sie sich, ' +
+        "wir stellen die Offerte gerne neu aus.</span>" : "") + "</p>" +
+      (html ? '<iframe class="doc" id="offerDoc" title="Ihre Offerte" sandbox loading="lazy"></iframe>' : "") +
+      '<div class="acts">' +
+        (html ? '<button type="button" id="offerPrint">Drucken / als PDF speichern</button>' : "") +
+        (datei ? '<a class="btnlink ghost" id="offerFile" href="' + esc(datei) +
+          '" target="_blank" rel="noopener noreferrer">Dokument öffnen</a>' : "") +
+      "</div>";
+    el("tileOffer").hidden = false;
+
+    if (html) {
+      el("offerDoc").srcdoc = html;
+      el("offerPrint").addEventListener("click", function () {
+        // Gedruckt wird das Dokument selbst — in einem eigenen Fenster, das
+        // nichts von dieser Seite mitbekommt (noopener).
+        var w = window.open("", "_blank", "noopener");
+        if (!w) return;
+        w.document.write(html);
+        w.document.close();
+        if (w.focus) w.focus();
+        if (w.print) w.print();
+      });
+    }
+    return true;
+  }
+
+  /* Stufe 3 — die Vorschau samt Änderungswünschen. Sie erscheint nur mit einer
+     echten HTTPS-Adresse; das Formular nur, wenn Quantus die Rückmeldung
+     ausdrücklich geöffnet hat (`feedback`). Der Wunsch geht über denselben
+     Einladungstoken an denselben Eingang und landet damit an genau diesem
+     Vorgang — es gibt keinen zweiten Weg und keine Projekt-ID im Browser. */
+  function renderPreview(tile) {
+    var url = tile ? safeUrl(tile.url) : "";
+    if (!url) return hide("tilePreview");
+    var feedback = tile.feedback === true;
+
+    el("tilePreview").innerHTML =
+      "<h2>Website-Vorschau &amp; Änderungswünsche</h2>" +
+      '<p class="meta">Das ist der aktuelle Stand Ihrer Website' +
+        (tile.releasedAt ? " · freigegeben am <b>" + esc(datum(tile.releasedAt)) + "</b>" : "") +
+        ". Schauen Sie in Ruhe durch." + "</p>" +
+      '<div class="acts"><a class="btnlink" id="previewOpen" href="' + esc(url) +
+        '" target="_blank" rel="noopener noreferrer">Vorschau ansehen</a></div>' +
+      (feedback
+        ? '<form id="changeForm" novalidate style="margin-top:18px">' +
+            '<label for="crTitle"><span class="lbl">Was soll geändert werden? ' +
+              '<span class="req">· Pflichtfeld</span></span>' +
+              '<input id="crTitle" maxlength="160" required aria-required="true"></label>' +
+            '<label for="crDetail"><span class="lbl">Details ' +
+              '<span class="sub" style="font-weight:400">· freiwillig</span></span>' +
+              '<textarea id="crDetail" maxlength="1500"></textarea></label>' +
+            '<label for="crBy"><span class="lbl">Ihr Name ' +
+              '<span class="sub" style="font-weight:400">· freiwillig</span></span>' +
+              '<input id="crBy" maxlength="120"></label>' +
+            '<label class="hp" aria-hidden="true">Bitte leer lassen' +
+              '<input id="crHp" tabindex="-1" autocomplete="off"></label>' +
+            '<button type="submit" id="crSubmit">Änderungswunsch senden</button>' +
+            '<div class="status" id="crStatus" role="status" aria-live="polite"></div>' +
+          "</form>"
+        : "");
+    el("tilePreview").hidden = false;
+    if (feedback) el("changeForm").addEventListener("submit", sendChange);
+    return true;
+  }
+
+  /* Stufe 3 — die Verwaltung. Eigene Freigabe, eigene Adresse, sonst nichts. */
+  function renderAdmin(tile) {
+    var url = tile ? safeUrl(tile.url) : "";
+    if (!url) return hide("tileAdmin");
+    el("tileAdmin").innerHTML =
+      "<h2>Verwaltung</h2>" +
+      '<p class="meta">Hier pflegen Sie Ihre eigenen Inhalte.</p>' +
+      '<div class="acts"><a class="btnlink ghost" id="adminOpen" href="' + esc(url) +
+        '" target="_blank" rel="noopener noreferrer">Verwaltung öffnen</a></div>';
+    el("tileAdmin").hidden = false;
+    return true;
+  }
+
+  function sendChange(ev) {
+    ev.preventDefault();
+    var status = el("crStatus");
+    var btn = el("crSubmit");
+    var titel = String(el("crTitle").value || "").trim();
+    if (titel.length < 3) {
+      status.className = "status show err";
+      status.textContent = "Bitte kurz beschreiben, was geändert werden soll.";
+      el("crTitle").focus();
+      return;
+    }
+    var detail = String(el("crDetail").value || "");
+    btn.disabled = true;
+    status.className = "status show ok";
+    status.textContent = "Wird gesendet …";
+    post({
+      token: token, kind: "change",
+      payload: { title: titel, detail: detail, requestedBy: el("crBy").value },
+      website: el("crHp").value,
+      idempotencyKey: idemKey([token, "change", titel, detail]),
+    })
+      .then(function (data) {
+        el("crTitle").value = "";
+        el("crDetail").value = "";
+        status.className = "status show ok";
+        status.textContent = data.duplicate
+          ? "Dieser Wunsch ist bereits bei uns."
+          : "Danke — Ihr Wunsch ist angekommen. Wir melden uns, bevor etwas umgesetzt wird.";
+      })
+      .catch(function (e) {
+        status.className = "status show err";
+        status.textContent = e.message + " Bitte später erneut versuchen.";
+      })
+      .then(function () { btn.disabled = false; });
   }
 
   function fieldHtml(q, i) {
@@ -364,6 +620,21 @@
     return "ft_" + hash.toString(36) + "_" + basis.length.toString(36);
   }
 
+  /* Genau EIN Sendeweg für diese Seite: derselbe abgesicherte Eingang, dieselbe
+     Fehlerbehandlung — für die Antworten wie für einen Änderungswunsch. */
+  function post(body) {
+    return fetch(PORTAL_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) throw new Error(data.error || "Senden fehlgeschlagen");
+        return data;
+      });
+    });
+  }
+
   el("form").addEventListener("submit", function (ev) {
     ev.preventDefault();
     var status = el("status");
@@ -384,22 +655,12 @@
     btn.disabled = true;
     status.className = "status show ok";
     status.textContent = "Wird gesendet …";
-    fetch(PORTAL_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        token: token, kind: "intake",
-        payload: { answers: answers },
-        website: el("hp").value,
-        idempotencyKey: idemKey([token, "intake"]),
-      }),
+    post({
+      token: token, kind: "intake",
+      payload: { answers: answers },
+      website: el("hp").value,
+      idempotencyKey: idemKey([token, "intake"]),
     })
-      .then(function (r) {
-        return r.json().catch(function () { return {}; }).then(function (data) {
-          if (!r.ok) throw new Error(data.error || "Senden fehlgeschlagen");
-          return data;
-        });
-      })
       .then(function (data) {
         el("fields").innerHTML = "";
         el("need").textContent = "";
