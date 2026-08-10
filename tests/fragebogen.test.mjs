@@ -12,8 +12,12 @@
  * Und: Der Vision Room gehört zu DIESER Einladung. Er ist kein zweiter Kanal,
  * sondern zwei Fragen desselben Fragebogens — abgeschickt in einem Zug, damit
  * genau EIN Projekt entsteht statt zweier auseinanderdriftender Vorgänge.
- * Die Seite zeigt niemals Vorschau, Angebot, Vertrag oder AGB; das ist die
- * Phase 2 und ein anderer Link.
+ *
+ * Derselbe Link wächst inzwischen zum Kundenbereich: Offerte, Vorschau und
+ * Verwaltung kommen dazu, sobald Quantus sie ausdrücklich freigibt. Das prüft
+ * tests/kundenbereich.test.mjs. Hier bleibt geprüft, dass der Fragebogen selbst
+ * unverändert funktioniert — und dass Vertrag, AGB und Kundenportal an diesem
+ * Link nichts zu suchen haben.
  *
  * Die Logik wird wirklich ausgeführt: Der Skriptblock läuft gegen ein DOM-Doppel.
  */
@@ -79,16 +83,28 @@ ok(/kind: "intake"/.test(page), "die Antworten werden mit der falschen Art gesen
 ok(/idempotencyKey/.test(page), "Doppeleinreichungen sind nicht abgesichert");
 ok(!/mailto:/.test(page), "die Seite bietet einen Mail-Entwurf an");
 
-// ── 4b. Phase 1 zeigt nichts aus Phase 2 ──────────────────────────────────
-// Der Fragebogen-Link ist ausdrücklich „Kundendaten & Vision Room – noch keine
-// Vorschau". Alles Weitere gehört ins Kundenportal und damit an einen anderen
-// Link.
-[[/Vorschau/, "eine Vorschau"], [/Änderungswunsch/, "Änderungswünsche"],
- [/Offerte/, "eine Offerte"], [/Vertrag/, "einen Vertrag"], [/\bAGB\b/, "AGB"],
- [/clientPortals/, "den Kundenportal-Snapshot"],
+// ── 4b. Was an diesem Link NIE vorkommt ───────────────────────────────────
+// Der Link wächst inzwischen: Offerte, Vorschau und Verwaltung kommen dazu,
+// sobald Quantus sie ausdrücklich freigibt (bewiesen in
+// tests/kundenbereich.test.mjs). Drei Dinge bleiben ausdrücklich draussen —
+// sie haben ihre eigene Freigabe und ihren eigenen Link.
+// Geprüft wird, was die Seite ausliefern kann — Kommentare erreichen niemanden
+// und dürfen benennen, was hier ausdrücklich NICHT hingehört.
+const ohneKommentare = (html) => html
+  .replace(/<!--[\s\S]*?-->/g, "")
+  .replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(/^\s*\/\/.*$/gm, "");
+const lieferbar = ohneKommentare(page);
+[[/\bVertrag\b/, "einen Vertrag"], [/\bAGB\b/, "AGB"],
+ [/clientPortals/, "den Kundenportal-Snapshot"], [/kunde\.html/, "das Kundenportal"],
 ].forEach(([re, was]) => {
-  ok(!re.test(page), `der Fragebogen zeigt ${was} — das gehört in die Phase 2`);
+  ok(!re.test(lieferbar), `der Fragebogen zeigt ${was} — das gehört nicht an diesen Link`);
 });
+// Die Stufen entstehen ausschliesslich aus dem gelieferten Datensatz — nicht
+// aus einem zweiten Abruf und nicht von einer zweiten Adresse.
+ok(/data\.tiles/.test(page), "die Seite liest die Kacheln nicht aus dem Datensatz");
+ok((page.match(/intakeForms/g) || []).length === 1,
+  "die Seite holt ihren Stand an mehr als einer Stelle");
 
 // ── 4c. Der Vision Room steht IM Fragebogen ───────────────────────────────
 ok(/id="visionRoom"/.test(markupOf(page)), "der Vision Room fehlt auf der Seite");
@@ -120,7 +136,9 @@ ok(!/vr-chip|VISION_SUGGESTIONS|VISION_BASE/.test(page),
   });
   const get = (id) => (nodes[id] = nodes[id] || mk(id));
   ["loading", "error", "errorTitle", "errorText", "content", "title", "subtitle", "intro",
-    "form", "fields", "hp", "submit", "need", "status", "footer"].forEach(get);
+    "form", "fields", "hp", "submit", "need", "status", "footer",
+    "answered", "answeredTitle", "answeredText", "area", "tileOffer", "tilePreview", "tileAdmin"]
+    .forEach(get);
 
   const TOKEN = "e".repeat(30);
   const posted = [];
@@ -233,7 +251,9 @@ ok(!/vr-chip|VISION_SUGGESTIONS|VISION_BASE/.test(page),
     addEventListener() {}, focus() {}, scrollIntoView() {},
   });
   ["loading", "error", "errorTitle", "errorText", "content", "title", "subtitle", "intro",
-    "form", "fields", "hp", "submit", "need", "status", "footer"].forEach((id) => { nodes[id] = mk(id); });
+    "form", "fields", "hp", "submit", "need", "status", "footer",
+    "answered", "answeredTitle", "answeredText", "area", "tileOffer", "tilePreview", "tileAdmin"]
+    .forEach((id) => { nodes[id] = mk(id); });
 
   const ctx = {
     document: { getElementById: (id) => nodes[id] || null, title: "" },
@@ -268,6 +288,7 @@ ok(!/vr-chip|VISION_SUGGESTIONS|VISION_BASE/.test(page),
   const dom = makeDom({ innerWidth: 400 });
   ["loading", "error", "errorTitle", "errorText", "content", "title", "subtitle", "intro",
     "form", "fields", "hp", "submit", "need", "status", "footer",
+    "answered", "answeredTitle", "answeredText", "area", "tileOffer", "tilePreview", "tileAdmin",
     "visionRoom", "vrLead", "visionRoomMount", "vrCarriers"].forEach((id) => dom.ensure(id));
 
   const TOKEN = "e".repeat(30);
