@@ -20,7 +20,9 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 import { fileURLToPath } from "node:url";
+import { makeDom } from "./dom-double.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const page = fs.readFileSync(path.join(root, "fragebogen.html"), "utf8");
@@ -34,8 +36,16 @@ const markupOf = (html) => html.replace(/<style>[\s\S]*?<\/style>/g, "");
 
 // ── 1. Eigenständig und ohne Geheimnisse ──────────────────────────────────
 ok(/<title>[^<]*FlowerTech/.test(page), "die Seite hat keinen eigenen Titel");
-ok(!/<script[^>]+src=/i.test(page), "die Seite lädt externe Skripte");
-ok(!/<link[^>]+stylesheet/i.test(page), "die Seite lädt externe Stylesheets");
+// Geladen wird ausschliesslich von dieser Domain — und zwar genau der
+// gemeinsame Vision Room. Ein Skript oder Stil von einer fremden Herkunft wäre
+// ein Mitleser auf einer Seite mit Kundendaten.
+const quellen = (page.match(/(?:src|href)="([^"]+\.(?:js|css))"/g) || [])
+  .map((m) => /"([^"]+)"/.exec(m)[1]);
+ok(quellen.every((q) => q.startsWith("/")), `die Seite lädt Fremdes: ${quellen.join(", ")}`);
+ok(quellen.includes("/visionroom.js") && quellen.includes("/visionroom.css"),
+  "die Seite benutzt nicht den gemeinsamen Vision Room");
+ok(!/<script[^>]+src="https?:/i.test(page), "die Seite lädt Skripte von fremden Servern");
+ok(!/<link[^>]+stylesheet[^>]+https?:/i.test(page), "die Seite lädt Stile von fremden Servern");
 ok(!/firebase[^"']*\.js|firebasejs|gstatic/i.test(page), "das Firebase-SDK wird geladen");
 ok(!/apiKey|serviceAccount|private_key|FIREBASE_[A-Z_]+|Bearer\s+[A-Za-z0-9]/i.test(page),
   "die Seite enthält Zugangsdaten");
@@ -86,6 +96,13 @@ ok(/<form id="form"[\s\S]*id="visionRoom"[\s\S]*<\/form>/.test(markupOf(page)),
   "der Vision Room steht ausserhalb des Formulars — er würde getrennt gesendet");
 ok(/q\.vision === "idea"/.test(page) && /q\.vision === "features"/.test(page),
   "der Vision Room hängt nicht an den Fragen des Fragebogens");
+ok(/FlowerTechVisionRoom\.mount\(/.test(page), "der gemeinsame Vision Room wird nicht eingesetzt");
+ok(/mode: "intake"/.test(page), "der Vision Room läuft nicht im Fragebogen-Modus");
+ok(/id="visionRoomMount"/.test(markupOf(page)), "der Vision Room hat keinen Platz im Formular");
+ok(/<form id="form"[\s\S]*id="visionRoomMount"[\s\S]*<\/form>/.test(markupOf(page)),
+  "der Vision Room steht ausserhalb des Formulars");
+ok(!/vr-chip|VISION_SUGGESTIONS|VISION_BASE/.test(page),
+  "die vereinfachte Zweitfassung des Vision Rooms steht weiterhin in der Seite");
 
 // ── 5. Die Logik wirklich ausführen ───────────────────────────────────────
 {
@@ -238,46 +255,20 @@ ok(/q\.vision === "idea"/.test(page) && /q\.vision === "features"/.test(page),
 }
 
 // ── 7. Der Vision Room läuft — und sendet mit demselben Absenden ─────────
-// Die entscheidende Eigenschaft: EIN Klick auf „Antworten senden" schickt
-// Kundendaten UND Vision Room. Es gibt keinen zweiten Versand und damit auch
-// keinen zweiten Vorgang in Quantus.
+// Zwei Eigenschaften zugleich:
+//   * Es ist DERSELBE Baustein wie auf flowertech.ch (visionroom.js) — keine
+//     vereinfachte Zweitfassung mehr.
+//   * EIN Klick auf „Antworten senden" schickt Kundendaten UND Vision Room.
+//     Es gibt keinen zweiten Versand und damit keinen zweiten Vorgang.
 {
   const script = /<script>([\s\S]*?)<\/script>/.exec(page)[1];
-  const nodes = {};
-  const handlers = {};
-
-  // Ein DOM-Doppel, das nur kann, was der Vision Room anfasst: Knoten
-  // verschieben (appendChild/closest) und Chips aus dem erzeugten HTML lesen.
-  const mk = (id) => ({
-    id, textContent: "", innerHTML: "", hidden: false, value: "", disabled: false,
-    checked: false, className: "", attrs: {}, tagName: "DIV", style: {}, children: [],
-    parentLabel: null,
-    focus() {}, reset() {}, scrollIntoView() {},
-    setAttribute(k, v) { this.attrs[k] = String(v); },
-    getAttribute(k) { return this.attrs[k] == null ? null : this.attrs[k]; },
-    addEventListener(t, fn) { (handlers[this.id] = handlers[this.id] || {})[t] = fn; },
-    fire(t, ev) { const fn = (handlers[this.id] || {})[t]; if (fn) fn(ev || { preventDefault() {} }); },
-    click() { this.fire("click"); },
-    appendChild(node) { this.children.push(node); },
-    // Jedes Feld sitzt in seinem <label> — hier als leichtes Doppel.
-    closest(sel) { return sel === "label" ? (this.parentLabel = this.parentLabel || mk(this.id + "_label")) : null; },
-    // Die Chips werden aus dem gerade erzeugten HTML gelesen: derselbe Weg,
-    // den der Browser geht.
-    querySelectorAll(sel) {
-      if (sel !== ".vr-chip") return [];
-      return (this.innerHTML.match(/data-f="([^"]*)"/g) || []).map((m, i) => {
-        const label = m.slice(8, -1);
-        const node = mk(this.id + "_chip_" + i);
-        node.attrs["data-f"] = label;
-        return node;
-      });
-    },
-  });
-  const get = (id) => (nodes[id] = nodes[id] || mk(id));
+  const component = fs.readFileSync(path.join(root, "visionroom.js"), "utf8");
+  // Am Telefon führt der Weg über „Vorschläge anzeigen" — die enge Breite
+  // prüft zugleich, dass der Baustein dort bedienbar bleibt.
+  const dom = makeDom({ innerWidth: 400 });
   ["loading", "error", "errorTitle", "errorText", "content", "title", "subtitle", "intro",
     "form", "fields", "hp", "submit", "need", "status", "footer",
-    "visionRoom", "vrLead", "vrIdeaField", "vrChips", "vrOwn", "vrAdd", "vrSum", "vrFeatureField",
-  ].forEach(get);
+    "visionRoom", "vrLead", "visionRoomMount", "vrCarriers"].forEach((id) => dom.ensure(id));
 
   const TOKEN = "e".repeat(30);
   const posted = [];
@@ -287,67 +278,88 @@ ok(/q\.vision === "idea"/.test(page) && /q\.vision === "features"/.test(page),
     questions: [
       { key: "name", label: "Ansprechperson", type: "text", role: "contactName", required: true, hint: "", options: [], vision: "" },
       { key: "email", label: "E-Mail", type: "email", role: "contactEmail", required: true, hint: "", options: [], vision: "" },
+      { key: "kind", label: "Was brauchen Sie?", type: "select", role: "", required: false, hint: "", options: ["Website", "Web-Programm", "Web-App", "Weiss ich noch nicht"], vision: "" },
       { key: "vision-idee", label: "Vision Room: Ihre Idee", type: "text", role: "", required: false, hint: "", options: [], vision: "idea" },
       { key: "vision-funktionen", label: "Vision Room: Funktionen", type: "textarea", role: "", required: false, hint: "", options: [], vision: "features" },
     ],
   };
 
-  const ctx = {
-    document: { getElementById: (id) => nodes[id] || null, title: "" },
-    location: { search: "?e=" + TOKEN, hash: "" },
-    URLSearchParams, URL, Date, Number, String, Math, JSON, RegExp, Promise, Array, Object, console,
-    fetch: (url, init) => {
-      posted.push({ url, init });
-      if (String(url).includes("intakeForms")) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(form) });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
-    },
+  const fetchDouble = (url, init) => {
+    posted.push({ url, init });
+    if (String(url).includes("intakeForms")) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(form) });
+    }
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
   };
-  ctx.window = ctx;
-  ctx.document.getElementById = (id) => nodes[id] || (/^q_\d+$/.test(id) ? get(id) : null);
 
-  new Function(...Object.keys(ctx), script)(...Object.values(ctx));
+  dom.window.location.search = "?e=" + TOKEN;
+  const ctx = {
+    window: dom.window, document: dom.document, location: dom.window.location,
+    setTimeout: dom.window.setTimeout, clearTimeout() {}, console,
+    URLSearchParams, URL, Date, Number, String, Math, JSON, RegExp, Promise, Array, Object,
+    fetch: fetchDouble,
+  };
+  ctx.globalThis = ctx;
+  dom.window.fetch = fetchDouble;
+  // Die Felder entstehen aus den Fragen — das Doppel legt sie bei Bedarf an.
+  const echtesGet = dom.document.getElementById;
+  dom.document.getElementById = (id) => echtesGet(id) || (/^q_\d+$/.test(id) ? dom.ensure(id, "INPUT") : null);
+
+  const context = vm.createContext(ctx);
+  vm.runInContext(component, context);   // erst der gemeinsame Baustein …
+  vm.runInContext(script, context);      // … dann die Seite, die ihn benutzt
   await new Promise((r) => setTimeout(r, 0));
 
-  ok(nodes.visionRoom.hidden === false, "der Vision Room bleibt verborgen, obwohl er gefragt ist");
-  ok(nodes.vrIdeaField.children.length === 1, "das Ideenfeld wurde nicht in den Vision Room geholt");
-  ok(nodes.vrFeatureField.children.length === 1,
-    "das Funktionenfeld wurde nicht in den Vision Room geholt");
+  ok(dom.node("visionRoom").hidden === false,
+    "der Vision Room bleibt verborgen, obwohl er gefragt ist");
+  ok(dom.node("vrIdea"), "der Baustein wurde nicht eingesetzt");
+  ok(dom.node("vrSend") === null && dom.node("vrMail") === null,
+    "im Fragebogen entsteht ein zweiter Versandweg");
+  // Die Fragen bleiben die Wertträger — sie wandern in den Behälter.
+  ok(dom.node("vrCarriers").children.length === 2,
+    `es wurden ${dom.node("vrCarriers").children.length} Wertträger übernommen statt zwei`);
 
-  // Die Vorschläge entstehen aus der Idee — nicht aus einer festen Liste.
-  nodes.q_2.value = "Gäste sollen einen Tisch reservieren";
-  nodes.q_2.fire("input");
-  ok(/Tischreservation/.test(nodes.vrChips.innerHTML),
-    `die Vorschläge passen nicht zur Idee: ${nodes.vrChips.innerHTML}`);
-  ok(/Kontaktformular/.test(nodes.vrChips.innerHTML), "die Grundvorschläge fehlen");
+  // Die Art wird nur einmal gefragt: Vision Room und Auswahlfrage sind eins.
+  dom.types.find((b) => b.dataset.t === "Website").fire("click");
+  ok(dom.node("q_2").value === "Website",
+    `die Art des Vision Rooms landet nicht in der Frage: ${dom.node("q_2").value}`);
 
-  // Ein Chip wählt eine Funktion — und schreibt sie in die Antwort der Frage.
-  const chips = nodes.vrChips.querySelectorAll(".vr-chip");
-  const tisch = chips.find((c) => c.getAttribute("data-f") === "Tischreservation");
+  // Die Vorschläge entstehen aus der Idee — aus der gemeinsamen Wissensbasis.
+  dom.node("vrIdea").value = "Speisekarte und Reservation für unsere Beiz";
+  dom.node("vrIdea").fire("input");
+  dom.node("vrSuggest").fire("click");
+  const labels = dom.node("mmNodes").children.map((n) => n.children[0].textContent);
+  ok(labels.some((l) => /Tischreservation/.test(l)),
+    `die Vorschläge passen nicht zur Idee: ${labels.join(", ")}`);
+  ok(labels.some((l) => /Kontaktformular|Mobil perfekt dargestellt/.test(l)),
+    "die Grundvorschläge der gewählten Art fehlen");
+  ok(dom.node("q_3").value.includes("Speisekarte"),
+    `die Idee landet nicht in der Antwort: ${dom.node("q_3").value}`);
+
+  // Eine Funktion wählen — sie schreibt sich in die Antwort der Frage.
+  const tisch = dom.node("mmNodes").children.find((n) => /Tischreservation/.test(n.children[0].textContent));
   ok(tisch, "der passende Vorschlag fehlt");
   tisch.fire("click");
-  ok(nodes.q_3.value.includes("Tischreservation"),
-    `die gewählte Funktion landet nicht in der Antwort: ${nodes.q_3.value}`);
-  ok(/Gewählt/.test(nodes.vrSum.innerHTML), "die Auswahl wird nicht zusammengefasst");
+  ok(/Tischreservation/.test(dom.node("q_4").value),
+    `die gewählte Funktion landet nicht in der Antwort: ${dom.node("q_4").value}`);
 
   // Eine eigene Funktion lässt sich anhängen.
-  nodes.vrOwn.value = "Gutscheine verkaufen";
-  nodes.vrAdd.fire("click");
-  ok(nodes.q_3.value.includes("Gutscheine verkaufen"), "eine eigene Funktion kommt nicht an");
-  ok(nodes.vrOwn.value === "", "das Eingabefeld wird nach dem Anhängen nicht geleert");
+  dom.node("vrOwn").value = "Gutscheine verkaufen";
+  dom.node("vrAdd").fire("click");
+  ok(dom.node("q_4").value.includes("Gutscheine verkaufen"), "eine eigene Funktion kommt nicht an");
+  ok(dom.node("vrOwn").value === "", "das Eingabefeld wird nach dem Anhängen nicht geleert");
 
   // Der Vision Room ist freiwillig: er sperrt das Absenden nicht.
-  nodes.q_0.value = "Anna Muster";
-  nodes.q_1.value = "anna@beiz.ch";
-  nodes.q_0.fire("input");
-  nodes.q_1.fire("input");
-  ok(nodes.submit.getAttribute("aria-disabled") === "false",
+  dom.node("q_0").value = "Anna Muster";
+  dom.node("q_1").value = "anna@beiz.ch";
+  dom.node("q_0").fire("input");
+  dom.node("q_1").fire("input");
+  ok(dom.node("submit").getAttribute("aria-disabled") === "false",
     "der freiwillige Vision Room sperrt das Absenden");
 
   // EIN Absenden — Kundendaten und Vision Room zusammen.
   const vorher = posted.length;
-  nodes.form.fire("submit");
+  dom.node("form").fire("submit");
   await new Promise((r) => setTimeout(r, 0));
   ok(posted.length === vorher + 1,
     `es wurden ${posted.length - vorher} Sendungen ausgelöst statt genau einer`);
@@ -355,13 +367,14 @@ ok(/q\.vision === "idea"/.test(page) && /q\.vision === "features"/.test(page),
   const body = JSON.parse(posted[posted.length - 1].init.body);
   ok(body.kind === "intake", `die falsche Art wurde gesendet: ${body.kind}`);
   ok(body.token === TOKEN, "die Einladung fehlt im Versand");
-  ok(body.payload.answers.length === 4, "es werden nicht alle Antworten gesendet");
+  ok(body.payload.answers.length === 5, "es werden nicht alle Antworten gesendet");
   const idee = body.payload.answers.find((a) => a.key === "vision-idee");
   const funktionen = body.payload.answers.find((a) => a.key === "vision-funktionen");
-  ok(idee && idee.answer.includes("Tisch"), "die Vision-Idee fehlt im Versand");
-  ok(funktionen && funktionen.answer.includes("Tischreservation"),
-    "die Vision-Funktionen fehlen im Versand");
+  ok(idee && idee.answer.includes("Speisekarte"), "die Vision-Idee fehlt im Versand");
+  ok(funktionen && /Tischreservation/.test(funktionen.answer), "die Vision-Funktionen fehlen im Versand");
   ok(funktionen.answer.includes("Gutscheine verkaufen"), "die eigene Funktion fehlt im Versand");
+  ok(body.payload.answers.find((a) => a.key === "kind").answer === "Website",
+    "die im Vision Room gewählte Art fehlt im Versand");
   // Der Schlüssel hängt an der Einladung: ein Reload erzeugt keinen zweiten Vorgang.
   ok(/^ft_/.test(body.idempotencyKey), "der Idempotenz-Schlüssel fehlt");
 }

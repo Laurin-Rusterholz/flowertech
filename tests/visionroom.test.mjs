@@ -1,263 +1,253 @@
 /*
- * Vision Room — Pflichtfeld, Hinweise und echter Versand.
+ * Vision Room — EIN Baustein für beide Seiten.
  * ---------------------------------------------------------------------------
- * Zwei Befunde, die hier abgesichert werden:
+ * Der Befund, den dieser Test festhält: Der Vision Room gab es zweimal. Auf
+ * flowertech.ch die Mindmap mit gewichteter Wissensbasis, Art-Wahl, Ziehen und
+ * Umbenennen — im öffentlichen Fragebogen eine vereinfachte Chip-Fassung mit
+ * einer viel kürzeren eigenen Vorschlagsliste. Zwei Oberflächen für dieselbe
+ * Sache driften auseinander, und die Kundschaft sah je nach Weg etwas anderes.
  *
- *   1. Der deaktivierte Senden-Knopf war nicht verständlich: Wer Funktionen
- *      anklickte, aber die Idee leer liess, sah nur einen ausgegrauten Knopf.
- *      Jetzt steht die Pflicht sichtbar im Zentrum UND beim Knopf — und die
- *      Funktionen sind ausdrücklich freiwillig.
+ * Jetzt gibt es visionroom.js und visionroom.css — und sonst nichts. Bewiesen
+ * wird:
  *
- *   2. „Senden" erzeugt eine echte ANFRAGE bei FlowerTech. Kein Mail-Entwurf,
- *      kein „Direktversand nicht möglich — per E-Mail senden".
+ *   1. Beide Seiten laden denselben Baustein und tragen keine eigene Fassung.
+ *   2. Die Pflicht steht sichtbar im Zentrum UND beim Knopf; die Auszeichnung
+ *      für Vorlese-Software stimmt (das bleibt aus dem früheren Test).
+ *   3. Die Wissensbasis wirkt: Vorschläge entstehen aus der Idee, nicht aus
+ *      einer festen Liste.
+ *   4. Der Anfrage-Modus sendet eine ANFRAGE — kein Projekt, kein Mail-Entwurf.
+ *      Wer eine Einladung hat (?e=), wird in den Fragebogen geschickt.
+ *   5. Der Fragebogen-Modus hat keinen eigenen Versand: kein Senden-Knopf,
+ *      kein E-Mail-Feld, kein fetch. Er meldet seine Werte nur nach aussen.
  *
- *   3. Der oeffentliche Vision Room legt KEIN Projekt an. Er ist der Einstieg
- *      ohne Einladung; der naechste Schritt ist der Fragebogen-Link, den
- *      FlowerTech zurueckschickt. Wer bereits eine Einladung hat (?e=), wird
- *      in den Fragebogen geschickt — dort ist der Vision Room Teil derselben
- *      Absendung, damit kein zweiter Vorgang entsteht.
- *
- * Die Logik wird wirklich ausgeführt: Der Skriptblock der Seite läuft gegen ein
- * DOM-Doppel, und der Vision-Room-Teil wird daraus herausgeschnitten.
+ * Die Logik wird wirklich ausgeführt: visionroom.js läuft gegen ein DOM-Doppel.
  */
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 import { fileURLToPath } from "node:url";
+import { makeDom } from "./dom-double.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const page = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const fragebogen = fs.readFileSync(path.join(root, "fragebogen.html"), "utf8");
+const source = fs.readFileSync(path.join(root, "visionroom.js"), "utf8");
+const styles = fs.readFileSync(path.join(root, "visionroom.css"), "utf8");
 
 let checks = 0;
 const ok = (condition, message) => { assert.ok(condition, message); checks++; };
 
-// Der Stilblock trägt dieselben Klassennamen und erzeugt sonst falsche Treffer.
-const markup = page.replace(/<style>[\s\S]*?<\/style>/g, "");
+/* ── 1. Ein Baustein, zwei Seiten ─────────────────────────────────────────── */
+[["index.html", page], ["fragebogen.html", fragebogen]].forEach(([name, html]) => {
+  ok(/<script src="\/visionroom\.js"><\/script>/.test(html),
+    `${name} lädt den gemeinsamen Vision Room nicht`);
+  ok(/<link rel="stylesheet" href="\/visionroom\.css">/.test(html),
+    `${name} lädt die gemeinsame Gestalt nicht`);
+  ok(/FlowerTechVisionRoom/.test(html), `${name} setzt den Baustein nicht ein`);
+  ok(/id="visionRoomMount"/.test(html), `${name} hat keinen Platz für den Vision Room`);
+});
 
-/* ── 1. Die Pflicht steht sichtbar im Zentrum ──────────────────────────────── */
+// Keine Zweitfassung mehr: weder Wissensbasis noch Aufbau stehen in den Seiten.
+[["index.html", page], ["fragebogen.html", fragebogen]].forEach(([name, html]) => {
+  const markup = html.replace(/<style>[\s\S]*?<\/style>/g, "");
+  ok(!/VISION_SUGGESTIONS|vr-chip/.test(html), `${name} trägt weiterhin eine eigene Vorschlagsliste`);
+  ok(!/const KB = \[/.test(html), `${name} trägt eine zweite Wissensbasis`);
+  ok(!/<div class="mm[ "]/.test(markup), `${name} baut die Mindmap selbst statt sie zu benutzen`);
+  ok(!/\.mnode\s*\{|\.mm-core\s*\{/.test(html), `${name} trägt eine zweite Gestalt der Mindmap`);
+});
+
+// Der Fragebogen bleibt derselbe eine Versandweg.
+ok((fragebogen.match(/fetch\(/g) || []).length === 2,
+  "der Fragebogen hat nicht mehr genau zwei fetch-Aufrufe (laden, senden)");
+ok(!/fetch\(/.test(source.split("if (!intake) {")[0]),
+  "der Baustein sendet ausserhalb des Anfrage-Modus");
+
+/* ── 2. Der Aufbau: Pflicht sichtbar, ARIA vollständig ────────────────────── */
+const dom0 = makeDom();
+const sandbox0 = {
+  window: dom0.window, document: dom0.document, location: dom0.window.location,
+  setTimeout: dom0.window.setTimeout, clearTimeout() {}, console, URLSearchParams,
+};
+sandbox0.globalThis = sandbox0;
+vm.runInContext(source, vm.createContext(sandbox0));
+const VR = dom0.window.FlowerTechVisionRoom;
+ok(VR && typeof VR.mount === "function" && typeof VR.markup === "function",
+  "der Baustein stellt weder markup() noch mount() bereit");
+
+const markup = VR.markup({ mode: "inquiry" });
 ok(/id="vrIdeaHelp"/.test(markup), "im Zentrum steht keine Pflicht-Hilfe");
 ok(/Beschreiben Sie kurz Ihre Idee, damit Sie senden können\./.test(markup),
   "die konkrete Pflicht-Hilfe fehlt im Ideenfeld");
 ok(/Eine App, mit der Familien Aufgaben und Termine gemeinsam organisieren\./.test(markup),
   "das Beispiel fehlt");
 ok(/Zum Beispiel:/.test(markup), "das Beispiel ist nicht als Beispiel gekennzeichnet");
-// Die Hilfe ist echter Text, kein Platzhalter — sie steht auch bei Fokus da.
 ok(/<p class="mm-need" id="vrIdeaHelp">/.test(markup),
   "die Hilfe ist kein eigenständiges Element, sondern nur ein Platzhalter");
 
-/* ── 2. ARIA: das Feld ist als Pflichtfeld ausgezeichnet ──────────────────── */
 const ideaTag = /<input id="vrIdea"[\s\S]*?>/.exec(markup)[0];
 ok(/aria-required="true"/.test(ideaTag), "das Ideenfeld ist nicht als Pflichtfeld ausgezeichnet");
 ok(/aria-describedby="vrIdeaHelp"/.test(ideaTag), "die Hilfe ist dem Feld nicht zugeordnet");
 ok(/aria-invalid="true"/.test(ideaTag), "der leere Anfangszustand ist nicht als unvollständig markiert");
 ok(/aria-label="Ihre Idee \(Pflichtfeld\)"/.test(ideaTag),
   "die Beschriftung für Vorlese-Software nennt die Pflicht nicht");
-ok(/Pflichtfeld<\/label>|Pflichtfeld<\/em>|Ihre Idee · Pflichtfeld/.test(markup),
-  "die sichtbare Beschriftung nennt die Pflicht nicht");
+ok(/Ihre Idee · Pflichtfeld/.test(markup), "die sichtbare Beschriftung nennt die Pflicht nicht");
 
-/* ── 3. Der Hinweis beim Knopf ist eine Live-Region ───────────────────────── */
 const needTag = /<p class="mm-need-send"[\s\S]*?>/.exec(markup)[0];
 ok(/aria-live="polite"/.test(needTag), "der Hinweis beim Knopf wird nicht vorgelesen");
-ok(/role="status"/.test(needTag), "der Hinweis ist keine Statusmeldung");
-ok(/Noch kurz Ihre Idee beschreiben, dann können Sie senden\./.test(markup),
-  "der geforderte Hinweistext fehlt");
-const sendTag = /<a class="bttn" id="vrSend"[\s\S]*?>/.exec(markup)[0];
-ok(/aria-disabled="true"/.test(sendTag), "der gesperrte Knopf ist nicht als gesperrt ausgezeichnet");
-ok(/aria-describedby="vrNeed"/.test(sendTag), "der Hinweis ist dem Knopf nicht zugeordnet");
+ok(/role="status"/.test(needTag), "der Hinweis beim Knopf ist keine Statusmeldung");
+ok(/aria-describedby="vrNeed"/.test(markup), "der Knopf verweist nicht auf den Hinweis");
+ok(/aria-live="polite"/.test(/<div class="mm-sum"[\s\S]*?>/.exec(markup)[0]),
+  "die Zusammenfassung wird nicht vorgelesen");
+ok(/aria-pressed/.test(source), "die gewählten Funktionen sind nicht als gedrückt ausgezeichnet");
 
-/* ── 4. Gestaltung: leer und fokussiert sind sichtbare Zustände ───────────── */
-ok(/\.mm-core\.empty\s*\{/.test(page), "das leere Zentrum hat keinen eigenen Zustand");
-ok(/\.mm-core:focus-within\s*\{/.test(page), "es gibt keinen klaren Fokus-Zustand");
-ok(/\.mm-core\.empty input::placeholder/.test(page),
-  "der Platzhalter im leeren Zentrum bleibt kontrastarm");
-ok(/--lime|--violet|--cyan/.test(/\.mm-core:focus-within[^}]*}/.exec(page)[0]),
-  "der Fokus-Zustand nutzt nicht die FlowerTech-Farben");
-// Gesperrt heisst lesbar-gesperrt, nicht fast unsichtbar.
-ok(!/#vrSend \{ opacity: \.35/.test(page) && !/#vrSend \{ opacity: \.4;/.test(page),
-  "der gesperrte Knopf wird weiterhin nur ausgeblendet");
+// Mobil bedienbar: eigene Schritte, eigener Knopf für die Vorschläge.
+["mm-mobile-step", "mm-suggest", "mm-more", "mm-idea-step", "mm-feature-step"].forEach((cls) => {
+  ok(markup.includes(cls), `die mobile Führung „${cls}“ fehlt im Aufbau`);
+});
+ok(/min-height: 4[2-9]px|min-height: 5\dpx/.test(styles), "die Touch-Ziele sind nicht vergrössert");
+ok(/@media \(prefers-reduced-motion: reduce\)/.test(styles),
+  "die Gestalt kennt keine Rücksicht auf reduzierte Bewegung");
 
-/* ── 5. Versandvertrag: echte Anfrage, kein Mailprogramm, kein Projekt ────── */
-ok(/kind: 'inquiry'/.test(page), "der Vision Room sendet keine Anfrage");
-ok(!/kind: 'quote'/.test(page),
-  "der Vision Room legt weiterhin direkt eine Offertenanfrage an");
-ok(/source: 'vision-room'/.test(page), "die Herkunft der Anfrage fehlt");
-ok(/flowertech-portal/.test(page), "der abgesicherte Eingang wird nicht aufgerufen");
-ok(/idempotencyKey/.test(page), "Doppeleinreichungen sind nicht abgesichert");
-ok(/id="vrHp"/.test(markup), "der Honeypot fehlt");
-ok(/\{24,64\}/.test(page), "der Einladungstoken wird nicht auf Form geprüft");
-ok(!/dataset\.mailto/.test(page), "es gibt weiterhin einen Rückfall auf ein Mailprogramm");
-ok(!/Direktversand nicht möglich/.test(page), "der Mail-Rückfalltext steht weiterhin auf der Seite");
-ok(!/mailto:[^"']*Visionroom/.test(page), "der Vision Room baut weiterhin einen Mail-Entwurf");
-ok(/Ihre Anfrage ist bei FlowerTech eingegangen/.test(page),
-  "die Bestätigung nach erfolgreichem Senden fehlt");
-// Der naechste Schritt wird benannt: der Fragebogen-Link.
-ok(/Fragebogen-Link/.test(page),
-  "die Seite verspricht keinen Fragebogen-Link als nächsten Schritt");
-// Mit Einladung gehoert der Vision Room in den Fragebogen — ein zweiter
-// Eingang wuerde einen zweiten Vorgang erzeugen.
-ok(/URLSearchParams\(location\.search\)\.get\('e'\)/.test(page),
-  "der Vision Room erkennt eine bestehende Einladung nicht");
-ok(/fragebogen\.html\?e=/.test(page), "mit Einladung wird nicht auf den Fragebogen verwiesen");
-// Der oeffentliche Vision Room kennt die Phase 2 nicht.
-ok(!/clientPortals/.test(page), "der Vision Room liest den Kundenportal-Snapshot");
+// Im Fragebogen-Modus gibt es keinen eigenen Versand.
+const intakeMarkup = VR.markup({ mode: "intake" });
+ok(!/id="vrSend"/.test(intakeMarkup), "der Fragebogen-Modus hat einen eigenen Senden-Knopf");
+ok(!/id="vrMail"/.test(intakeMarkup), "der Fragebogen-Modus fragt die E-Mail ein zweites Mal");
+ok(/data-mode="intake"/.test(intakeMarkup), "der Modus steht nicht am Baustein");
+ok(/id="vrIdea"/.test(intakeMarkup) && /id="mmNodes"/.test(intakeMarkup),
+  "der Fragebogen-Modus lässt Zentrum oder Mindmap weg");
 
-/* ── 6. Die Logik wirklich ausführen ──────────────────────────────────────── */
-{
-  const script = /<script>\n([\s\S]*?)\n<\/script>/.exec(page)[1];
-  const start = script.indexOf("/* ================= Visionroom");
-  const end = script.indexOf("/* ================= Mobile-Menü");
-  ok(start > 0 && end > start, "der Vision-Room-Block liess sich nicht herausschneiden");
-  const source = script.slice(start, end);
-
-  // ── Ein sehr kleines DOM-Doppel: nur, was der Vision Room anfasst ────────
-  function mk(tag) {
-    const cls = new Set();
-    const node = {
-      tagName: String(tag || "div").toUpperCase(),
-      children: [], attrs: {}, dataset: {}, handlers: {},
-      textContent: "", value: "", hidden: false, type: "",
-      _html: "",
-      clientWidth: 1200, clientHeight: 600,
-      style: {
-        setProperty() {}, getPropertyValue() { return ""; },
-      },
-      classList: {
-        add: (...c) => c.forEach((x) => cls.add(x)),
-        remove: (...c) => c.forEach((x) => cls.delete(x)),
-        contains: (c) => cls.has(c),
-        toggle: (c, on) => {
-          if (on === undefined) return cls.has(c) ? cls.delete(c) : cls.add(c);
-          return on ? cls.add(c) : cls.delete(c);
-        },
-      },
-      // innerHTML = "" leert im Browser auch die Kindknoten — sonst wachsen
-      // die Vorschlags-Knoten bei jedem render() weiter an.
-      get innerHTML() { return node._html; },
-      set innerHTML(v) { node._html = String(v); if (!v) node.children.length = 0; },
-      get className() { return Array.from(cls).join(" "); },
-      set className(v) {
-        cls.clear();
-        String(v).split(/\s+/).filter(Boolean).forEach((x) => cls.add(x));
-      },
-      setAttribute(k, v) { node.attrs[k] = String(v); },
-      getAttribute(k) { return Object.prototype.hasOwnProperty.call(node.attrs, k) ? node.attrs[k] : null; },
-      addEventListener(t, fn) { (node.handlers[t] = node.handlers[t] || []).push(fn); },
-      removeEventListener() {},
-      appendChild(c) { node.children.push(c); return c; },
-      querySelector() { return mk("i"); },
-      querySelectorAll() { return []; },
-      focus() {},
-      fire(t, ev) {
-        (node.handlers[t] || []).forEach((fn) => fn(Object.assign({
-          preventDefault() {}, stopPropagation() {}, target: node, key: "",
-        }, ev || {})));
-      },
-    };
-    return node;
-  }
-
-  const nodes = {};
-  ["mmCanvas", "mmNodes", "mmLinks", "mmCore", "mm", "vrIdea", "vrOwn", "vrMail", "vrSend",
-    "vrSum", "mmBadge", "mmType", "mmEmpty", "mmHint", "vrSuggest", "mmMore", "vrNeed",
-    "vrHp", "vrAdd", "mmReset"].forEach((id) => { nodes[id] = mk(); });
-
-  const types = ["Website", "Web-Programm", "Web-App"].map((t) => {
-    const b = mk("button");
-    b.dataset.t = t;
-    return b;
-  });
-
-  let sent = null;
-  const ctx = {
-    document: {
-      getElementById: (id) => nodes[id] || null,
-      querySelectorAll: (sel) => (sel === ".mt" ? types : []),
-      createElement: (tag) => mk(tag),
-    },
-    location: { search: "" },
-    URLSearchParams, JSON, Math, Number, String, Array, Object, Date, RegExp, Promise, console,
-    setTimeout: (fn) => { if (typeof fn === "function") fn(); return 0; },
-    clearTimeout: () => {},
-    requestAnimationFrame: (fn) => fn(),
+/* ── 3. Laufzeit: Anfrage-Modus ───────────────────────────────────────────── */
+function boot({ search = "", innerWidth = 1200 } = {}) {
+  const dom = makeDom({ innerWidth });
+  const posted = [];
+  const sandbox = {
+    window: dom.window,
+    document: dom.document,
+    setTimeout: dom.window.setTimeout,
+    clearTimeout() {},
+    console,
+    URLSearchParams,
+    location: dom.window.location,
     fetch: (url, init) => {
-      sent = { url, body: JSON.parse(init.body) };
+      posted.push({ url, init });
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
     },
   };
-  ctx.window = { innerWidth: 1200, addEventListener() {}, document: ctx.document };
-  const fn = new Function(...Object.keys(ctx), source);
-  fn(...Object.values(ctx));
+  sandbox.globalThis = sandbox;
+  dom.window.location.search = search;
+  dom.window.fetch = sandbox.fetch;
+  dom.window.URLSearchParams = URLSearchParams;
+  vm.runInContext(source, vm.createContext(sandbox));
+  return { dom, posted, VR: dom.window.FlowerTechVisionRoom };
+}
 
-  const send = nodes.vrSend;
-  const need = nodes.vrNeed;
+{
+  const { dom, posted, VR: vr } = boot();
+  const mount = dom.ensure("visionRoomMount");
+  const api = vr.mount(mount, { mode: "inquiry" });
+  ok(api, "der Baustein liess sich nicht einsetzen");
 
-  // Anfangszustand: leer, gesperrt, erklärt.
-  ok(!send.classList.contains("ready"), "der Knopf ist im Leerzustand aktiv");
-  ok(send.getAttribute("aria-disabled") === "true", "der Leerzustand ist nicht als gesperrt ausgezeichnet");
-  ok(/Noch kurz Ihre Idee beschreiben/.test(need.textContent),
-    `der Hinweis erklärt den Leerzustand nicht: ${need.textContent}`);
-  ok(nodes.mmCore.classList.contains("empty"), "das leere Zentrum ist nicht als leer markiert");
+  const idea = dom.node("vrIdea"), send = dom.node("vrSend"), need = dom.node("vrNeed");
+  ok(send.getAttribute("aria-disabled") === "true", "der Senden-Knopf ist im Leerzustand frei");
+  ok(/Idee beschreiben/.test(need.textContent), `der Hinweis nennt den nächsten Schritt nicht: ${need.textContent}`);
 
-  // Nur Funktionen gewählt, Idee leer — genau der gemeldete Fall.
-  types[0].fire("click");
-  nodes.vrMail.value = "familie@muster.ch";
-  nodes.vrMail.fire("input");
-  ok(!send.classList.contains("ready"),
-    "ohne Idee ist der Knopf aktiv — die Pflicht wäre wirkungslos");
-  ok(/Noch kurz Ihre Idee beschreiben/.test(need.textContent),
-    "bei gewählter Art und Mail erklärt der Hinweis die fehlende Idee nicht");
-  ok(nodes.vrIdea.getAttribute("aria-invalid") === "true",
-    "das leere Pflichtfeld ist nicht als unvollständig markiert");
+  // Erst die Art, dann die Idee — genau wie auf der Seite.
+  dom.types.find((b) => b.dataset.t === "Web-Programm").fire("click");
+  idea.value = "Ein Programm für die Buchhaltung im Treuhandbüro";
+  idea.fire("input");
 
-  // Ein einziges Wort genügt — keine künstliche Mindestlänge.
-  nodes.vrIdea.value = "  Hofladen  ";
-  nodes.vrIdea.fire("input");
-  ok(send.classList.contains("ready"), "ein kurzer, sinnvoller Text schaltet den Knopf nicht frei");
-  ok(send.getAttribute("aria-disabled") === "false", "der freigeschaltete Knopf gilt weiter als gesperrt");
-  ok(/Sie können jetzt senden/.test(need.textContent),
-    `der Hinweis wird nicht zur Bestätigung: ${need.textContent}`);
-  ok(need.classList.contains("done"), "die Bestätigung ist nicht als erledigt markiert");
-  ok(nodes.mmCore.classList.contains("filled"), "das gefüllte Zentrum wird nicht umgeschaltet");
-  ok(nodes.vrIdea.getAttribute("aria-invalid") === "false", "das gefüllte Pflichtfeld gilt weiter als leer");
+  // Die Vorschläge entstehen aus der Idee, nicht aus einer festen Liste.
+  const labels = dom.node("mmNodes").children.map((n) => n.children[0].textContent);
+  ok(labels.some((l) => /MwSt|Belege|Bankabgleich/.test(l)),
+    `die Wissensbasis wirkt nicht: ${labels.join(", ")}`);
+  ok(labels.some((l) => /Offline weiterarbeiten|Benutzer & Rechte/.test(l)),
+    "die Grundvorschläge der gewählten Art fehlen");
+  ok(dom.node("mmType").textContent === "Web-Programm", "die gewählte Art steht nicht im Zentrum");
 
-  // Funktionen sind freiwillig: ohne eine einzige Auswahl bleibt „Senden" aktiv.
-  ok(nodes.mmBadge.textContent === "0" || Number(nodes.mmBadge.textContent) === 0,
-    "es wurde ungefragt eine Funktion ausgewählt");
-  ok(send.classList.contains("ready"), "ohne gewählte Funktion wird der Versand gesperrt");
+  // Eine Funktion wählen: Zähler und Zusammenfassung ziehen mit.
+  // Am Schreibtisch schaltet das kleine Zeichen am Rand — die Karte selbst
+  // gehört dort dem Ziehen und dem Umbenennen.
+  dom.node("mmNodes").children[0].children[1].fire("click");
+  ok(dom.node("mmBadge").textContent === 1, "der Zähler der Auswahl stimmt nicht");
+  ok(/Funktionen angehängt/.test(dom.node("vrSum").innerHTML), "die Auswahl wird nicht zusammengefasst");
+  ok(api.state().features.length === 1, "die Auswahl kommt nach aussen nicht an");
 
-  // Wieder leeren: der Hinweis kommt zurück, der Knopf sperrt.
-  nodes.vrIdea.value = "   ";
-  nodes.vrIdea.fire("input");
-  ok(!send.classList.contains("ready"), "nur Leerzeichen gelten als Idee");
-  ok(/Noch kurz Ihre Idee beschreiben/.test(need.textContent), "der Hinweis kehrt nicht zurück");
+  // Ohne E-Mail bleibt der Knopf zu — mit E-Mail geht er auf.
+  ok(send.getAttribute("aria-disabled") === "true", "ohne E-Mail lässt sich senden");
+  ok(/E-Mail/.test(need.textContent), "der Hinweis verlangt die E-Mail nicht");
+  dom.node("vrMail").value = "anna@beiz.ch";
+  dom.node("vrMail").fire("input");
+  ok(send.getAttribute("aria-disabled") === "false", "mit vollständigen Angaben bleibt der Knopf zu");
 
-  // Fehlende Mail wird eigenständig benannt, nicht mit der Idee vermischt.
-  nodes.vrIdea.value = "Hofladen";
-  nodes.vrIdea.fire("input");
-  nodes.vrMail.value = "";
-  nodes.vrMail.fire("input");
-  ok(!send.classList.contains("ready"), "ohne Rückkanal ist der Versand offen");
-  ok(/E-Mail/.test(need.textContent), `der Hinweis nennt die fehlende Mail nicht: ${need.textContent}`);
-
-  // ── Der Versand selbst ────────────────────────────────────────────────────
-  nodes.vrMail.value = "familie@muster.ch";
-  nodes.vrMail.fire("input");
+  // Senden erzeugt eine ANFRAGE — kein Projekt, kein Mail-Entwurf.
   send.fire("click");
-  // Der Versand ist asynchron — die Bestätigung steht erst nach dem Durchlauf da.
-  await new Promise((r) => setTimeout(r, 0));
-  ok(sent, "es wurde nichts gesendet");
-  ok(sent.url.includes("flowertech-portal"), `der Eingang stimmt nicht: ${sent.url}`);
-  ok(sent.body.kind === "inquiry", `die falsche Art wurde gesendet: ${sent.body.kind}`);
-  ok(!sent.body.token, "der oeffentliche Vision Room sendet einen Token mit");
-  ok(sent.body.source === "vision-room", "die Herkunft fehlt im Versand");
-  ok(sent.body.payload.need === "Hofladen", "der Bedarf fehlt im Versand");
-  ok(sent.body.payload.email === "familie@muster.ch", "der Rückkanal fehlt im Versand");
-  ok(Array.isArray(sent.body.payload.features), "die freiwilligen Funktionen fehlen als Feld");
-  ok(sent.body.payload.features.length === 0, "es wurden ungefragt Funktionen mitgeschickt");
-  ok(typeof sent.body.idempotencyKey === "string" && sent.body.idempotencyKey.startsWith("ft_"),
-    "der Idempotenz-Schlüssel fehlt");
-  ok(!send.dataset.mailto, "es wurde doch ein Mail-Entwurf vorbereitet");
-  ok(/eingegangen/.test(nodes.vrSum.innerHTML), "die Bestätigung nach dem Senden fehlt");
+  ok(posted.length === 1, `es wurden ${posted.length} Sendungen ausgelöst statt genau einer`);
+  const body = JSON.parse(posted[0].init.body);
+  ok(/flowertech-portal/.test(posted[0].url), `der Eingang stimmt nicht: ${posted[0].url}`);
+  ok(body.kind === "inquiry", `es wird kein Anfrage-Eingang benutzt: ${body.kind}`);
+  ok(body.source === "vision-room", "die Herkunft fehlt");
+  ok(body.payload.idea.includes("Buchhaltung"), "die Idee fehlt im Versand");
+  ok(body.payload.features.length === 1, "die gewählten Funktionen fehlen im Versand");
+  ok(/^ft_/.test(body.idempotencyKey), "der Idempotenz-Schlüssel fehlt");
+  ok(!/mailto:/.test(source), "der Baustein bietet einen Mail-Entwurf als Ausweg an");
+}
+
+/* ── 4. Mit Einladung: kein zweiter Eingang, sondern der Fragebogen ───────── */
+{
+  const token = "e".repeat(30);
+  const { dom, posted, VR: vr } = boot({ search: "?e=" + token });
+  vr.mount(dom.ensure("visionRoomMount"), { mode: "inquiry" });
+  dom.types.find((b) => b.dataset.t === "Website").fire("click");
+  dom.node("vrIdea").value = "Eine Seite für die Beiz";
+  dom.node("vrIdea").fire("input");
+  dom.node("vrMail").value = "anna@beiz.ch";
+  dom.node("vrMail").fire("input");
+  dom.node("vrSend").fire("click");
+
+  ok(posted.length === 0, "mit Einladung wird trotzdem eine zweite Anfrage gesendet");
+  ok(dom.window.location.href.includes("/fragebogen.html?e=" + token),
+    `mit Einladung wird nicht in den Fragebogen geführt: ${dom.window.location.href}`);
+}
+
+/* ── 5. Fragebogen-Modus: meldet nur, sendet nie ──────────────────────────── */
+{
+  const { dom, posted, VR: vr } = boot({ innerWidth: 400 });
+  const gemeldet = [];
+  const api = vr.mount(dom.ensure("visionRoomMount"), {
+    mode: "intake",
+    initial: { type: "Website", idea: "Speisekarte und Reservation für unsere Beiz", features: ["Eigene Idee"] },
+    onChange: (state) => gemeldet.push(state),
+  });
+
+  ok(dom.node("vrSend") === null, "im Fragebogen-Modus entsteht ein Senden-Knopf");
+  ok(dom.node("vrMail") === null, "im Fragebogen-Modus entsteht ein E-Mail-Feld");
+  ok(gemeldet.length > 0, "der Baustein meldet seine Werte nicht nach aussen");
+
+  const letzte = gemeldet[gemeldet.length - 1];
+  ok(letzte.idea.includes("Speisekarte"), "die vorbelegte Idee ging verloren");
+  ok(letzte.type === "Website", "die vorbelegte Art ging verloren");
+  ok(letzte.features.includes("Eigene Idee"), "die vorbelegte Auswahl ging verloren");
+
+  // Vorschläge holen (mobiler Weg) und eine Funktion dazunehmen.
+  dom.node("vrSuggest").fire("click");
+  const labels = dom.node("mmNodes").children.map((n) => n.children[0].textContent);
+  ok(labels.some((l) => /Tischreservation/.test(l)),
+    `die Wissensbasis wirkt im Fragebogen nicht: ${labels.join(", ")}`);
+  const frei = dom.node("mmNodes").children.find((n) => /Tischreservation|Tisch/.test(n.children[0].textContent));
+  ok(frei, `der passende Vorschlag fehlt: ${labels.join(", ")}`);
+  frei.fire("click");
+  ok(api.state().features.some((f) => /Tischreservation/.test(f)), "die Auswahl kommt nicht an");
+
+  // Eine eigene Funktion lässt sich anhängen.
+  dom.node("vrOwn").value = "Gutscheine verkaufen";
+  dom.node("vrAdd").fire("click");
+  ok(api.state().features.includes("Gutscheine verkaufen"), "eine eigene Funktion kommt nicht an");
+  ok(dom.node("vrOwn").value === "", "das Eingabefeld wird nach dem Anhängen nicht geleert");
+
+  ok(posted.length === 0, "der Fragebogen-Modus sendet von sich aus");
+  ok(/geht mit dem Fragebogen ab/.test(dom.node("vrSum").innerHTML),
+    `der Fragebogen-Modus verspricht einen eigenen Versand: ${dom.node("vrSum").innerHTML}`);
 }
 
 console.log(`visionroom: ok (${checks} Pruefungen)`);
