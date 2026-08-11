@@ -111,25 +111,87 @@ export function passt(selektor, pfad) {
   return true;
 }
 
+/* Die Spezifität eines Selektors — ids, dann Klassen/Attribute, dann Typen.
+   Ohne sie beantwortet der Leser nur, OB eine Regel existiert, nicht ob sie
+   gewinnt. Genau daran lag der zweite Befund: `.ck [hidden]{display:none}`
+   stand da und verlor trotzdem gegen `.ck-stage[data-rahmen="1"] .tile`. */
+export function spezifitaet(selektor) {
+  const ids = (selektor.match(/#[\w-]+/g) || []).length;
+  const klassen = (selektor.match(/\.[\w-]+/g) || []).length +
+    (selektor.match(/\[[^\]]+\]/g) || []).length;
+  const typen = (selektor.match(/(^|[\s>])[a-zA-Z][\w-]*/g) || []).length;
+  return [ids, klassen, typen];
+}
+
+function groesser(a, b) {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return a[i] > b[i];
+  }
+  return false;
+}
+
+/* Die letzte Angabe zu einer Eigenschaft in einem Regelblock. */
+function angabe(block, eigenschaft) {
+  const re = new RegExp("(?:^|;)\\s*" + eigenschaft + "\\s*:\\s*([^;]+)", "gi");
+  let treffer;
+  let letzte = null;
+  while ((treffer = re.exec(block))) letzte = treffer[1].trim();
+  if (letzte == null) return null;
+  const wichtig = /!\s*important/i.test(letzte);
+  return { wert: letzte.replace(/!\s*important/i, "").trim(), wichtig: wichtig };
+}
+
+/* Welche Angabe gewinnt — wie im Browser: `!important` zuerst, dann
+   Spezifität, dann Reihenfolge. `hidden` bringt die Vorgabe des Browsers
+   (`display:none`) als schwächste Stimme mit; jede Regel mit höherer
+   Spezifität überstimmt sie. */
+export function anzeige(css, pfad, eigenschaft) {
+  const element = pfad[pfad.length - 1];
+  let beste = null;
+  if (eigenschaft === "display" &&
+      Object.prototype.hasOwnProperty.call(element.attrs || {}, "hidden")) {
+    beste = { rang: [0, 0, 0, 0, -1], wert: "none", selektor: "[hidden] (Browser-Vorgabe)", bedingung: "" };
+  }
+  regeln(css).forEach((regel, index) => {
+    if (!passt(regel.selektor, pfad)) return;
+    const gefunden = angabe(regel.regeln, eigenschaft);
+    if (!gefunden) return;
+    const rang = [gefunden.wichtig ? 1 : 0].concat(spezifitaet(regel.selektor), [index]);
+    if (!beste || groesser(rang, beste.rang)) {
+      beste = { rang: rang, wert: gefunden.wert, selektor: regel.selektor, bedingung: regel.bedingung };
+    }
+  });
+  return beste;
+}
+
+const EIGENSCHAFTEN = ["display", "visibility", "content-visibility", "height", "max-height", "opacity"];
+
 /* Alle Gründe, aus denen dieser Pfad unsichtbar wäre. Leer = sichtbar.
-   Geprüft wird der ganze Pfad: Ein verstecktes Elternteil nimmt das Kind mit. */
+   Geprüft wird der ganze Pfad: Ein verstecktes Elternteil nimmt das Kind mit —
+   und je Eigenschaft zählt nur die Angabe, die den Zuschlag bekommt. */
 export function versteckt(css, pfad) {
-  const alle = regeln(css);
   const gruende = [];
   pfad.forEach((_, index) => {
     const bis = pfad.slice(0, index + 1);
-    alle.forEach((regel) => {
-      if (!passt(regel.selektor, bis)) return;
-      VERSTECKT.forEach(([muster, name]) => {
-        if (muster.test(regel.regeln)) {
-          gruende.push(`${regel.selektor}{${name}}` +
-            (regel.bedingung ? ` in @media${regel.bedingung}` : "") +
-            (index < pfad.length - 1 ? ` (trifft den Vorfahren ${beschreibe(bis[index])})` : ""));
-        }
-      });
+    EIGENSCHAFTEN.forEach((eigenschaft) => {
+      const sieger = anzeige(css, bis, eigenschaft);
+      if (!sieger) return;
+      const satz = eigenschaft + ":" + sieger.wert;
+      if (!VERSTECKT.some(([muster]) => muster.test(satz))) return;
+      gruende.push(`${sieger.selektor}{${satz}}` +
+        (sieger.bedingung ? ` in @media${sieger.bedingung}` : "") +
+        (index < pfad.length - 1 ? ` (trifft den Vorfahren ${beschreibe(bis[index])})` : ""));
     });
   });
   return gruende;
+}
+
+/* Die Gegenfrage: Bleibt ein Element, das `hidden` trägt, auch wirklich weg?
+   Antwortet mit dem Selektor, der es zurückholt — oder mit "". */
+export function trotzHiddenSichtbar(css, pfad) {
+  const sieger = anzeige(css, pfad, "display");
+  if (sieger && /none/i.test(sieger.wert)) return "";
+  return sieger ? sieger.selektor + "{display:" + sieger.wert + "}" : "(keine Regel blendet es aus)";
 }
 
 export function beschreibe(element) {

@@ -27,7 +27,7 @@ import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import { makeDom } from "./dom-double.mjs";
-import { versteckt, passt, beschreibe, el as cssEl } from "./css-sichtbarkeit.mjs";
+import { versteckt, passt, beschreibe, trotzHiddenSichtbar, el as cssEl } from "./css-sichtbarkeit.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const page = fs.readFileSync(path.join(root, "fragebogen.html"), "utf8");
@@ -246,15 +246,35 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     "die rechte Änderungsleiste ist unsichtbar: " + versteckt(css, leiste).join(" · "));
 
   /* Und die Gegenprobe nach unten: Was `hidden` trägt, ist auch wirklich weg —
-     sonst stünde die Formularwand wieder unter der Vorschau. */
-  const bogen = buehne.concat([cssEl("section", "content", [], { hidden: "" })]);
-  ok(versteckt(css, bogen).length, "ein Bereich mit `hidden` bleibt sichtbar");
-  const kachelWeg = buehne.concat([
-    cssEl("section", "area"),
-    cssEl("article", "tileAdmin", ["card", "tile"], { hidden: "" }),
-  ]);
-  ok(versteckt(css, kachelWeg).length,
-    "eine Kachel mit `hidden` bleibt sichtbar — daraus würde wieder eine Kachelreihe");
+     sonst stünde die Formularwand wieder unter der Vorschau.
+
+     Geprüft wird das in BEIDEN Zuständen der Bühne. In der Website-Ansicht
+     trägt sie `data-rahmen="1"`, und genau dort schlug eine Regel für die
+     randlose Kachel (`… .tile{display:flex}`, Spezifität 0,3,0) das
+     `.ck [hidden]{display:none}` (0,2,0): Im Website-Tab standen darauf die
+     Leistungsübersicht, die Kosten und die externen Verweise neben der
+     Website. Eine Regel, die es GIBT, ist eben nicht dieselbe wie eine, die
+     GEWINNT. */
+  [{}, { "data-rahmen": "1", "data-ansicht": "website" }].forEach((zustand) => {
+    const stufe = koerper.concat([cssEl("div", "ckStage", ["ck-stage"], zustand)]);
+    const wie = zustand["data-rahmen"] ? "in der Website-Ansicht" : "in einer gelesenen Ansicht";
+    const bogen = stufe.concat([cssEl("section", "content", [], { hidden: "" })]);
+    ok(versteckt(css, bogen).length, `ein Bereich mit \`hidden\` bleibt ${wie} sichtbar`);
+    ["tileAdmin", "tileOffer", "tileTest", "tileTerms", "tileContract"].forEach((id) => {
+      const kachel = stufe.concat([
+        cssEl("section", "area"),
+        cssEl("article", id, ["card", "tile"], { hidden: "" }),
+      ]);
+      const zurueck = trotzHiddenSichtbar(css, kachel);
+      ok(!zurueck, `${id} steht ${wie} trotz \`hidden\` da — zurückgeholt von ${zurueck}`);
+    });
+    // Die tragende Kachel dagegen ist sichtbar und füllt in der Website-Ansicht.
+    const vorne = stufe.concat([
+      cssEl("section", "area"),
+      cssEl("article", "tilePreview", ["card", "tile"]),
+    ]);
+    ok(!versteckt(css, vorne).length, `die Vorschau ist ${wie} unsichtbar`);
+  });
 }
 
 /* ══ 2. Was die Kopfzeile im Betrieb trägt ═════════════════════════════════ */
@@ -320,6 +340,48 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
       .filter((k) => dom.node("ckView_" + k).getAttribute("aria-selected") === "true");
     ok(!andere.length, `neben «${key}» ist auch «${andere.join(", ")}» aktiv`);
   });
+}
+
+/* ══ 3b. Im Website-Tab steht die Website — und sonst nichts ═══════════════ */
+{
+  /* Der Live-Befund: Bei ausgewähltem Tab „Website" stand oben die
+     „Leistungsübersicht · TEST" samt Kostenhinweis und den externen Verweisen
+     „Vorschlag ansehen" / „Bestehende Website"; die eingebettete Website lag
+     darunter. Was zentral sichtbar ist, wird deshalb hier Zeichen für Zeichen
+     durchgesehen. */
+  const { dom } = await seite(daten());
+  const sichtbarerText = () => zentralSichtbar(dom)
+    .map((id) => String(dom.node(id).innerHTML || "") + " " + String(dom.node(id).textContent || ""))
+    .join(" ");
+
+  zeige(dom, "website");
+  const zentral = zentralSichtbar(dom);
+  ok(zentral.join() === "tilePreview",
+    `im Website-Tab steht zentral auch: ${zentral.filter((i) => i !== "tilePreview").join(", ")}`);
+
+  const text = sichtbarerText();
+  ["Leistungsübersicht", "TEST", "Vorschlag ansehen", "Bestehende Website",
+    "Kosten noch offen", "Website-Neukonzept"].forEach((wort) => {
+    ok(!text.includes(wort), `im Website-Tab steht „${wort}“`);
+  });
+  // Kein externes Ziel als Verweis: Der Rückweg wird verborgen ausgeliefert.
+  ok(!/<a [^>]*href="https?:/.test(String(dom.node("tilePreview").innerHTML || "")
+    .replace(/<div class="pv-fallback"[\s\S]*$/, "")),
+    "im Website-Tab steht ein externer Verweis über der Website");
+
+  // Genau EINE Rahmenstufe — kein vorgelagerter Artikel, kein zweiter Rahmen.
+  const kachel = String(dom.node("tilePreview").innerHTML || "");
+  ok((kachel.match(/id="pvStage"/g) || []).length === 1, "es steht nicht genau eine Rahmenstufe da");
+  ok((kachel.match(/<iframe/g) || []).length === 1, "es steht nicht genau ein Rahmen da");
+  ok(/^(<div class="pv-stage")/.test(kachel.trim()),
+    "vor dem Rahmen steht noch etwas anderes");
+
+  // Die Leistungsübersicht steht in der Offerte — dort und nur dort.
+  zeige(dom, "offerte");
+  ok(zentralSichtbar(dom).join() === "tileTest",
+    "die Leistungsübersicht steht nicht allein in der Offerte");
+  ok(/Leistungsübersicht/.test(sichtbarerText()), "die Leistungsübersicht fehlt in der Offerte");
+  ok(/Website-Neukonzept Lehner/.test(sichtbarerText()), "die Übersicht nennt das Vorhaben nicht");
 }
 
 /* ══ 4. «Änderungswunsch» führt aus jeder Ansicht zum Ziel ═════════════════ */
