@@ -50,7 +50,8 @@ const IDS = [
   "tileTest", "tileOffer", "tilePreview", "tileContract", "tileAdmin", "tileTerms",
   // Bereichsleiste und Fortschritt gehoeren seit dem Portal-Umbau dazu.
   // Cockpit: Huelle, Umschalter, Sperrzustand und Aenderungsleiste.
-  "ck", "ckViews", "ckProject", "ckMobil", "ckWish", "ckStage", "ckSide", "ckLock",
+  "ck", "ckViews", "ckProject", "ckMobil", "ckDesktop", "ckReload", "ckWish",
+  "ckStage", "ckSide", "ckLock",
   "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_agb", "ckView_fragebogen",
   "ckWishes", "crArea", "pvStage", "adminStage",
   "visionRoom", "vrLead", "visionRoomMount", "vrCarriers",
@@ -163,9 +164,20 @@ const sichtbar = (dom) => IDS.map((id) => {
     "der Kundenbereich bleibt zu, obwohl Vorschau, TEST-Übersicht und AGB freigegeben sind");
   ok(kachel.hidden === false,
     "die Website-Vorschau fehlt auf der öffentlichen Kundenadresse — genau der gemeldete Befund");
-  ok(/Website-Vorschau/.test(kachel.innerHTML), "die Kachel ist nicht als Website-Vorschau benannt");
+  /* Benannt wird die Ansicht in der Kopfzeile. In der Bühne steht die Website
+     selbst — randlos, ohne eigene Überschrift, ohne nachgebaute Adressleiste.
+     Beides zusammen las sich in der Abnahme als zwei Anwendungen. */
+  ok(!/<h2>/.test(kachel.innerHTML), "über der Vorschau steht eine zweite Überschrift");
+  ok(!/ck-shell-bar|ck-addr|ck-dots/.test(kachel.innerHTML),
+    "über der Website steht wieder eine nachgebaute Browser-Adressleiste");
+  ok(!/Angezeigt wird/.test(kachel.innerHTML), "unter der Website steht wieder eine Adresszeile");
 
-  // Die Adresse: im Verweis UND ausgeschrieben zum Lesen und Kopieren.
+  // Eingebettet wird die Website selbst — die Wurzel des Hosts, nicht eine
+  // Präsentationshülle auf einem Unterpfad.
+  ok(/src="https:\/\/beispiel-lehner\.netlify\.app\/\?embed=flowertech"/.test(kachel.innerHTML),
+    "die Bühne zeigt nicht die blanke Website");
+
+  // Die volle Adresse ist nicht verloren: Sie steht im Rückweg, samt Verweis.
   ok(kachel.innerHTML.includes('href="' + LEHNER_URL + '"'),
     "die Vorschau verweist nicht auf genau die hinterlegte Adresse");
   ok(dom.node("previewOpen"), "es fehlt der Weg zur Vorschau");
@@ -174,6 +186,11 @@ const sichtbar = (dom) => IDS.map((id) => {
   ok(dom.node("previewUrlText").innerHTML.includes(LEHNER_URL)
     || String(kachel.innerHTML).includes(">" + LEHNER_URL + "<"),
     "die ausgeschriebene Adresse stimmt nicht");
+  /* Ob der Rückweg gerade steht, entscheidet erst der Browser (die Wartezeit
+     auf `load`) — das ist hier nicht nachstellbar. Geprüft wird deshalb, dass
+     er als verborgen ausgeliefert wird. */
+  ok(/id="pvFallback" hidden/.test(kachel.innerHTML),
+    "der Rückweg steht von Anfang an offen, statt nur bei blockierter Einbettung");
   ok(/rel="noopener noreferrer"/.test(kachel.innerHTML), "der Verweis gibt Seite und Token weiter");
   ok(/target="_blank"/.test(kachel.innerHTML), "die Vorschau ersetzt diese Seite");
 
@@ -385,12 +402,14 @@ const sichtbar = (dom) => IDS.map((id) => {
   // Die Vorschau steht IM Portal, nicht als nackter Verweis daneben.
   const kachel = String(dom.node("tilePreview").innerHTML || "");
   ok(/id="pvFrame"/.test(kachel), "die Vorschau wird nicht im Portal angezeigt");
-  ok(kachel.includes('src="' + LEHNER_URL + '"'), "der Rahmen zeigt nicht die hinterlegte Adresse");
-  ok(/id="ckMobil"/.test(String(dom.node("ck").innerHTML || "")) || !!dom.node("ckMobil"),
-    "die Mobil-Umschaltung fehlt in der Kopfzeile");
-  ok(/ck-shell-bar/.test(kachel), "der Vorschau-Rahmen fehlt");
-  // Der Verweis nach draussen bleibt — aber als Rueckweg, nicht als Hauptweg.
-  ok(/In neuem Tab öffnen/.test(kachel), "der Rueckweg in einen eigenen Tab fehlt");
+  ok(kachel.includes('src="' + LEHNER_URL + "?embed=flowertech" + '"'),
+    "der Rahmen zeigt nicht die Website selbst");
+  ok(!!dom.node("ckMobil") && !!dom.node("ckDesktop") && !!dom.node("ckReload"),
+    "Desktop/Mobil und «Neu laden» fehlen in der Kopfzeile");
+  ok(!/ck-shell|pv-bar|pv-note/.test(kachel),
+    "um die Website steht wieder ein zweiter Fensterrahmen");
+  // Der Verweis nach draussen bleibt — aber im Rueckweg, nicht als Hauptweg.
+  ok(/Vorschau in neuem Tab öffnen/.test(kachel), "der Rueckweg in einen eigenen Tab fehlt");
   ok(!/>Vorschau ansehen</.test(kachel),
     "der alte nackte Verweis „Vorschau ansehen“ steht wieder da");
   // Aenderungswuensche bleiben direkt neben der Vorschau — kein dritter Link.
@@ -416,10 +435,18 @@ const sichtbar = (dom) => IDS.map((id) => {
   }));
   const admin = String(dom.node("tileAdmin").innerHTML || "");
   ok(/<h2>Verwaltung<\/h2>/.test(admin), "die Verwaltung ist kein eigener Bereich");
-  ok(/id="adminFrame"/.test(admin), "die Verwaltung wird nicht im Portal gezeigt");
-  ok(admin.includes('src="https://admin.lehner.ch/login"'), "der Rahmen zeigt die falsche Adresse");
-  ok(/id="adminFallback"/.test(admin), "der Rueckweg fuer die Verwaltung fehlt");
-  ok(/In neuem Tab öffnen/.test(admin), "der Rueckweg ist nicht benannt");
+  /* Die live erreichbare Verwaltung bringt eine eigene Kopfzeile und eine
+     eigene Bedienung mit. Eingebettet stuenden zwei Navigationen uebereinander
+     — genau die Doppelung, die diese Fassung ablöst. Deshalb: eine eigene,
+     benannte FlowerTech-Ansicht mit EINEM klaren Weg nach draussen. */
+  ok(!/<iframe/.test(admin), "die Verwaltung wird als zweites Cockpit eingebettet");
+  ok(/id="adminOpen"/.test(admin), "es fehlt der Weg in die Verwaltung");
+  ok(admin.includes('href="https://admin.lehner.ch/login"'), "der Weg zeigt auf die falsche Adresse");
+  ok(/rel="noopener noreferrer"/.test(admin) && /target="_blank"/.test(admin),
+    "die Verwaltung ersetzt diese Seite oder gibt sie weiter");
+  ok(/Verwaltung öffnen/.test(admin), "der Weg in die Verwaltung ist nicht benannt");
+  ok(/lässt sich deshalb nicht in diese Ansicht einbetten/.test(admin),
+    "es wird nicht erklärt, warum die Verwaltung nicht hier steht");
 }
 
 /* ══ 6d. Die AGB bleiben unveraenderlich ═══════════════════════════════════ */
@@ -448,8 +475,15 @@ const sichtbar = (dom) => IDS.map((id) => {
   ok(/referrerpolicy="no-referrer"/.test(script), "der Rahmen gibt den Token weiter");
   // Und der sichtbare Rueckweg, falls die Einbettung blockiert ist.
   ok(/id="pvFallback"/.test(script), "es fehlt der Rueckweg bei blockierter Einbettung");
-  ok(/In neuem Tab öffnen/.test(script), "der Rueckweg ist nicht benannt");
+  ok(/Vorschau in neuem Tab öffnen/.test(script), "der Rueckweg ist nicht benannt");
   ok(/safeUrl/.test(script), "die Seite prüft Adressen nicht");
+  /* Was in den Rahmen geht, geht durch `einbettUrl` — und das gibt nur die
+     Wurzel eines HTTPS-Hosts heraus. Eine Praesentationshuelle auf einem
+     Unterpfad kann so gar nicht erst eingebettet werden. */
+  ok(/function einbettUrl/.test(script), "die Einbettadresse wird nicht eigens gebildet");
+  ok(/src="' \+ esc\(einbettUrl\(url\)\)/.test(script),
+    "der Rahmen bekommt eine Adresse an der Regel vorbei");
+  ok(/embed=" \+ EMBED_MARKE/.test(script), "die Einbett-Absprache fehlt");
   // Kein Weg an der Prüfung vorbei: Jede ausgegebene Adresse geht durch safeUrl.
   ok(!/href="'\s*\+\s*esc\(tile\.url\)/.test(script),
     "eine Adresse geht ungeprüft in einen Verweis");

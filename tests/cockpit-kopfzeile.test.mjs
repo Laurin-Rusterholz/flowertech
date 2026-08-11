@@ -343,19 +343,43 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
 /* ══ 5. Ein Mobil-Schalter, zwei Anzeigen — nie widersprüchlich ════════════ */
 {
   const { dom } = await seite(daten());
+  /* Desktop/Mobil steht NUR in der Kopfzeile. Das zweite Paar am Rahmen ist
+     weg — zwei Schalter für dieselbe Sache waren Teil der Doppelung. */
+  const kachel = String(dom.node("tilePreview").innerHTML || "");
+  ok(!/id="pvDesktop"|id="pvMobil"/.test(kachel),
+    "am Rahmen steht wieder ein eigenes Desktop/Mobil-Paar");
+
   const stand = () => [
+    dom.node("ckDesktop").getAttribute("aria-pressed"),
     dom.node("ckMobil").getAttribute("aria-pressed"),
     dom.node("pvStage").getAttribute("data-view"),
-    dom.node("pvDesktop") ? dom.node("pvDesktop").getAttribute("aria-pressed") : null,
-    dom.node("pvMobil") ? dom.node("pvMobil").getAttribute("aria-pressed") : null,
   ].join("|");
 
+  ok(stand() === "true|false|desktop", `Ausgangsstand: ${stand()}`);
   dom.node("ckMobil").click();
-  ok(stand() === "true|mobil|false|true", `nach Mobil aus der Kopfzeile: ${stand()}`);
-  dom.node("pvDesktop").click();
-  ok(stand() === "false|desktop|true|false", `nach Desktop am Rahmen: ${stand()}`);
-  dom.node("pvMobil").click();
-  ok(stand() === "true|mobil|false|true", `nach Mobil am Rahmen: ${stand()}`);
+  ok(stand() === "false|true|mobil", `nach Mobil: ${stand()}`);
+  dom.node("ckDesktop").click();
+  ok(stand() === "true|false|desktop", `nach Desktop: ${stand()}`);
+
+  /* «Neu laden» lädt genau die eingerahmte Ansicht neu — und räumt dabei
+     einen stehengebliebenen Rückweg weg. */
+  dom.node("pvFallback").hidden = false;
+  const vorher = dom.node("pvFrame").getAttribute("src");
+  dom.node("ckReload").click();
+  ok(String(dom.node("pvFrame").src || dom.node("pvFrame").getAttribute("src")) === vorher,
+    "«Neu laden» verändert die Adresse der Vorschau");
+  ok(dom.node("pvFallback").hidden === true, "«Neu laden» lässt den Rückweg stehen");
+
+  /* Breite und Neuladen gehören zur eingerahmten Ansicht — in einer gelesenen
+     Ansicht wären sie Knöpfe ohne Gegenstand. */
+  zeige(dom, "agb");
+  ["ckDesktop", "ckMobil", "ckReload"].forEach((id) => {
+    ok(dom.node(id).hidden === true, `${id} steht auch in einer gelesenen Ansicht`);
+  });
+  zeige(dom, "website");
+  ["ckDesktop", "ckMobil", "ckReload"].forEach((id) => {
+    ok(dom.node(id).hidden === false, `${id} fehlt in der Website-Ansicht`);
+  });
 }
 
 /* ══ 6. Der Name kommt aus den Daten — erfunden wird keiner ════════════════ */

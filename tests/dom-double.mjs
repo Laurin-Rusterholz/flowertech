@@ -132,7 +132,7 @@ export function makeDom({ innerWidth = 1200, innerHeight = 900 } = {}) {
          `data-ft="view"` oder `aria-selected` trägt, muss danach auch über
          getAttribute auffindbar sein — sonst prüfte der Test nur die
          Zeichenkette, aus der er gebaut wurde. */
-      (tag.match(/\s(data-[\w-]+|aria-[\w-]+|role)="([^"]*)"/g) || []).forEach((paar) => {
+      (tag.match(/\s(data-[\w-]+|aria-[\w-]+|role|src|href)="([^"]*)"/g) || []).forEach((paar) => {
         const [, schluessel, wert] = /\s([\w-]+)="([^"]*)"/.exec(paar);
         node.attrs[schluessel] = wert;
         if (schluessel.indexOf("data-") === 0) {

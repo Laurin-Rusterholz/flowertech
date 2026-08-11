@@ -90,21 +90,19 @@
   .lockmsg{display:flex;gap:11px;align-items:flex-start;color:var(--muted);font-size:14px;line-height:1.6}
   .lockmsg .ico{flex:none;font-size:17px;line-height:1.4}
   /* ── Eingebettete Vorschau ──────────────────────────────────────────────
-     Die Vorschau gehoert INS Portal. Ein nackter Verweis nach draussen liess
-     Formular und Website wie zwei Anwendungen wirken. */
-  .pv-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
-  .pv-seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  .pv-seg button{background:var(--card);border:0;border-radius:0;color:var(--muted);
-    font-size:13px;font-weight:600;padding:7px 13px}
-  .pv-seg button[aria-pressed="true"]{color:var(--text);background:rgba(160,107,255,.18)}
-  .pv-spacer{flex:1 1 auto}
-  .pv-stage{border:1px solid var(--line);border-radius:14px;background:var(--bg);
-    padding:10px;display:flex;justify-content:center}
-  .pv-frame{width:100%;max-width:100%;border:0;border-radius:9px;background:#fff;
-    height:min(70vh,620px);display:block;transition:max-width .2s ease}
-  .pv-stage[data-view="mobil"] .pv-frame{max-width:390px}
-  .pv-note{font-size:13px;color:var(--muted);margin:10px 0 0}
-  .pv-fallback{margin:12px 0 0}
+     Die Website steht randlos in der Buehne. Kein eigener Rahmen, keine
+     nachgebaute Adressleiste, keine zweite Bedienung: Alles, was man ueber
+     die Ansicht tut, steht in der EINEN Kopfzeile darueber. */
+  .pv-stage{display:flex;justify-content:center;height:100%;background:var(--bg)}
+  .pv-frame{width:100%;max-width:100%;border:0;background:#fff;height:100%;
+    display:block;transition:max-width .2s ease}
+  .pv-stage[data-view="mobil"]{padding:14px 0;background:#0a0a10}
+  .pv-stage[data-view="mobil"] .pv-frame{max-width:390px;border-radius:14px}
+  .pv-hint{margin:0;padding:7px 14px;font-size:12.5px;color:var(--muted);
+    background:rgba(160,107,255,.1);border-bottom:1px solid var(--line)}
+  .pv-fallback{margin:0;padding:22px}
+  .pv-addr{display:block;margin-top:9px;font-size:12.5px;color:var(--muted);
+    word-break:break-all}
 
   /* ── Vorschau-Cockpit ───────────────────────────────────────────────────
      Eine ruhige, breite Ansicht statt gestapelter Abschnitte: oben eine
@@ -148,8 +146,11 @@
   .ck-right{display:flex;align-items:center;gap:6px;flex:0 0 auto}
   .ck-right button{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:9px;cursor:pointer;
     background:transparent;border:1px solid rgba(255,255,255,.18);color:#f4f2f8}
-  .ck-right button[aria-pressed="true"]{background:rgba(160,107,255,.28);border-color:transparent}
   .ck-right button.primary{background:linear-gradient(135deg,var(--lime),var(--cyan));color:#0d0d13;border:0}
+  /* Desktop/Mobil als ein Paar — die einzige Breitenumschaltung der Oberflaeche. */
+  .ck-seg{display:inline-flex;border:1px solid rgba(255,255,255,.18);border-radius:9px;overflow:hidden}
+  .ck-seg button{border:0;border-radius:0;padding:7px 11px;color:#9a94a8}
+  .ck-seg button[aria-pressed="true"]{background:rgba(160,107,255,.3);color:#f4f2f8}
   .ck-body{flex:1 1 auto;display:flex;min-height:0;min-width:0}
   .ck-stage{flex:1 1 auto;min-width:0;min-height:0;overflow:auto;padding:16px}
   /* Nur die aktive Ansicht steht zentral. */
@@ -168,18 +169,15 @@
   .ck-wishes li{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.45}
   .ck-wishes .k{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;
     text-transform:uppercase;color:var(--muted);margin-bottom:2px}
-  /* Die Vorschau fuellt die Mitte, mit Browserrahmen. */
-  .ck-stage .pv-stage{height:100%;min-height:420px;align-items:stretch}
-  .ck-stage .pv-frame{height:100%;min-height:400px}
-  .ck-shell{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card);
-    display:flex;flex-direction:column;height:100%}
-  .ck-shell-bar{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:7px 11px;
-    border-bottom:1px solid var(--line);background:var(--bg)}
-  .ck-dots{display:flex;gap:5px}
-  .ck-dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
-  .ck-addr{flex:1 1 auto;min-width:0;font-size:11.5px;color:var(--muted);white-space:nowrap;
-    overflow:hidden;text-overflow:ellipsis;background:var(--card);border:1px solid var(--line);
-    border-radius:7px;padding:4px 9px}
+  /* Die eingerahmte Ansicht fuellt die Mitte randlos.
+     -----------------------------------------------------------------------
+     Kein zweites Fenster: keine Karte, kein Rand, keine Rundung, kein Abstand.
+     Die Website beginnt direkt unter der Kopfzeile. */
+  .ck-stage[data-rahmen="1"]{padding:0;overflow:hidden}
+  .ck-stage[data-rahmen="1"] #area{height:100%}
+  .ck-stage[data-rahmen="1"] .tile{background:transparent;border:0;border-radius:0;
+    padding:0;margin:0;height:100%;display:flex;flex-direction:column}
+  .ck-stage[data-rahmen="1"] .pv-stage{flex:1 1 auto;min-height:0}
   /* Ansicht nicht verfuegbar: inline, mittig, erklaert. */
   .ck-lock{display:flex;flex-direction:column;align-items:center;justify-content:center;
     text-align:center;height:100%;min-height:320px;gap:9px;color:var(--muted);padding:30px 20px}
@@ -270,8 +268,11 @@
         <span><b>FlowerTech</b><i id="ckProject" data-ft="project"></i></span></div>
       <nav class="ck-views" id="ckViews" data-ft="views" role="tablist" aria-label="Ansichten"></nav>
       <div class="ck-right">
-        <button type="button" id="ckMobil" data-ft="mobil" aria-pressed="false"
-          title="Mobil-Ansicht">Mobil</button>
+        <span class="ck-seg" role="group" aria-label="Breite">
+          <button type="button" id="ckDesktop" data-ft="desktop" aria-pressed="true">Desktop</button>
+          <button type="button" id="ckMobil" data-ft="mobil" aria-pressed="false">Mobil</button>
+        </span>
+        <button type="button" id="ckReload" data-ft="reload" title="Ansicht neu laden">Neu laden</button>
         <button type="button" id="ckWish" data-ft="wish" class="primary">Änderungswunsch</button>
       </div>
     </header>
@@ -640,9 +641,12 @@
     });
 
     var mobil = el("ckMobil");
-    if (mobil) mobil.addEventListener("click", function () {
-      ckMobilSetzen(mobil.getAttribute("aria-pressed") !== "true");
-    });
+    if (mobil) mobil.addEventListener("click", function () { ckMobilSetzen(true); });
+    var desktop = el("ckDesktop");
+    if (desktop) desktop.addEventListener("click", function () { ckMobilSetzen(false); });
+
+    var neu = el("ckReload");
+    if (neu) neu.addEventListener("click", ckNeuLaden);
 
     // Sobald eine Vorschau freigegeben ist, ist „Website" die Startansicht.
     ckZeige(hatVorschau ? "website" : "fragebogen");
@@ -652,16 +656,25 @@
      Kopfzeile und das Paar im Vorschaurahmen zeigen immer denselben Stand;
      sonst haette die Kundschaft zwei Schalter, die sich widersprechen. */
   function ckMobilSetzen(an) {
-    var kopf = el("ckMobil");
-    if (kopf) kopf.setAttribute("aria-pressed", String(!!an));
-    var desktop = el("pvDesktop");
-    var mobil = el("pvMobil");
-    if (desktop) desktop.setAttribute("aria-pressed", String(!an));
+    var mobil = el("ckMobil");
+    var desktop = el("ckDesktop");
     if (mobil) mobil.setAttribute("aria-pressed", String(!!an));
-    ["pvStage", "adminStage"].forEach(function (id) {
-      var st = el(id);
-      if (st) st.setAttribute("data-view", an ? "mobil" : "desktop");
-    });
+    if (desktop) desktop.setAttribute("aria-pressed", String(!an));
+    var st = el("pvStage");
+    if (st) st.setAttribute("data-view", an ? "mobil" : "desktop");
+  }
+
+  /* Neu laden — der Knopf der Kopfzeile. Er laedt genau die Ansicht neu, die
+     gerade vorne steht; ohne Rahmen gibt es nichts neu zu laden. */
+  function ckNeuLaden() {
+    var frame = el("pvFrame");
+    if (!frame || ckAnsicht !== "website") return false;
+    var quelle = frame.getAttribute ? frame.getAttribute("src") : frame.src;
+    if (!quelle) return false;
+    var zurueck = el("pvFallback");
+    if (zurueck) zurueck.hidden = true;
+    frame.src = quelle;
+    return true;
   }
 
   /* Eine Ansicht zeigen — die anderen weg. */
@@ -706,6 +719,21 @@
     // Die Aenderungsleiste gehoert zur Website-Ansicht.
     var seite = el("ckSide");
     if (seite) seite.hidden = !(key === "website" && ckBereit.website);
+
+    /* Die eingerahmte Ansicht laeuft randlos bis an die Kopfzeile; die
+       gelesenen Ansichten behalten ihren Satzspiegel. Desktop/Mobil und
+       „Neu laden" gehoeren nur zur eingerahmten. */
+    var buehne = el("ckStage");
+    var rahmen = key === "website" && etwasSichtbar;
+    if (buehne) {
+      buehne.setAttribute("data-ansicht", key);
+      if (rahmen) buehne.setAttribute("data-rahmen", "1");
+      else buehne.removeAttribute("data-rahmen");
+    }
+    ["ckDesktop", "ckMobil", "ckReload"].forEach(function (id) {
+      var btn = el(id);
+      if (btn) btn.hidden = !rahmen;
+    });
   }
 
   /* Bogen, Notiz und Fehlerkasten entscheiden sich ERST nach dem Bereichsaufbau
@@ -789,55 +817,67 @@
     // aber auch nichts Fertiges.
     var vorlaeufig = tile.provisional === true;
 
+    /* Die Website steht randlos in der Buehne — sonst nichts.
+       -------------------------------------------------------------------
+       Vorher trug diese Kachel eine eigene Ueberschrift, einen Einleitungstext,
+       ein eigenes Desktop/Mobil-Paar, „In neuem Tab oeffnen" und eine
+       nachgebaute Browser-Adressleiste. Zusammen mit der Kopfzeile darueber
+       las sich das als zwei ineinandergeschachtelte Anwendungen. Alles davon
+       gehoert in die EINE Kopfzeile; hier bleibt die Website selbst.
+
+       Was bleibt: der Rueckweg, wenn die Einbettung technisch blockiert ist.
+       Er ist verborgen, bis genau das eintritt — dann trägt er auch die
+       ausgeschriebene Adresse. */
     el("tilePreview").innerHTML =
-      "<h2>Website-Vorschau &amp; Änderungswünsche</h2>" +
       (vorlaeufig
-        ? '<p class="warn"><b>Testvorschau — Zwischenstand.</b> Dieser Entwurf ist noch nicht ' +
-          "als fertige Fassung freigegeben. Schauen Sie ihn trotzdem gerne an: Ihre " +
-          "Rückmeldung fliesst direkt in die nächste Fassung ein.</p>"
+        ? '<p class="pv-hint">Testvorschau — Zwischenstand. Ihre Rückmeldung fliesst ' +
+          "direkt in die nächste Fassung ein.</p>"
         : "") +
-      '<p class="meta">Das ist der aktuelle Stand Ihrer Website' +
-        (tile.releasedAt ? " · freigegeben am <b>" + esc(datum(tile.releasedAt)) + "</b>" : "") +
-        ". Schauen Sie in Ruhe durch." + "</p>" +
-      /* Die Vorschau wird HIER gezeigt, nicht anderswo. Vorher stand an dieser
-         Stelle nur ein nackter Verweis nach draussen — Formular und Website
-         wirkten dadurch wie zwei verschiedene Anwendungen. Das Bild bleibt im
-         Portal, mit Desktop/Mobil-Umschaltung. */
-      '<div class="pv-bar">' +
-        '<span class="pv-seg" role="group" aria-label="Ansicht">' +
-          '<button type="button" id="pvDesktop" aria-pressed="true">Desktop</button>' +
-          '<button type="button" id="pvMobil" aria-pressed="false">Mobil</button>' +
-        "</span><span class=\"pv-spacer\"></span>" +
-        '<a class="btnlink ghost" id="previewOpen" href="' + esc(url) +
-          '" target="_blank" rel="noopener noreferrer">In neuem Tab öffnen</a>' +
-      "</div>" +
-      '<div class="ck-shell"><div class="ck-shell-bar">' +
-        '<span class="ck-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
-        '<span class="ck-addr">' + esc(url) + "</span>" +
-      "</div>" +
       '<div class="pv-stage" id="pvStage" data-view="desktop">' +
         '<iframe class="pv-frame" id="pvFrame" title="Vorschau Ihrer Website" ' +
-          'loading="lazy" referrerpolicy="no-referrer" ' +
+          'referrerpolicy="no-referrer" ' +
           'sandbox="allow-scripts allow-same-origin" ' +
-          'src="' + esc(url) + '"></iframe>' +
-      "</div></div>" +
-      // Die Adresse bleibt ausgeschrieben lesbar — zum Kopieren und fuer ein
-      // anderes Geraet.
-      '<p class="pv-note">Angezeigt wird: <span id="previewUrlText">' + esc(url) + "</span></p>" +
-      // Sichtbarer Rueckweg, falls die Einbettung technisch blockiert ist.
+          'src="' + esc(einbettUrl(url)) + '"></iframe>' +
+      "</div>" +
       '<div class="pv-fallback" id="pvFallback" hidden>' +
         '<p class="lockmsg"><span class="ico" aria-hidden="true">↗</span><span>' +
         "Diese Website erlaubt keine Einbettung. Öffnen Sie die Vorschau deshalb " +
         "in einem eigenen Tab — Ihre Änderungswünsche schreiben Sie danach wieder hier." +
         "</span></p>" +
-        '<div class="acts"><a class="btnlink" href="' + esc(url) +
-          '" target="_blank" rel="noopener noreferrer">Vorschau in neuem Tab öffnen</a></div>' +
-      "</div>" +
-      "";
+        '<div class="acts"><a class="btnlink" id="previewOpen" href="' + esc(url) +
+          '" target="_blank" rel="noopener noreferrer">Vorschau in neuem Tab öffnen</a>' +
+          '<span class="pv-addr" id="previewUrlText">' + esc(url) + "</span></div>" +
+      "</div>";
     ckSeite(feedback);
     el("tilePreview").hidden = false;
     wirePreviewFrame(url);
     return true;
+  }
+
+  /* Die Adresse, die IN den Rahmen geht.
+     -----------------------------------------------------------------------
+     In die Buehne gehoert die WEBSITE — nicht eine Praesentationshuelle um
+     sie herum. Eine solche Huelle liegt typischerweise auf einem eigenen Pfad
+     desselben Hosts (`…/vorschau/`) und bringt eigene Kopfzeile, eigene Reiter
+     und eine eigene Wunschseite mit. Im Rahmen von FlowerTech waere das eine
+     zweite Bedienung neben der ersten — genau der Befund aus der Abnahme.
+     Eingebettet wird deshalb die Wurzel des Hosts; sie ist die Website selbst.
+
+     Dazu geht `embed=flowertech` mit: eine Absprache, kein Eingriff. Fremdes
+     CSS laesst sich von hier aus ohnehin nicht anfassen — und soll es nicht.
+     Wer den Wert nicht kennt, ignoriert ihn; wer ihn kennt, blendet seine
+     eigene Huelle aus.
+
+     Die vollstaendige Adresse geht dabei nicht verloren: Ist die Einbettung
+     blockiert, steht sie im Rueckweg. */
+  var EMBED_MARKE = "flowertech";
+
+  function einbettUrl(url) {
+    var sauber = safeUrl(url);
+    if (!sauber) return "";
+    var wurzel = sauber.replace(/^(https:\/\/[^/?#]+)(?:[/?#].*)?$/, "$1/");
+    if (!/^https:\/\//.test(wurzel)) return "";
+    return wurzel + "?embed=" + EMBED_MARKE;
   }
 
   /* Desktop/Mobil und die Blockade-Erkennung.
@@ -852,14 +892,9 @@
     var stage = el("pvStage");
     var frame = el("pvFrame");
     var fallback = el("pvFallback");
-    var desktop = el("pvDesktop");
-    var mobil = el("pvMobil");
     if (!stage || !frame) return;
-
-    // Beide Wege fuehren durch dieselbe Stelle — der Knopf in der Kopfzeile
-    // und das Paar am Rahmen bleiben dadurch einig.
-    if (desktop) desktop.addEventListener("click", function () { ckMobilSetzen(false); });
-    if (mobil) mobil.addEventListener("click", function () { ckMobilSetzen(true); });
+    // Desktop/Mobil bedient ausschliesslich die Kopfzeile — hier steht kein
+    // zweites Paar mehr.
 
     var geladen = false;
     frame.addEventListener("load", function () {
@@ -961,29 +996,28 @@
     /* Auch die Verwaltung bleibt im Portal: gerahmt statt als Verweis nach
        draussen. Der Rueckweg steht sichtbar daneben, weil Verwaltungen sich
        oft bewusst nicht einbetten lassen. */
+    /* Die Verwaltung: eigene Ansicht von FlowerTech, kein zweites Cockpit.
+       -------------------------------------------------------------------
+       Die live erreichbare Verwaltung bringt selbst eine Kopfzeile und eine
+       eigene Bedienung („Zur Vorschau-Zentrale") mit. Eingebettet ergaebe das
+       wieder zwei Navigationen uebereinander — dieselbe Doppelung, die diese
+       Fassung gerade abloest. Bis die Verwaltung einen Einbett-Modus kennt,
+       steht hier die Sache selbst benannt, und der Weg dorthin ist EIN klarer
+       Knopf. Kaschiert wird nichts. */
     el("tileAdmin").innerHTML =
-      "<h2>Verwaltung</h2>" +
-      '<p class="meta">Hier pflegen Sie Ihre eigenen Inhalte.</p>' +
-      '<div class="pv-bar"><span class="pv-spacer"></span>' +
-        '<a class="btnlink ghost" id="adminOpen" href="' + esc(url) +
-        '" target="_blank" rel="noopener noreferrer">In neuem Tab öffnen</a></div>' +
-      '<div class="pv-stage" id="adminStage" data-view="desktop">' +
-        '<iframe class="pv-frame" id="adminFrame" title="Verwaltung Ihrer Website" ' +
-          'loading="lazy" referrerpolicy="no-referrer" ' +
-          'sandbox="allow-scripts allow-same-origin" ' +
-          'src="' + esc(url) + '"></iframe>' +
-      "</div>" +
-      '<p class="pv-note">Angezeigt wird: ' + esc(url) + "</p>" +
-      '<div class="pv-fallback" id="adminFallback" hidden>' +
+      '<div class="ck-native" id="adminNative">' +
+        "<h2>Verwaltung</h2>" +
+        '<p class="meta">Hier pflegen Sie später Ihre eigenen Inhalte — Texte, Bilder ' +
+        "und Seiten Ihrer Website.</p>" +
         '<p class="lockmsg"><span class="ico" aria-hidden="true">↗</span><span>' +
-        "Die Verwaltung erlaubt keine Einbettung — das ist bei Anmeldebereichen üblich. " +
-        "Öffnen Sie sie deshalb in einem eigenen Tab." +
+        "Die Verwaltung öffnet sich in einem eigenen Tab: Sie bringt einen eigenen " +
+        "Anmeldebereich mit und lässt sich deshalb nicht in diese Ansicht einbetten." +
         "</span></p>" +
-        '<div class="acts"><a class="btnlink" href="' + esc(url) +
-          '" target="_blank" rel="noopener noreferrer">Verwaltung in neuem Tab öffnen</a></div>' +
+        '<div class="acts"><a class="btnlink" id="adminOpen" href="' + esc(url) +
+          '" target="_blank" rel="noopener noreferrer">Verwaltung öffnen</a>' +
+          '<span class="pv-addr">' + esc(url) + "</span></div>" +
       "</div>";
     el("tileAdmin").hidden = false;
-    wireEmbed("adminFrame", "adminFallback", "adminStage");
     return true;
   }
 
