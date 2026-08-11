@@ -49,14 +49,17 @@ const IDS = [
   "answered", "answeredTitle", "answeredText", "area",
   "tileTest", "tileOffer", "tilePreview", "tileContract", "tileAdmin", "tileTerms",
   // Bereichsleiste und Fortschritt gehoeren seit dem Portal-Umbau dazu.
-  "pnav", "phead", "pstatus", "pbarFill", "pcount",
+  // Cockpit: Huelle, Umschalter, Sperrzustand und Aenderungsleiste.
+  "ck", "ckViews", "ckProject", "ckMobil", "ckWish", "ckStage", "ckSide", "ckLock",
+  "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_agb", "ckView_fragebogen",
+  "ckWishes", "crArea", "pvStage", "adminStage",
   "visionRoom", "vrLead", "visionRoomMount", "vrCarriers",
 ];
 
 async function seite(daten) {
   const dom = makeDom();
   IDS.forEach((id) => dom.ensure(id));
-  ["error", "content", "answered", "area", "pnav", "phead", "tileTest", "tileOffer", "tilePreview",
+  ["error", "content", "answered", "area", "ck", "ckSide", "ckLock", "tileTest", "tileOffer", "tilePreview",
     "tileContract", "tileAdmin", "tileTerms", "visionRoom"]
     .forEach((id) => { dom.node(id).hidden = true; });
   const posted = [];
@@ -143,6 +146,7 @@ const lehner = (extra) => Object.assign({
   updatedAt: "2026-08-10T10:00:00.000Z",
 }, extra || {});
 
+const zeige = (dom, key) => { const b = dom.node("ckView_" + key); if (b) b.click(); };
 const sichtbar = (dom) => IDS.map((id) => {
   const n = dom.node(id);
   if (!n || n.hidden) return "";
@@ -152,6 +156,7 @@ const sichtbar = (dom) => IDS.map((id) => {
 /* ══ 1. Der Live-Befund selbst ═════════════════════════════════════════════ */
 {
   const { dom } = await seite(lehner());
+  zeige(dom, "website");
   const kachel = dom.node("tilePreview");
 
   ok(dom.node("area").hidden === false,
@@ -176,7 +181,13 @@ const sichtbar = (dom) => IDS.map((id) => {
   ok(dom.node("changeForm"), "es fehlt der Weg für Änderungswünsche");
   ok(dom.node("crSubmit"), "der Knopf für den Änderungswunsch fehlt");
   ok(dom.node("changeIntro"), "der Einstieg für Änderungswünsche ist nicht benannt");
-  ok(/geändert werden/.test(kachel.innerHTML), "das Pflichtfeld ist nicht beschriftet");
+  /* Die Aenderungswuensche stehen jetzt in der festen Seitenleiste neben der
+     Vorschau — nicht mehr unter ihr in derselben Kachel. */
+  ok(/geändert werden/.test(String(dom.node("ckSide").innerHTML || "")),
+    "das Pflichtfeld ist nicht beschriftet");
+  ok(dom.node("ckSide").hidden === false, "die Änderungsleiste steht nicht neben der Vorschau");
+  ok(/id="crArea"/.test(String(dom.node("ckSide").innerHTML || "")),
+    "die Kategorie Website/Verwaltung fehlt");
 
   // Kein Abhängen vom alten Phase-2-Kundenportal.
   ok(!/kunde\.html/.test(sichtbar(dom)), "die Seite verweist auf das alte Kundenportal");
@@ -186,6 +197,7 @@ const sichtbar = (dom) => IDS.map((id) => {
 /* ══ 2. Die freigegebene TEST-Leistungsübersicht ═══════════════════════════ */
 {
   const { dom } = await seite(lehner());
+  zeige(dom, "offerte");
   const kachel = dom.node("tileTest");
   ok(kachel.hidden === false, "die freigegebene TEST-Leistungsübersicht fehlt");
   ok(/Website-Neukonzept Lehner/.test(kachel.innerHTML), "der Titel der Übersicht fehlt");
@@ -201,17 +213,20 @@ const sichtbar = (dom) => IDS.map((id) => {
   /* Der Offerten-Bereich steht seit dem Portal-Umbau da — aber als erklaerter
      Wartezustand, nicht als Offerte. Entscheidend bleibt: kein Betrag, keine
      Nummer, nichts aus einem Entwurf. */
-  const offerNode = dom.node("tileOffer");
-  ok(offerNode.hidden === false, "der Offerten-Bereich fehlt ganz");
-  ok(/Wird vorbereitet/.test(String(offerNode.innerHTML || "")),
-    "ohne versendete Offerte erscheint eine Offerten-Kachel statt eines Wartezustands");
-  ok(!/CHF|0\.00|OF-/.test(String(offerNode.innerHTML || "")),
-    "der wartende Offerten-Bereich zeigt Zahlen oder eine Nummer");
+  zeige(dom, "offerte");
+  /* Die Offerte ist eine eigene Ansicht. Ohne Versand steht dort der inline
+     erklaerte Sperrzustand — nie eine Offerte, nie eine Zahl, nie eine Nummer.
+     Die TEST-Uebersicht gehoert zur selben Ansicht und bleibt sichtbar. */
+  zeige(dom, "offerte");
+  ok(dom.node("tileOffer").hidden === true, "ohne versendete Offerte erscheint eine Offerten-Kachel");
+  const zentral = String(dom.node("tileTest").innerHTML || "") + String(dom.node("ckLock").innerHTML || "");
+  ok(!/CHF|0\.00|OF-/.test(zentral), "die Offerten-Ansicht zeigt Zahlen oder eine Nummer");
 }
 
 /* ══ 3. Die zentrale Standard-AGB — immer da ═══════════════════════════════ */
 {
   const { dom } = await seite(lehner());
+  zeige(dom, "agb");
   const kachel = dom.node("tileTerms");
   ok(kachel.hidden === false, "die zentrale Standard-AGB fehlt auf dem Kundenlink");
   ok(/Standard-AGB/.test(kachel.innerHTML), "die AGB sind nicht benannt");
@@ -225,6 +240,7 @@ const sichtbar = (dom) => IDS.map((id) => {
     stage: "intake",
     tiles: { testService: null, offer: null, preview: null, contract: null, admin: null, terms: AGB },
   }));
+  zeige(ohne.dom, "agb");
   ok(ohne.dom.node("tileTerms").hidden === false,
     "ohne Vorschau verschwindet die AGB — sie hängt an keiner Freigabe");
   ok(ohne.dom.node("area").hidden === false, "die AGB allein öffnet den Bereich nicht");
@@ -259,6 +275,7 @@ const sichtbar = (dom) => IDS.map((id) => {
   const { dom } = await seite(lehner({
     tiles: { testService: TESTUEBERSICHT, offer: null, preview: manuell, contract: null, admin: null, terms: AGB },
   }));
+  zeige(dom, "website");
   const kachel = dom.node("tilePreview");
   ok(kachel.hidden === false, "die manuelle Testvorschau verschwindet still");
   ok(/Testvorschau/.test(kachel.innerHTML), "die Testvorschau wird nicht als solche benannt");
@@ -282,13 +299,15 @@ const sichtbar = (dom) => IDS.map((id) => {
   /* Ohne Freigabe gibt es keinen INHALT — aber sehr wohl den erklaerten
      Bereich. Genau das war der Befund: Wer nicht sieht, dass es eine Vorschau
      ueberhaupt geben wird, haelt Formular und Website fuer zwei Anwendungen. */
-  ["tileOffer", "tilePreview", "tileAdmin", "tileTerms"].forEach((id) => {
-    const node = dom.node(id);
-    ok(node.hidden === false, `der Bereich ${id} fehlt statt zu warten`);
-    ok(/Wird vorbereitet/.test(String(node.innerHTML || "")),
-      `der Bereich ${id} erklärt den Wartezustand nicht`);
-    ok(!/https?:\/\//.test(String(node.innerHTML || "")),
-      `der wartende Bereich ${id} zeigt eine Adresse`);
+  [["offerte", "tileOffer"], ["website", "tilePreview"], ["verwaltung", "tileAdmin"]].forEach(([key, id]) => {
+    zeige(dom, key);
+    ok(dom.node(id).hidden === true, `der Bereich ${id} steht ohne Freigabe da`);
+    const lock = dom.node("ckLock");
+    ok(lock.hidden === false, `die Ansicht ${key} zeigt keinen Sperrzustand`);
+    ok(/wird vorbereitet/i.test(String(lock.innerHTML || "")),
+      `die Ansicht ${key} erklärt den Sperrzustand nicht`);
+    ok(!/https?:\/\//.test(String(lock.innerHTML || "")),
+      `der Sperrzustand von ${key} zeigt eine Adresse`);
   });
   // Was gar kein eigener Bereich ist, bleibt weg.
   ["tileTest", "tileContract"].forEach((id) => {
@@ -305,8 +324,10 @@ const sichtbar = (dom) => IDS.map((id) => {
       contract: null, admin: null, terms: null,
     },
   }));
-  ok(/Wird vorbereitet/.test(String(unsicher.dom.node("tilePreview").innerHTML || "")),
-    "eine http-Adresse wird als Vorschau gezeigt");
+  zeige(unsicher.dom, "website");
+  ok(unsicher.dom.node("tilePreview").hidden === true, "eine http-Adresse wird als Vorschau gezeigt");
+  ok(/wird vorbereitet/i.test(String(unsicher.dom.node("ckLock").innerHTML || "")),
+    "statt der unsicheren Adresse fehlt der Sperrzustand");
   ok(!/beispiel-lehner/.test(sichtbar(unsicher.dom)), "die unsichere Adresse steht trotzdem da");
 
   // Die Verwaltung erscheint nie allein.
@@ -316,8 +337,10 @@ const sichtbar = (dom) => IDS.map((id) => {
       admin: { label: "Verwaltung", url: "https://admin.lehner.ch/login" }, terms: null,
     },
   }));
-  ok(/Wird vorbereitet/.test(String(nurAdmin.dom.node("tileAdmin").innerHTML || "")),
-    "die Verwaltung erscheint ohne Vorschau");
+  zeige(nurAdmin.dom, "verwaltung");
+  ok(nurAdmin.dom.node("tileAdmin").hidden === true, "die Verwaltung erscheint ohne Vorschau");
+  ok(/wird vorbereitet/i.test(String(nurAdmin.dom.node("ckLock").innerHTML || "")),
+    "die gesperrte Verwaltung erklärt sich nicht");
   ok(!/admin\.lehner\.ch/.test(sichtbar(nurAdmin.dom)),
     "die Verwaltungsadresse steht da, obwohl die Vorschau fehlt");
 }
@@ -328,27 +351,56 @@ const sichtbar = (dom) => IDS.map((id) => {
      Netlify-Seite, Formular und Website wirkten wie zwei Anwendungen. Jetzt
      bleibt die Kundschaft fuer alles auf dieser einen Adresse. */
   const { dom } = await seite(lehner());
-  const nav = String(dom.node("pnav").innerHTML || "");
-  ["Fragebogen", "Offerte", "Website-Vorschau", "Verwaltung", "AGB &amp; Kunde"].forEach((label) => {
-    ok(nav.includes(label), `die Bereichsleiste nennt „${label}“ nicht`);
+  const nav = String(dom.node("ckViews").innerHTML || "");
+  ["Website", "Verwaltung", "Offerte", "AGB &amp; Kunde", "Fragebogen"].forEach((label) => {
+    ok(nav.includes(label), `die Kopfzeile nennt „${label}“ nicht`);
   });
-  ok(dom.node("phead").hidden === false, "Statuszeile und Fortschritt fehlen");
-  ok(String(dom.node("pcount").textContent || "").includes("von 5"),
-    "der Fortschritt zaehlt nicht die fuenf Bereiche");
-  ok(String(dom.node("pstatus").textContent || "").length > 10, "die Statuszeile ist leer");
+  // Projektname links in der schmalen Kopfzeile.
+  ok(String(dom.node("ckProject").textContent || "").length > 2, "der Projektname fehlt in der Kopfzeile");
+  // Mit freigegebener Vorschau ist „Website" die Startansicht.
+  ok(dom.node("ckView_website").getAttribute("aria-selected") === "true",
+    "die Startansicht ist nicht die Website");
+
+  /* Und zwar OHNE einen einzigen Klick: zentral steht die Vorschau, rechts die
+     Aenderungsleiste — sonst nichts. Genau das war der Befund, den diese
+     Fassung ablöst: eine Kachelreihe oben und darunter eine gestapelte Wand aus
+     Fragebogen, Notiz und allen Bereichen gleichzeitig. */
+  const zentral = ["content", "answered", "tilePreview", "tileAdmin", "tileOffer",
+    "tileTest", "tileTerms", "tileContract", "ckLock"]
+    .filter((id) => dom.node(id).hidden === false);
+  ok(zentral.join() === "tilePreview",
+    `neben der Vorschau steht zentral noch: ${zentral.filter((i) => i !== "tilePreview").join(", ")}`);
+  ok(dom.node("ckSide").hidden === false, "die Änderungsleiste steht nicht von Anfang an da");
+
+  /* Der Fragebogen ist nur noch eine Ansicht — er wird geholt, nicht
+     untergeschoben. Danach ist die Vorschau weg, nicht beides zugleich. */
+  zeige(dom, "fragebogen");
+  ok(dom.node("answered").hidden === false, "der Fragebogen-Bereich lässt sich nicht öffnen");
+  ok(dom.node("tilePreview").hidden === true, "die Vorschau bleibt unter dem Fragebogen stehen");
+  ok(dom.node("ckSide").hidden === true, "die Änderungsleiste steht auch über dem Fragebogen");
+  zeige(dom, "website");
+  ok(dom.node("answered").hidden === true && dom.node("tilePreview").hidden === false,
+    "der Rückweg zur Website lässt den Fragebogen stehen");
 
   // Die Vorschau steht IM Portal, nicht als nackter Verweis daneben.
   const kachel = String(dom.node("tilePreview").innerHTML || "");
   ok(/id="pvFrame"/.test(kachel), "die Vorschau wird nicht im Portal angezeigt");
   ok(kachel.includes('src="' + LEHNER_URL + '"'), "der Rahmen zeigt nicht die hinterlegte Adresse");
-  ok(/id="pvDesktop"/.test(kachel) && /id="pvMobil"/.test(kachel),
-    "die Desktop/Mobil-Umschaltung fehlt");
+  ok(/id="ckMobil"/.test(String(dom.node("ck").innerHTML || "")) || !!dom.node("ckMobil"),
+    "die Mobil-Umschaltung fehlt in der Kopfzeile");
+  ok(/ck-shell-bar/.test(kachel), "der Vorschau-Rahmen fehlt");
   // Der Verweis nach draussen bleibt — aber als Rueckweg, nicht als Hauptweg.
   ok(/In neuem Tab öffnen/.test(kachel), "der Rueckweg in einen eigenen Tab fehlt");
   ok(!/>Vorschau ansehen</.test(kachel),
     "der alte nackte Verweis „Vorschau ansehen“ steht wieder da");
-  // Aenderungswuensche bleiben direkt bei der Vorschau — kein dritter Link.
+  // Aenderungswuensche bleiben direkt neben der Vorschau — kein dritter Link.
   ok(dom.node("changeForm"), "die Änderungswünsche stehen nicht bei der Vorschau");
+  // Die Kopfzeile traegt die vier Ansichten.
+  const kopf = String(dom.node("ckViews").innerHTML || "");
+  ["Website", "Verwaltung", "Offerte", "AGB &amp; Kunde"].forEach((l) => {
+    ok(kopf.includes(l), `die Kopfzeile nennt „${l}“ nicht`);
+  });
+  ok(!!dom.node("ckWish"), "der Knopf „Änderungswunsch“ fehlt");
   ok(!/kunde\.html/.test(sichtbar(dom)) && !/\?t=/.test(sichtbar(dom)),
     "es entsteht ein zweiter Kundenlink");
 }
