@@ -211,22 +211,33 @@ const sichtbar = (dom) => IDS.map((id) => {
   ok(!/\?t=/.test(sichtbar(dom)), "es steht ein zweiter Bearer-Link auf der Seite");
 }
 
-/* ══ 2. Die freigegebene TEST-Leistungsübersicht ═══════════════════════════ */
+/* ══ 2. Die Offerte — in der Sprache der Kundschaft ════════════════════════ */
 {
+  /* Frueher stand hier „Leistungsuebersicht · TEST" samt „Testansicht" und
+     zwei Verweisen nach draussen. Fuer die Kundschaft war das nicht zu lesen.
+     Jetzt steht der wahre Stand da — und weiterhin kein Betrag. */
   const { dom } = await seite(lehner());
   zeige(dom, "offerte");
   const kachel = dom.node("tileTest");
-  ok(kachel.hidden === false, "die freigegebene TEST-Leistungsübersicht fehlt");
-  ok(/Website-Neukonzept Lehner/.test(kachel.innerHTML), "der Titel der Übersicht fehlt");
-  ok(/TEST/.test(kachel.innerHTML), "die Übersicht ist nicht als Test gekennzeichnet");
-  ok(/unverbindlich/i.test(kachel.innerHTML), "die Unverbindlichkeit steht nicht da");
+  ok(kachel.hidden === false, "der Stand der Offerte fehlt");
+  ok(/Offerte in Vorbereitung/.test(kachel.innerHTML), "die Offerte sagt nicht, woran sie ist");
+  ok(/Website-Neukonzept Lehner/.test(kachel.innerHTML), "das Vorhaben wird nicht benannt");
+  ok(/Leistungsumfang/.test(kachel.innerHTML), "der Leistungsumfang fehlt");
+  ok(/keine verbindliche Preiszusage/.test(kachel.innerHTML),
+    "die Unverbindlichkeit steht nicht da");
+  ok(/entsteht keine Rechnung/.test(kachel.innerHTML),
+    "es steht nicht da, dass keine Rechnung entsteht");
   ok(/Kosten noch offen/.test(kachel.innerHTML), "der Kostenstand fehlt");
-  ok(dom.node("testPreview") && dom.node("testCurrent"),
-    "die beiden Adressen der Übersicht fehlen");
+  ok(/Standard-AGB/.test(kachel.innerHTML), "die Grundlage der Zusammenarbeit fehlt");
+  // Keine Testsprache, keine Wege nach draussen.
+  ["TEST", "Testansicht", "Vorschlag ansehen", "Bestehende Website"].forEach((wort) => {
+    ok(!kachel.innerHTML.includes(wort), `in der Offerte steht „${wort}“`);
+  });
+  ok(!/<a\s/.test(kachel.innerHTML), "die Offerte führt aus dem Kundenlink hinaus");
 
-  // Eine Test-Übersicht ist keine Offerte: nie ein Betrag, nie eine Null.
-  ok(!/CHF/.test(kachel.innerHTML), "auf der Test-Übersicht steht ein Betrag");
-  ok(!/0\.00/.test(kachel.innerHTML), "auf der Test-Übersicht steht „0.00“");
+  // Eine Offerte in Vorbereitung trägt keinen Betrag — auch keine Null.
+  ok(!/CHF/.test(kachel.innerHTML), "in der Offerte steht ein Betrag");
+  ok(!/0\.00/.test(kachel.innerHTML), "in der Offerte steht „0.00“");
   /* Der Offerten-Bereich steht seit dem Portal-Umbau da — aber als erklaerter
      Wartezustand, nicht als Offerte. Entscheidend bleibt: kein Betrag, keine
      Nummer, nichts aus einem Entwurf. */
@@ -440,13 +451,15 @@ const sichtbar = (dom) => IDS.map((id) => {
      — genau die Doppelung, die diese Fassung ablöst. Deshalb: eine eigene,
      benannte FlowerTech-Ansicht mit EINEM klaren Weg nach draussen. */
   ok(!/<iframe/.test(admin), "die Verwaltung wird als zweites Cockpit eingebettet");
-  ok(/id="adminOpen"/.test(admin), "es fehlt der Weg in die Verwaltung");
-  ok(admin.includes('href="https://admin.lehner.ch/login"'), "der Weg zeigt auf die falsche Adresse");
-  ok(/rel="noopener noreferrer"/.test(admin) && /target="_blank"/.test(admin),
-    "die Verwaltung ersetzt diese Seite oder gibt sie weiter");
-  ok(/Verwaltung öffnen/.test(admin), "der Weg in die Verwaltung ist nicht benannt");
-  ok(/lässt sich deshalb nicht in diese Ansicht einbetten/.test(admin),
-    "es wird nicht erklärt, warum die Verwaltung nicht hier steht");
+  /* Und sie fuehrt auch nicht hinaus: Die Adresse des fremden Produkts ist ein
+     technisches Ziel, kein Kundenweg. Gezeigt werden die Bereiche, die spaeter
+     gepflegt werden — jeder mit dem direkten Weg zum Aenderungswunsch. */
+  ok(!/<a\s/.test(admin) && !/admin\.lehner\.ch/.test(admin),
+    "die Verwaltung führt aus dem Kundenlink hinaus");
+  ok(/id="adminAreas"/.test(admin), "die Verwaltung zeigt keine Bereiche");
+  ok(/Änderung wünschen/.test(admin), "aus der Verwaltung führt kein Weg zum Wunsch");
+  ok(/noch nicht mit Ihren eigenen Inhalten/.test(admin),
+    "die Verwaltung behauptet, bereits mit den Inhalten verbunden zu sein");
 }
 
 /* ══ 6d. Die AGB bleiben unveraenderlich ═══════════════════════════════════ */
@@ -467,9 +480,15 @@ const sichtbar = (dom) => IDS.map((id) => {
      "gar nicht einbetten" auf "nur streng eingesperrt einbetten": */
   ok(/id="pvFrame"/.test(script), "die Vorschau wird nicht im Portal gezeigt");
   // Eingesperrt: keine Formulare, keine Popups, keine Top-Navigation.
-  ok(/sandbox="allow-scripts allow-same-origin"/.test(script),
-    "der Vorschau-Rahmen ist nicht eingesperrt");
-  ok(!/allow-top-navigation|allow-forms|allow-popups|allow-modals/.test(script),
+  /* Eingesperrt — aber benutzbar. Eine Vorschau, in der sich nicht klicken
+     laesst, ist ein Bildschirmfoto; Navigation, Knoepfe und Formulare gehoeren
+     dazu. Entscheidend bleibt, was NICHT erlaubt ist: Die eingebettete Seite
+     kann diese hier nicht ersetzen, und geoeffnete Fenster erben dieselben
+     Schranken. */
+  ok(/sandbox="allow-scripts allow-same-origin allow-forms allow-popups"/.test(script),
+    "der Vorschau-Rahmen lässt die Website nicht benutzen");
+  const schranken = (script.match(/sandbox="[^"]*"/g) || []).join(" ");
+  ok(!/allow-top-navigation|allow-popups-to-escape-sandbox|allow-modals/.test(schranken),
     "der Vorschau-Rahmen darf zu viel");
   // Kein Verweiser nach draussen.
   ok(/referrerpolicy="no-referrer"/.test(script), "der Rahmen gibt den Token weiter");

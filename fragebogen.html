@@ -188,6 +188,28 @@
   .ck-stage[data-rahmen="1"] #tilePreview{background:transparent;border:0;border-radius:0;
     padding:0;margin:0;height:100%;display:flex;flex-direction:column}
   .ck-stage[data-rahmen="1"] .pv-stage{flex:1 1 auto;min-height:0}
+  /* Gelesene Ansichten — Offerte, Vertrag, AGB, Verwaltung. Ruhig, flach,
+     ohne Kachelwand: eine Spalte, Zwischentitel, Satzbreite. */
+  .ck-h3{font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);
+    margin:18px 0 5px}
+  .ck-liste{margin:0;padding-left:18px}
+  .ck-liste li{margin-bottom:6px}
+  .linkish{background:none;border:0;padding:0;font:inherit;color:var(--cyan);
+    text-decoration:underline;cursor:pointer}
+  /* Die Verwaltung als Kundenansicht: ihre Bereiche, jeder mit dem direkten
+     Weg zum Wunsch. Kein zweites Cockpit, kein Weg nach draussen. */
+  .adm{max-width:820px}
+  .adm-kopf h2{margin-bottom:2px}
+  .adm-raster{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));
+    gap:12px;margin:16px 0 6px}
+  .adm-feld{border:1px solid var(--line);border-radius:12px;padding:13px 14px;
+    background:var(--card);display:flex;flex-direction:column;gap:6px}
+  .adm-feld h3{margin:0;font-size:14.5px}
+  .adm-hint{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;flex:1 1 auto}
+  .adm-btn{align-self:flex-start;background:transparent;border:1px solid var(--line);
+    color:var(--text);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:9px;
+    cursor:pointer}
+  .adm-btn:hover{border-color:rgba(160,107,255,.5)}
   /* Ansicht nicht verfuegbar: inline, mittig, erklaert. */
   .ck-lock{display:flex;flex-direction:column;align-items:center;justify-content:center;
     text-align:center;height:100%;min-height:320px;gap:9px;color:var(--muted);padding:30px 20px}
@@ -502,20 +524,22 @@
      Vorschau. Startansicht ist „Website", sobald eine Vorschau freigegeben
      ist — vorher der Fragebogen.
 
-     `nodes` sind die Knoten, die zu einer Ansicht gehoeren. Test-Uebersicht
-     und Vertrag sind keine eigenen Umschalter: Die Kostenuebersicht gehoert
-     zur Offerte, der Vertrag zu „AGB & Kunde". */
+     `nodes` sind die Knoten, die zu einer Ansicht gehoeren. `bereich` sagt,
+     welche Kategorie die Aenderungsleiste vorwaehlt — sie steht nur dort, wo
+     es etwas zu aendern gibt: an der Website und an der Verwaltung. */
   var ANSICHTEN = [
-    { key: "website", label: "Website", nodes: ["tilePreview"],
+    { key: "website", label: "Website", nodes: ["tilePreview"], bereich: "Website",
       warte: "Ihre Website entsteht gerade. Sobald ein Stand zum Anschauen bereit ist, "
         + "sehen Sie ihn hier — direkt auf dieser Seite." },
-    { key: "verwaltung", label: "Verwaltung", nodes: ["tileAdmin"],
+    { key: "verwaltung", label: "Verwaltung", nodes: ["tileAdmin"], bereich: "Verwaltung",
       warte: "Die Verwaltung kommt gemeinsam mit der Website-Vorschau. Dort pflegen Sie "
         + "später Ihre eigenen Inhalte." },
     { key: "offerte", label: "Offerte", nodes: ["tileOffer", "tileTest"],
       warte: "Ihre Kosten werden gerade vorbereitet. Sobald die Offerte steht, erscheint "
         + "sie hier — Sie müssen nichts weiter tun." },
-    { key: "agb", label: "AGB & Kunde", nodes: ["tileTerms", "tileContract"],
+    { key: "vertrag", label: "Vertrag", nodes: ["tileContract"],
+      warte: "Der Projektvertrag entsteht aus Offerte und Leistungsumfang." },
+    { key: "agb", label: "AGB & Kunde", nodes: ["tileTerms"],
       warte: "Die allgemeinen Geschäftsbedingungen stehen auf jeder gültigen Einladung." },
     { key: "fragebogen", label: "Fragebogen", nodes: ["content", "answered"],
       warte: "" },
@@ -525,6 +549,7 @@
   var ckAnsicht = "";
   var ckBereit = {};
   var ckInhalt = {};
+  var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
   var CK_BUILD = "kopfzeile-2";
@@ -570,6 +595,9 @@
        nicht gab. */
     var hatBereiche = !!(data && data.tiles && typeof data.tiles === "object");
     var tiles = (data && data.tiles) || {};
+    // Vertrag und Verwaltung entstehen aus dem Datensatz, nicht aus einer
+    // eigenen Kachel — sie brauchen ihn deshalb zur Hand.
+    ckDaten = data || null;
     var test = sicher(renderTest, tiles.testService, "tileTest");
     var offer = sicher(renderOffer, tiles.offer, "tileOffer");
     var preview = sicher(renderPreview, tiles.preview, "tilePreview");
@@ -588,7 +616,7 @@
 
     ckBereit = {
       website: !!preview, verwaltung: !!admin,
-      offerte: !!(offer || test), agb: !!(terms || contract), fragebogen: true,
+      offerte: !!(offer || test), vertrag: !!contract, agb: !!terms, fragebogen: true,
     };
     if (area) area.hidden = false;
     // Auch das Cockpit selbst darf die Seite nicht mitreissen.
@@ -726,9 +754,17 @@
       var btn = el("ckView_" + a.key);
       if (btn) btn.setAttribute("aria-selected", String(a.key === key));
     });
-    // Die Aenderungsleiste gehoert zur Website-Ansicht.
+    /* Die Aenderungsleiste steht dort, wo es etwas zu aendern gibt: an der
+       Website und an der Verwaltung. Sie kommt mit der richtigen Kategorie —
+       wer in der Verwaltung etwas anmerkt, meint die Verwaltung. In Offerte,
+       Vertrag, AGB und Fragebogen hat sie nichts verloren. */
     var seite = el("ckSide");
-    if (seite) seite.hidden = !(key === "website" && ckBereit.website);
+    var mitLeiste = !!treffer.bereich && !!ckBereit[key] && etwasSichtbar;
+    if (seite) seite.hidden = !mitLeiste;
+    if (mitLeiste) {
+      var wahl = el("crArea");
+      if (wahl) wahl.value = treffer.bereich;
+    }
 
     /* Die eingerahmte Ansicht laeuft randlos bis an die Kopfzeile; die
        gelesenen Ansichten behalten ihren Satzspiegel. Desktop/Mobil und
@@ -844,9 +880,19 @@
           "direkt in die nächste Fassung ein.</p>"
         : "") +
       '<div class="pv-stage" id="pvStage" data-view="desktop">' +
+        /* Die Vorschau ist zum BENUTZEN da, nicht zum Anschauen: Navigation,
+           Knoepfe, Seitenwechsel muessen im Rahmen funktionieren. Dafuer
+           braucht es neben Skripten und gleicher Herkunft auch Formulare
+           (Suche, Kontakt) und Popups (Verweise mit eigenem Ziel).
+
+           Was gesperrt bleibt, bleibt gesperrt — und das ist das Entscheidende:
+           OHNE `allow-top-navigation` kann die eingebettete Seite diese Seite
+           hier nicht ersetzen, und ohne `allow-popups-to-escape-sandbox`
+           erben geoeffnete Fenster dieselben Schranken. Der Token bleibt
+           ausserdem draussen (`referrerpolicy`). */
         '<iframe class="pv-frame" id="pvFrame" title="Vorschau Ihrer Website" ' +
           'referrerpolicy="no-referrer" ' +
-          'sandbox="allow-scripts allow-same-origin" ' +
+          'sandbox="allow-scripts allow-same-origin allow-forms allow-popups" ' +
           'src="' + esc(einbettUrl(url)) + '"></iframe>' +
       "</div>" +
       '<div class="pv-fallback" id="pvFallback" hidden>' +
@@ -924,7 +970,9 @@
      dieselben Schichten wie beim Offertendokument. */
   function renderContract(tile) {
     var html = tile ? entschaerfen(tile.document && tile.document.html) : "";
-    if (!html) return hide("tileContract");
+    // Ohne freigegebenes Vertragsdokument steht hier der Entwurf aus den
+    // Projektangaben — eine leere Ansicht waere die schlechtere Auskunft.
+    if (!html) return renderContractDraft();
     el("tileContract").innerHTML =
       "<h2>" + esc(tile.label || "Vertrag") + "</h2>" +
       (tile.title ? '<p class="sub">' + esc(tile.title) + "</p>" : "") +
@@ -943,6 +991,62 @@
       if (w.focus) w.focus();
       if (w.print) w.print();
     });
+    return true;
+  }
+
+  /* Der Projektvertrag als ENTWURF.
+     -----------------------------------------------------------------------
+     Bisher gab es zum Vertrag gar keine Ansicht: Wer wissen wollte, was
+     eigentlich vereinbart wird, fand nichts. Ein Entwurf ist die ehrliche
+     Antwort darauf — er sagt, was feststeht, was fehlt, und dass er nichts
+     bindet.
+
+     Erfunden wird hier nichts: Der Leistungsumfang kommt aus der
+     Leistungsuebersicht, die Kosten aus deren Kostenstand, die Grundlage aus
+     der zentralen AGB. Was die Seite nicht hat — Name und Adresse der
+     Auftraggeberschaft — wird als fehlend benannt statt gefuellt. Es gibt
+     keine Unterschriftszeile, kein Bestaetigen, kein Zustimmen: Der Entwurf
+     wird gelesen, nicht angenommen. */
+  function renderContractDraft() {
+    var data = ckDaten || {};
+    var tiles = data.tiles || {};
+    var uebersicht = tiles.testService || tiles.offer || null;
+    var agb = tiles.terms || null;
+    var haus = (data.company && data.company.name) || "FlowerTech";
+    var vorhaben = projektName(data);
+    if (!vorhaben && !uebersicht) return hide("tileContract");
+    // Eine Seite ohne diesen Behaelter (aeltere Fassung) bekommt keinen Entwurf
+    // untergeschoben — sie hat schlicht keinen Platz dafuer.
+    if (!el("tileContract")) return false;
+
+    el("tileContract").innerHTML =
+      "<h2>Projektvertrag — Entwurf</h2>" +
+      '<p class="warn" id="contractDraftState"><b>Entwurf – noch nicht freigegeben.</b> ' +
+        "Dieser Entwurf ist keine Vereinbarung: Er ist nicht unterschrieben, nicht " +
+        "bestätigt und begründet keine Verpflichtung. Er zeigt, worüber wir sprechen.</p>" +
+      '<h3 class="ck-h3">Projekt</h3>' +
+      "<p>" + esc(vorhaben || (uebersicht && uebersicht.title) || "") + "</p>" +
+      '<h3 class="ck-h3">Parteien</h3>' +
+      '<ul class="ck-liste">' +
+        "<li><b>" + esc(haus) + "</b> — Erstellung und Betreuung</li>" +
+        '<li><b>Auftraggeberschaft</b> — <i>noch offen</i>: Name, Adresse und ' +
+          "Ansprechperson liegen für diesen Entwurf nicht vor und werden vor einer " +
+          "Freigabe gemeinsam eingetragen.</li>" +
+      "</ul>" +
+      '<h3 class="ck-h3">Leistungsumfang</h3>' +
+      "<p>" + esc((uebersicht && uebersicht.summary)
+        || "Wird aus Ihren Angaben und der Offerte übernommen, sobald beides steht.") + "</p>" +
+      '<h3 class="ck-h3">Kosten</h3>' +
+      "<p>" + esc((uebersicht && uebersicht.costStatus) || "Kosten noch offen") +
+        " — es besteht keine verbindliche Preiszusage.</p>" +
+      '<h3 class="ck-h3">Grundlage</h3>' +
+      "<p>Es gelten die Standard-AGB" +
+        (agb && agb.version ? " in der Fassung <b>" + esc(agb.version) + "</b>" : "") +
+        '. Sie stehen unter <button type="button" class="linkish" data-zu="agb">' +
+        "AGB &amp; Kunde</button>.</p>" +
+      '<p class="meta">Status: <b>Entwurf – noch nicht freigegeben</b></p>';
+    el("tileContract").hidden = false;
+    wireZuAnsicht(el("tileContract"), "contractToTerms");
     return true;
   }
 
@@ -973,61 +1077,137 @@
     return true;
   }
 
-  /* Eine ausdrücklich als TEST gekennzeichnete Leistungsübersicht. Sie ist
-     KEINE Offerte: Sie trägt keinen Betrag, keinen Status und kein Versand-
-     datum — diese Felder liefert Quantus für diese Kachel gar nicht erst.
-     Deshalb kann hier auch nie „CHF 0.00" stehen. */
+  /* Der Stand der Kosten — in der Sprache der Kundschaft.
+     -----------------------------------------------------------------------
+     Frueher stand hier „Leistungsuebersicht · TEST" samt „Testansicht" und
+     zwei Verweisen nach draussen. Fuer die Kundschaft war das nicht zu lesen:
+     Ein „Test" sagt ihr nichts ueber ihr Vorhaben, und die externen Verweise
+     fuehrten aus dem Kundenlink heraus.
+
+     Was hier steht, ist deshalb der wahre Stand: Die Offerte ist in
+     Vorbereitung, der Leistungsumfang ist benannt, die Kosten sind offen —
+     und es ist ausdruecklich gesagt, dass daraus weder eine Preiszusage noch
+     eine Rechnung entstanden ist. Betraege erfindet die Seite keine: Sie
+     bekommt gar keine geliefert. */
   function renderTest(tile) {
     if (!tile || !tile.title) return hide("tileTest");
-    var vorschau = safeUrl(tile.previewUrl);
-    var bestehend = safeUrl(tile.currentUrl);
     el("tileTest").innerHTML =
-      '<h2>' + esc(tile.label || "Leistungsübersicht · TEST") + "</h2>" +
-      '<p class="warn"><b>Testansicht — unverbindlich.</b> ' + esc(tile.notice || "") + "</p>" +
+      "<h2>Offerte in Vorbereitung</h2>" +
       '<p class="sub">' + esc(tile.title) + "</p>" +
-      (tile.summary ? "<p>" + esc(tile.summary) + "</p>" : "") +
-      '<p class="meta">Kosten: <b>' + esc(tile.costStatus || "") + "</b></p>" +
-      ((vorschau || bestehend)
-        ? '<div class="acts">' +
-            (vorschau ? '<a class="btnlink" id="testPreview" href="' + esc(vorschau) +
-              '" target="_blank" rel="noopener noreferrer">Vorschlag ansehen</a>' : "") +
-            (bestehend ? '<a class="btnlink ghost" id="testCurrent" href="' + esc(bestehend) +
-              '" target="_blank" rel="noopener noreferrer">Bestehende Website</a>' : "") +
-          "</div>"
-        : "");
+      (tile.summary
+        ? '<h3 class="ck-h3">Leistungsumfang</h3><p>' + esc(tile.summary) + "</p>"
+        : "") +
+      '<h3 class="ck-h3">Kosten</h3>' +
+      '<p class="meta" id="offerCost">Stand: <b>' +
+        esc(tile.costStatus || "Kosten noch offen") + "</b></p>" +
+      '<p class="warn" id="offerNotice">Es besteht <b>keine verbindliche Preiszusage</b>. ' +
+        "Es wurde nichts versendet, und es entsteht keine Rechnung. Sobald die Offerte " +
+        "steht, erscheint sie hier — Sie müssen nichts weiter tun.</p>" +
+      '<h3 class="ck-h3">Grundlage</h3>' +
+      '<p class="meta">Für die Zusammenarbeit gelten die Standard-AGB. Sie stehen ' +
+        'unter <button type="button" class="linkish" data-zu="agb">AGB &amp; Kunde</button>.</p>';
     el("tileTest").hidden = false;
+    wireZuAnsicht(el("tileTest"), "offerToTerms");
     return true;
   }
 
-  /* Stufe 3 — die Verwaltung. Eigene Freigabe, eigene Adresse, sonst nichts. */
+  /* Verweise INNERHALB des Kundenlinks: Sie wechseln die Ansicht, sie fuehren
+     nicht hinaus. Der DOM-Doppelgaenger kennt kein querySelectorAll fuer
+     Kindknoten, deshalb bekommt der Knopf eine eigene id. */
+  function wireZuAnsicht(behaelter, id) {
+    if (!behaelter) return;
+    behaelter.innerHTML = String(behaelter.innerHTML || "")
+      .replace('<button type="button" class="linkish" data-zu=',
+        '<button type="button" class="linkish" id="' + id + '" data-zu=');
+    var knopf = el(id);
+    if (knopf) knopf.addEventListener("click", function () {
+      ckZeige(knopf.getAttribute("data-zu") || "agb");
+    });
+  }
+
+  /* Die Verwaltung — als Kundenansicht IM Kundenlink.
+     -----------------------------------------------------------------------
+     Das eigentliche Verwaltungsprodukt bringt einen eigenen Anmeldebereich und
+     eine eigene Kopfzeile mit; eingebettet stuenden zwei Navigationen
+     uebereinander, verlinkt waere es ein zweiter Ort. Beides verletzt den
+     einen Kundenlink.
+
+     Also zeigt FlowerTech die Verwaltung selbst — im selben Bild wie alles
+     andere: welche Bereiche der Website spaeter gepflegt werden, und zu jedem
+     der direkte Weg, eine Aenderung zu wuenschen. Das ist keine Attrappe des
+     fremden Produkts: Es steht ausdruecklich da, dass die Bereiche noch nicht
+     mit den eigenen Inhalten verbunden sind. Und es ist keine Sackgasse — der
+     Wunsch geht denselben Weg wie an der Website, nur unter „Verwaltung".
+
+     Die Bereiche kommen aus dem Leistungsumfang des Projekts. Gibt es keinen,
+     stehen die drei, die jede Verwaltung hat — erfunden wird nichts. */
+  var ADMIN_GRUND = ["Seiten und Texte", "Bilder", "Kontaktangaben"];
+
+  function adminBereiche(tile) {
+    var tiles = (ckDaten && ckDaten.tiles) || {};
+    var quelle = (tiles.testService && tiles.testService.summary) ||
+      (tiles.offer && tiles.offer.summary) || "";
+    var teile = String(quelle).split(/,| und | sowie /);
+    var namen = [];
+    teile.forEach(function (roh) {
+      var name = String(roh).replace(/[.;]+$/, "").trim();
+      if (name.length > 1 && name.length < 60 && namen.length < 8) {
+        namen.push(name.charAt(0).toUpperCase() + name.slice(1));
+      }
+    });
+    if (!namen.length) namen = ADMIN_GRUND.slice(0);
+    if (tile && tile.label && namen.indexOf(String(tile.label)) < 0) return namen;
+    return namen;
+  }
+
   function renderAdmin(tile) {
-    var url = tile ? safeUrl(tile.url) : "";
-    if (!url) return hide("tileAdmin");
-    /* Auch die Verwaltung bleibt im Portal: gerahmt statt als Verweis nach
-       draussen. Der Rueckweg steht sichtbar daneben, weil Verwaltungen sich
-       oft bewusst nicht einbetten lassen. */
-    /* Die Verwaltung: eigene Ansicht von FlowerTech, kein zweites Cockpit.
-       -------------------------------------------------------------------
-       Die live erreichbare Verwaltung bringt selbst eine Kopfzeile und eine
-       eigene Bedienung („Zur Vorschau-Zentrale") mit. Eingebettet ergaebe das
-       wieder zwei Navigationen uebereinander — dieselbe Doppelung, die diese
-       Fassung gerade abloest. Bis die Verwaltung einen Einbett-Modus kennt,
-       steht hier die Sache selbst benannt, und der Weg dorthin ist EIN klarer
-       Knopf. Kaschiert wird nichts. */
+    // Die Freigabe entscheidet weiterhin, OB es die Verwaltung gibt. Die
+    // Adresse selbst wird nicht mehr ausgegeben — sie ist ein technisches
+    // Ziel, kein Kundenweg.
+    if (!tile || !safeUrl(tile.url)) return hide("tileAdmin");
+    var bereiche = adminBereiche(tile);
+
     el("tileAdmin").innerHTML =
-      '<div class="ck-native" id="adminNative">' +
-        "<h2>Verwaltung</h2>" +
-        '<p class="meta">Hier pflegen Sie später Ihre eigenen Inhalte — Texte, Bilder ' +
-        "und Seiten Ihrer Website.</p>" +
-        '<p class="lockmsg"><span class="ico" aria-hidden="true">↗</span><span>' +
-        "Die Verwaltung öffnet sich in einem eigenen Tab: Sie bringt einen eigenen " +
-        "Anmeldebereich mit und lässt sich deshalb nicht in diese Ansicht einbetten." +
-        "</span></p>" +
-        '<div class="acts"><a class="btnlink" id="adminOpen" href="' + esc(url) +
-          '" target="_blank" rel="noopener noreferrer">Verwaltung öffnen</a>' +
-          '<span class="pv-addr">' + esc(url) + "</span></div>" +
+      '<div class="adm" id="adminNative">' +
+        '<div class="adm-kopf"><h2>Verwaltung</h2>' +
+          '<p class="sub">So pflegen Sie Ihre Inhalte. Diese Ansicht gehört zu Ihrem ' +
+          "Vorhaben und öffnet sich hier — Sie bleiben auf dieser Seite.</p></div>" +
+        '<div class="adm-raster" id="adminAreas">' +
+          bereiche.map(function (name, i) {
+            return '<section class="adm-feld">' +
+              "<h3>" + esc(name) + "</h3>" +
+              '<p class="adm-hint">Texte, Bilder und Reihenfolge dieses Bereichs ' +
+                "werden hier gepflegt.</p>" +
+              '<button type="button" class="adm-btn" id="admWish' + i + '" ' +
+                'data-bereich="' + esc(name) + '">Änderung wünschen</button>' +
+              "</section>";
+          }).join("") +
+        "</div>" +
+        '<p class="meta" id="adminState">Diese Ansicht zeigt die Bereiche Ihrer ' +
+          "künftigen Verwaltung. Sie ist noch nicht mit Ihren eigenen Inhalten " +
+          "verbunden — bis dahin nehmen wir jeden Wunsch hier auf und setzen ihn um.</p>" +
       "</div>";
     el("tileAdmin").hidden = false;
+    bereiche.forEach(function (name, i) {
+      var knopf = el("admWish" + i);
+      if (!knopf) return;
+      knopf.addEventListener("click", function () { adminWunsch(name); });
+    });
+    return true;
+  }
+
+  /* Aus der Verwaltung heraus einen Wunsch anlegen: dieselbe Leiste, dieselbe
+     Sendung — nur ist die Kategorie „Verwaltung" und der Bereich schon
+     benannt. Gesendet wird nichts von selbst. */
+  function adminWunsch(name) {
+    ckZeige("verwaltung");
+    var wahl = el("crArea");
+    if (wahl) wahl.value = "Verwaltung";
+    var feld = el("crTitle");
+    if (feld) {
+      if (!String(feld.value || "").trim()) feld.value = name + ": ";
+      if (feld.focus) feld.focus();
+    }
     return true;
   }
 
