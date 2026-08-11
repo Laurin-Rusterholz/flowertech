@@ -56,6 +56,51 @@
   .status.ok{background:rgba(123,216,143,.12);border:1px solid rgba(123,216,143,.4);color:var(--ok)}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
   footer{color:var(--muted);font-size:13px;text-align:center;margin-top:26px}
+  /* ── Portal-Navigation ──────────────────────────────────────────────────
+     Eine Adresse, fuenf Bereiche. Sie stehen IMMER alle da — auch die, die
+     noch nicht bereit sind. Vorher war eine nicht freigegebene Stufe schlicht
+     unsichtbar; die Kundschaft konnte nicht wissen, dass es sie ueberhaupt
+     gibt, und der Ablauf wirkte wie zwei verschiedene Anwendungen. */
+  .pnav{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;margin:0 0 14px;
+    scrollbar-width:none;-ms-overflow-style:none}
+  .pnav::-webkit-scrollbar{display:none}
+  .pnav button{flex:0 0 auto;background:var(--card);border:1px solid var(--line);color:var(--muted);
+    font-size:13.5px;font-weight:600;padding:9px 14px;border-radius:11px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px}
+  .pnav button[aria-selected="true"]{color:var(--text);border-color:var(--violet);
+    background:linear-gradient(135deg,rgba(160,107,255,.16),rgba(37,213,255,.10))}
+  .pnav button[data-state="locked"]{opacity:.62}
+  .pnav .dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex:none}
+  .pnav button[data-state="ready"] .dot{background:var(--lime)}
+  .pnav button[data-state="locked"] .dot{background:var(--muted)}
+  /* Kopfzeile: Stand und Fortschritt in einem Blick. */
+  .phead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+  .pstatus{font-size:13.5px;color:var(--muted)}
+  .pbar{flex:1 1 160px;height:6px;border-radius:99px;background:var(--line);overflow:hidden;min-width:120px}
+  .pbar i{display:block;height:100%;border-radius:99px;
+    background:linear-gradient(90deg,var(--lime),var(--cyan))}
+  .pcount{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  /* Wartezustand: erklaert, statt leer zu sein. */
+  .locked{border-style:dashed}
+  .locked h2{color:var(--muted)}
+  .lockmsg{display:flex;gap:11px;align-items:flex-start;color:var(--muted);font-size:14px;line-height:1.6}
+  .lockmsg .ico{flex:none;font-size:17px;line-height:1.4}
+  /* ── Eingebettete Vorschau ──────────────────────────────────────────────
+     Die Vorschau gehoert INS Portal. Ein nackter Verweis nach draussen liess
+     Formular und Website wie zwei Anwendungen wirken. */
+  .pv-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+  .pv-seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .pv-seg button{background:var(--card);border:0;border-radius:0;color:var(--muted);
+    font-size:13px;font-weight:600;padding:7px 13px}
+  .pv-seg button[aria-pressed="true"]{color:var(--text);background:rgba(160,107,255,.18)}
+  .pv-spacer{flex:1 1 auto}
+  .pv-stage{border:1px solid var(--line);border-radius:14px;background:var(--bg);
+    padding:10px;display:flex;justify-content:center}
+  .pv-frame{width:100%;max-width:100%;border:0;border-radius:9px;background:#fff;
+    height:min(70vh,620px);display:block;transition:max-width .2s ease}
+  .pv-stage[data-view="mobil"] .pv-frame{max-width:390px}
+  .pv-note{font-size:13px;color:var(--muted);margin:10px 0 0}
+  .pv-fallback{margin:12px 0 0}
   /* ── Ihr Bereich ────────────────────────────────────────────────────────
      Dieselbe Adresse zeigt mit der Zeit mehr: die versendete Offerte, später
      die freigegebene Vorschau und die Verwaltung. Was nicht freigegeben ist,
@@ -157,8 +202,16 @@
     <p class="sub" id="answeredText"></p>
   </div>
 
-  <!-- Ihr Bereich: wächst mit dem Vorgang. Jede Kachel steht erst da, wenn sie
-       in Quantus ausdrücklich freigegeben wurde — vorher gibt es sie nicht. -->
+  <!-- Ihr Bereich: EINE Adresse, fuenf Bereiche. Sie stehen immer alle da —
+       was noch nicht bereit ist, zeigt einen erklaerten Wartezustand statt zu
+       fehlen. Ein zweiter Link entsteht nie. -->
+  <nav class="pnav" id="pnav" role="tablist" aria-label="Bereiche" hidden></nav>
+  <div class="phead" id="phead" hidden>
+    <span class="pstatus" id="pstatus"></span>
+    <span class="pbar" aria-hidden="true"><i id="pbarFill" style="width:0%"></i></span>
+    <span class="pcount" id="pcount"></span>
+  </div>
+
   <section id="area" hidden aria-label="Ihr Bereich">
     <article class="card tile" id="tileTest" hidden></article>
     <article class="card tile" id="tileOffer" hidden></article>
@@ -314,7 +367,33 @@
      --------------------------------------------------------------------- */
   var OFFER_STATES = ["sent", "accepted", "declined", "expired"];
 
+  /* Die fuenf Bereiche dieses einen Links. Sie stehen IMMER alle da: Was noch
+     nicht bereit ist, bekommt einen erklaerten Wartezustand statt zu fehlen.
+     Vorher war eine nicht freigegebene Stufe schlicht unsichtbar — die
+     Kundschaft konnte nicht wissen, dass es sie ueberhaupt gibt. */
+  var BEREICHE = [
+    { key: "intake", label: "Fragebogen", ziel: "content",
+      warte: "" },
+    { key: "offer", label: "Offerte", ziel: "tileOffer",
+      warte: "Ihre Kosten werden gerade vorbereitet. Sobald die Offerte steht, "
+        + "erscheint sie hier — Sie müssen nichts weiter tun." },
+    { key: "preview", label: "Website-Vorschau", ziel: "tilePreview",
+      warte: "Ihre Website entsteht gerade. Sobald ein Stand zum Anschauen bereit ist, "
+        + "sehen Sie ihn hier direkt auf dieser Seite — und können Änderungswünsche melden." },
+    { key: "admin", label: "Verwaltung", ziel: "tileAdmin",
+      warte: "Die Verwaltung kommt gemeinsam mit der Website-Vorschau. Dort pflegen Sie "
+        + "später Ihre eigenen Inhalte." },
+    { key: "terms", label: "AGB & Kunde", ziel: "tileTerms",
+      warte: "Die allgemeinen Geschäftsbedingungen stehen auf jeder gültigen Einladung." },
+  ];
+
   function renderArea(data) {
+    /* Ein aelterer, schon veroeffentlichter Datensatz kennt `tiles` gar nicht.
+       Fuer den bleibt alles wie bisher: kein Bereich, keine Wartezustaende —
+       sonst behauptete eine alte Veroeffentlichung ploetzlich Stufen, die es
+       zu ihrer Zeit nicht gab. Erst ein Datensatz MIT `tiles` bekommt das
+       Portal mit seinen fuenf Bereichen. */
+    var hatBereiche = !!(data && data.tiles && typeof data.tiles === "object");
     var tiles = (data && data.tiles) || {};
     var test = renderTest(tiles.testService);
     var offer = renderOffer(tiles.offer);
@@ -326,9 +405,80 @@
     // jedem gültigen Kundenlink dieselbe zentrale Fassung.
     var contract = renderContract(tiles.contract);
     var terms = renderTerms(tiles.terms);
+
+    var etwas = test || offer || preview || contract || admin || terms;
     var area = el("area");
-    if (area) area.hidden = !(test || offer || preview || contract || admin || terms);
-    return test || offer || preview || contract || admin || terms;
+    if (!hatBereiche) {
+      // Alter Datensatz: unveraendertes Verhalten.
+      if (area) area.hidden = !etwas;
+      return etwas;
+    }
+
+    var bereit = { intake: true, offer: !!offer, preview: !!preview, admin: !!admin, terms: !!terms };
+    lockedStates(bereit);
+    renderNav(bereit);
+    // Ab hier steht der Bereich immer — die Wartezustaende gehoeren dazu.
+    if (area) area.hidden = false;
+    return etwas;
+  }
+
+  /* Ein nicht bereiter Bereich ist nicht leer, sondern erklaert. */
+  function lockedStates(bereit) {
+    BEREICHE.forEach(function (b) {
+      if (b.key === "intake" || bereit[b.key]) return;
+      var node = el(b.ziel);
+      if (!node) return;
+      node.className = "card tile locked";
+      node.innerHTML = "<h2>" + esc(b.label) + "</h2>" +
+        '<p class="lockmsg"><span class="ico" aria-hidden="true">⏳</span>' +
+        "<span><b>Wird vorbereitet.</b> " + esc(b.warte) + "</span></p>";
+      node.hidden = false;
+    });
+    // Bereite Bereiche tragen wieder ihre normale Gestalt.
+    BEREICHE.forEach(function (b) {
+      if (b.key === "intake" || !bereit[b.key]) return;
+      var node = el(b.ziel);
+      if (node) node.className = "card tile";
+    });
+  }
+
+  /* Die Bereichsleiste samt Fortschritt. Ein Klick springt zum Bereich —
+     derselbe Link, dieselbe Seite, kein zweiter Einstieg. */
+  function renderNav(bereit) {
+    var nav = el("pnav");
+    if (!nav) return;
+    nav.innerHTML = BEREICHE.map(function (b) {
+      var da = b.key === "intake" ? true : !!bereit[b.key];
+      return '<button type="button" role="tab" data-ziel="' + esc(b.ziel) + '" ' +
+        'data-bereich="' + esc(b.key) + '" data-state="' + (da ? "ready" : "locked") + '" ' +
+        'aria-selected="false"><span class="dot" aria-hidden="true"></span>' + esc(b.label) + "</button>";
+    }).join("");
+    nav.hidden = false;
+    Array.prototype.forEach.call(nav.querySelectorAll("button"), function (btn) {
+      btn.addEventListener("click", function () {
+        Array.prototype.forEach.call(nav.querySelectorAll("button"), function (b) {
+          b.setAttribute("aria-selected", String(b === btn));
+        });
+        var ziel = el(btn.getAttribute("data-ziel"));
+        if (ziel && ziel.scrollIntoView) ziel.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    // Fortschritt: wie viele der fuenf Bereiche wirklich offen sind.
+    var offen = BEREICHE.filter(function (b) { return b.key === "intake" || bereit[b.key]; }).length;
+    var kopf = el("phead");
+    var fill = el("pbarFill");
+    var count = el("pcount");
+    var status = el("pstatus");
+    if (fill) fill.style.width = Math.round((offen / BEREICHE.length) * 100) + "%";
+    if (count) count.textContent = offen + " von " + BEREICHE.length + " Bereichen offen";
+    if (status) {
+      status.textContent = bereit.preview
+        ? "Ihre Website steht zum Anschauen bereit."
+        : bereit.offer ? "Ihre Offerte liegt vor."
+          : "Wir haben Ihre Angaben — der Rest folgt hier auf derselben Seite.";
+    }
+    if (kopf) kopf.hidden = false;
   }
 
   function hide(id) {
@@ -409,11 +559,36 @@
       '<p class="meta">Das ist der aktuelle Stand Ihrer Website' +
         (tile.releasedAt ? " · freigegeben am <b>" + esc(datum(tile.releasedAt)) + "</b>" : "") +
         ". Schauen Sie in Ruhe durch." + "</p>" +
-      // Die Adresse steht ausgeschrieben da — nicht nur im Knopf. So lässt sie
-      // sich lesen, kopieren und auf einem anderen Gerät öffnen.
-      '<p class="sub" id="previewUrlText">' + esc(url) + "</p>" +
-      '<div class="acts"><a class="btnlink" id="previewOpen" href="' + esc(url) +
-        '" target="_blank" rel="noopener noreferrer">Vorschau ansehen</a></div>' +
+      /* Die Vorschau wird HIER gezeigt, nicht anderswo. Vorher stand an dieser
+         Stelle nur ein nackter Verweis nach draussen — Formular und Website
+         wirkten dadurch wie zwei verschiedene Anwendungen. Das Bild bleibt im
+         Portal, mit Desktop/Mobil-Umschaltung. */
+      '<div class="pv-bar">' +
+        '<span class="pv-seg" role="group" aria-label="Ansicht">' +
+          '<button type="button" id="pvDesktop" aria-pressed="true">Desktop</button>' +
+          '<button type="button" id="pvMobil" aria-pressed="false">Mobil</button>' +
+        "</span><span class=\"pv-spacer\"></span>" +
+        '<a class="btnlink ghost" id="previewOpen" href="' + esc(url) +
+          '" target="_blank" rel="noopener noreferrer">In neuem Tab öffnen</a>' +
+      "</div>" +
+      '<div class="pv-stage" id="pvStage" data-view="desktop">' +
+        '<iframe class="pv-frame" id="pvFrame" title="Vorschau Ihrer Website" ' +
+          'loading="lazy" referrerpolicy="no-referrer" ' +
+          'sandbox="allow-scripts allow-same-origin" ' +
+          'src="' + esc(url) + '"></iframe>' +
+      "</div>" +
+      // Die Adresse bleibt ausgeschrieben lesbar — zum Kopieren und fuer ein
+      // anderes Geraet.
+      '<p class="pv-note">Angezeigt wird: <span id="previewUrlText">' + esc(url) + "</span></p>" +
+      // Sichtbarer Rueckweg, falls die Einbettung technisch blockiert ist.
+      '<div class="pv-fallback" id="pvFallback" hidden>' +
+        '<p class="lockmsg"><span class="ico" aria-hidden="true">↗</span><span>' +
+        "Diese Website erlaubt keine Einbettung. Öffnen Sie die Vorschau deshalb " +
+        "in einem eigenen Tab — Ihre Änderungswünsche schreiben Sie danach wieder hier." +
+        "</span></p>" +
+        '<div class="acts"><a class="btnlink" href="' + esc(url) +
+          '" target="_blank" rel="noopener noreferrer">Vorschau in neuem Tab öffnen</a></div>' +
+      "</div>" +
       (feedback
         ? '<p class="meta" id="changeIntro">Etwas soll anders sein? Schreiben Sie es hier ' +
             "direkt auf — der Wunsch landet bei uns an Ihrem Vorhaben.</p>" +
@@ -439,7 +614,45 @@
           "an Ihrem Vorhaben nach.</p>");
     el("tilePreview").hidden = false;
     if (feedback) el("changeForm").addEventListener("submit", sendChange);
+    wirePreviewFrame(url);
     return true;
+  }
+
+  /* Desktop/Mobil und die Blockade-Erkennung.
+
+     Ob eine fremde Seite sich einbetten laesst, laesst sich vorher nicht
+     feststellen: X-Frame-Options und frame-ancestors greifen erst beim Laden,
+     und der Fehler ist fuer uns nicht lesbar (Cross-Origin). Deshalb der
+     ehrliche Weg: Kommt binnen einiger Sekunden kein `load`, gilt die
+     Einbettung als blockiert und der sichtbare Rueckweg erscheint. Ein
+     `load`-Ereignis raeumt ihn wieder weg. */
+  function wirePreviewFrame(url) {
+    var stage = el("pvStage");
+    var frame = el("pvFrame");
+    var fallback = el("pvFallback");
+    var desktop = el("pvDesktop");
+    var mobil = el("pvMobil");
+    if (!stage || !frame) return;
+
+    function view(mode) {
+      stage.setAttribute("data-view", mode);
+      if (desktop) desktop.setAttribute("aria-pressed", String(mode === "desktop"));
+      if (mobil) mobil.setAttribute("aria-pressed", String(mode === "mobil"));
+    }
+    if (desktop) desktop.addEventListener("click", function () { view("desktop"); });
+    if (mobil) mobil.addEventListener("click", function () { view("mobil"); });
+
+    var geladen = false;
+    frame.addEventListener("load", function () {
+      geladen = true;
+      if (fallback) fallback.hidden = true;
+    });
+    window.setTimeout(function () {
+      if (geladen || !fallback) return;
+      fallback.hidden = false;
+      // Der Rahmen bleibt stehen: Er zeigt, dass hier etwas hingehoert.
+      stage.setAttribute("data-blocked", "1");
+    }, 6000);
   }
 
   /* Der Vertrag — projektindividuell und deshalb hinter einer eigenen
@@ -526,13 +739,48 @@
   function renderAdmin(tile) {
     var url = tile ? safeUrl(tile.url) : "";
     if (!url) return hide("tileAdmin");
+    /* Auch die Verwaltung bleibt im Portal: gerahmt statt als Verweis nach
+       draussen. Der Rueckweg steht sichtbar daneben, weil Verwaltungen sich
+       oft bewusst nicht einbetten lassen. */
     el("tileAdmin").innerHTML =
       "<h2>Verwaltung</h2>" +
       '<p class="meta">Hier pflegen Sie Ihre eigenen Inhalte.</p>' +
-      '<div class="acts"><a class="btnlink ghost" id="adminOpen" href="' + esc(url) +
-        '" target="_blank" rel="noopener noreferrer">Verwaltung öffnen</a></div>';
+      '<div class="pv-bar"><span class="pv-spacer"></span>' +
+        '<a class="btnlink ghost" id="adminOpen" href="' + esc(url) +
+        '" target="_blank" rel="noopener noreferrer">In neuem Tab öffnen</a></div>' +
+      '<div class="pv-stage" id="adminStage" data-view="desktop">' +
+        '<iframe class="pv-frame" id="adminFrame" title="Verwaltung Ihrer Website" ' +
+          'loading="lazy" referrerpolicy="no-referrer" ' +
+          'sandbox="allow-scripts allow-same-origin" ' +
+          'src="' + esc(url) + '"></iframe>' +
+      "</div>" +
+      '<p class="pv-note">Angezeigt wird: ' + esc(url) + "</p>" +
+      '<div class="pv-fallback" id="adminFallback" hidden>' +
+        '<p class="lockmsg"><span class="ico" aria-hidden="true">↗</span><span>' +
+        "Die Verwaltung erlaubt keine Einbettung — das ist bei Anmeldebereichen üblich. " +
+        "Öffnen Sie sie deshalb in einem eigenen Tab." +
+        "</span></p>" +
+        '<div class="acts"><a class="btnlink" href="' + esc(url) +
+          '" target="_blank" rel="noopener noreferrer">Verwaltung in neuem Tab öffnen</a></div>' +
+      "</div>";
     el("tileAdmin").hidden = false;
+    wireEmbed("adminFrame", "adminFallback", "adminStage");
     return true;
+  }
+
+  /* Dieselbe ehrliche Blockade-Erkennung wie bei der Vorschau. */
+  function wireEmbed(frameId, fallbackId, stageId) {
+    var frame = el(frameId);
+    var fallback = el(fallbackId);
+    var stage = el(stageId);
+    if (!frame || !fallback) return;
+    var geladen = false;
+    frame.addEventListener("load", function () { geladen = true; fallback.hidden = true; });
+    window.setTimeout(function () {
+      if (geladen) return;
+      fallback.hidden = false;
+      if (stage) stage.setAttribute("data-blocked", "1");
+    }, 6000);
   }
 
   function sendChange(ev) {
