@@ -155,9 +155,17 @@
   .ck-stage{flex:1 1 auto;min-width:0;min-height:0;overflow:auto;padding:16px}
   /* Nur die aktive Ansicht steht zentral. */
   .ck-stage > [hidden]{display:none}
-  /* Und im ganzen Cockpit gilt: `hidden` heisst ausnahmslos unsichtbar — auch
-     dann, wenn eine Klasse dem Element ein eigenes `display` gibt. */
-  .ck [hidden]{display:none}
+  /* Und im ganzen Cockpit gilt: `hidden` heisst ausnahmslos unsichtbar.
+     -----------------------------------------------------------------------
+     Hier steht `!important`, und zwar mit Absicht. Ohne es entscheidet die
+     Spezifitaet, und die verliert diese Regel gegen jede etwas laengere
+     Auswahl, die einem Element ein `display` gibt — genau so stand im
+     Website-Tab ploetzlich die ganze Leistungsuebersicht neben der Website:
+     `.ck-stage[data-rahmen="1"] .tile{display:flex}` (0,3,0) schlug
+     `.ck [hidden]` (0,2,0) und holte auch die verborgenen Kacheln zurueck.
+     `hidden` ist keine Gestaltungsfrage, die man abwaegt; es ist eine Aussage
+     ueber Sichtbarkeit. Also gewinnt sie immer. */
+  .ck [hidden]{display:none !important}
   .ck-side{flex:0 0 330px;min-width:0;border-left:1px solid var(--line);background:var(--card);
     overflow:auto;padding:16px}
   .ck-side[hidden]{display:none}
@@ -175,7 +183,9 @@
      Die Website beginnt direkt unter der Kopfzeile. */
   .ck-stage[data-rahmen="1"]{padding:0;overflow:hidden}
   .ck-stage[data-rahmen="1"] #area{height:100%}
-  .ck-stage[data-rahmen="1"] .tile{background:transparent;border:0;border-radius:0;
+  /* Nur die Kachel, die den Rahmen traegt — nicht `.tile` allgemein. Sonst
+     bekaemen auch die verborgenen Kacheln ein `display`. */
+  .ck-stage[data-rahmen="1"] #tilePreview{background:transparent;border:0;border-radius:0;
     padding:0;margin:0;height:100%;display:flex;flex-direction:column}
   .ck-stage[data-rahmen="1"] .pv-stage{flex:1 1 auto;min-height:0}
   /* Ansicht nicht verfuegbar: inline, mittig, erklaert. */
