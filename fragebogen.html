@@ -25,7 +25,11 @@
   body{font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
        -webkit-font-smoothing:antialiased}
   .wrap{max-width:760px;margin:0 auto;padding:28px 18px 72px}
-  header{display:flex;gap:14px;align-items:center;margin-bottom:22px;flex-wrap:wrap}
+  /* Der Seitenkopf wird ueber seine Klasse angesprochen, nicht ueber das
+     Element: Die Kopfzeile des Cockpits ist ebenfalls ein <header> und darf
+     von diesen Regeln nichts abbekommen (`flex-wrap:wrap` liesse ihre
+     Umschalter in eine zweite, abgeschnittene Zeile rutschen). */
+  .page-head{display:flex;gap:14px;align-items:center;margin-bottom:22px;flex-wrap:wrap}
   .mark{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex:none;
     background:linear-gradient(135deg,rgba(200,255,46,.18),rgba(160,107,255,.22));
     border:1px solid rgba(160,107,255,.35);font-size:24px}
@@ -55,7 +59,7 @@
   .status.err{background:rgba(255,129,129,.12);border:1px solid rgba(255,129,129,.4);color:var(--err)}
   .status.ok{background:rgba(123,216,143,.12);border:1px solid rgba(123,216,143,.4);color:var(--ok)}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-  footer{color:var(--muted);font-size:13px;text-align:center;margin-top:26px}
+  .page-foot{color:var(--muted);font-size:13px;text-align:center;margin-top:26px}
   /* ── Portal-Navigation ──────────────────────────────────────────────────
      Eine Adresse, fuenf Bereiche. Sie stehen IMMER alle da — auch die, die
      noch nicht bereit sind. Vorher war eine nicht freigegebene Stufe schlicht
@@ -108,8 +112,14 @@
      Vorschau, rechts die Aenderungsleiste. Es ist immer GENAU EINE Ansicht
      zentral — die anderen ersetzen sie, statt darunter aufzugehen. */
   body.ck-on .wrap{max-width:none;padding:0}
-  body.ck-on header{display:none}
-  body.ck-on footer{display:none}
+  /* NUR der Seitenkopf und der Seitenfuss weichen dem Cockpit — und zwar ueber
+     ihre eigenen Klassen. Die frueheren Fassungen hiessen `header` und
+     `footer` nach dem Element: Damit traf die Regel auch die Kopfzeile des
+     Cockpits, denn die IST ein <header>. Sie stand vollstaendig im DOM, mit
+     allen Umschaltern — und war display:none. Ein Element nach seinem Typ
+     auszublenden trifft immer auch das naechste gleichen Typs. */
+  body.ck-on .page-head{display:none}
+  body.ck-on .page-foot{display:none}
   .ck{display:flex;flex-direction:column;height:100vh;height:100dvh;background:var(--bg)}
   /* `display:flex` schlaegt das UA-`[hidden]`. Ohne diese Zeile stuende die
      Huelle schon vor den Daten da — mit leerer Kopfzeile ohne Umschalter. */
@@ -144,6 +154,9 @@
   .ck-stage{flex:1 1 auto;min-width:0;min-height:0;overflow:auto;padding:16px}
   /* Nur die aktive Ansicht steht zentral. */
   .ck-stage > [hidden]{display:none}
+  /* Und im ganzen Cockpit gilt: `hidden` heisst ausnahmslos unsichtbar — auch
+     dann, wenn eine Klasse dem Element ein eigenes `display` gibt. */
+  .ck [hidden]{display:none}
   .ck-side{flex:0 0 330px;min-width:0;border-left:1px solid var(--line);background:var(--card);
     overflow:auto;padding:16px}
   .ck-side[hidden]{display:none}
@@ -228,7 +241,7 @@
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <header class="page-head">
     <div class="mark" aria-hidden="true">🌸</div>
     <div>
       <h1 id="title">Ihre Angaben</h1>
@@ -322,7 +335,7 @@
     </div>
   </div>
 
-  <footer id="footer">FlowerTech</footer>
+  <footer class="page-foot" id="footer">FlowerTech</footer>
 </div>
 
 <script src="/visionroom.js"></script>
@@ -503,7 +516,7 @@
   var ckInhalt = {};
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "kopfzeile-1";
+  var CK_BUILD = "kopfzeile-2";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine

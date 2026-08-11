@@ -27,11 +27,16 @@ import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import { makeDom } from "./dom-double.mjs";
+import { versteckt, passt, beschreibe, el as cssEl } from "./css-sichtbarkeit.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const page = fs.readFileSync(path.join(root, "fragebogen.html"), "utf8");
 const script = /<script>([\s\S]*?)<\/script>/.exec(page)[1];
 const markup = page.slice(0, page.indexOf("<script src="));
+const css = /<style>([\s\S]*?)<\/style>/.exec(page)[1];
+/* Die Baumarke, die die Seite selbst setzt — die Abnahme liest sie in Chrome
+   als `document.documentElement.dataset.ftCockpit`. */
+const BAUMARKE = /var CK_BUILD = "([^"]+)"/.exec(script)[1];
 
 let checks = 0;
 const ok = (condition, message) => { assert.ok(condition, message); checks++; };
@@ -158,11 +163,105 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     "die Cockpit-Hülle erscheint schon vor den Daten");
 }
 
+/* ══ 1b. Sie steht nicht nur da — sie ist zu sehen ═════════════════════════ */
+{
+  /* Der gemeldete Befund: `[data-ft="cockpit-header"]` existierte genau einmal,
+     enthielt alle fünf Umschalter — und war in Chrome unsichtbar
+     (`isVisible() === false`). Schuld war eine einzige Regel:
+     `body.ck-on header{display:none}`, gedacht für den Seitenkopf, wirksam für
+     JEDEN <header> — und die Kopfzeile des Cockpits IST einer.
+
+     Deshalb wird hier der ganze Pfad gelesen, so wie ihn der Browser liest:
+     html › body.ck-on › .wrap › #ck › header#ckTop. Ein verstecktes Elternteil
+     zählt genauso wie ein verstecktes Element. */
+  const pfad = [
+    cssEl("html", "", [], { "data-ft-cockpit": BAUMARKE }),
+    cssEl("body", "", ["ck-on"]),
+    cssEl("div", "", ["wrap"]),
+    // Zur Laufzeit ist `hidden` entfernt — genau der Zustand, den die Abnahme sah.
+    cssEl("div", "ck", ["ck"]),
+    cssEl("header", "ckTop", ["ck-top"], { "data-ft": "cockpit-header" }),
+  ];
+  const gruende = versteckt(css, pfad);
+  ok(!gruende.length,
+    "die Kopfzeile ist im Betrieb unsichtbar: " + gruende.join(" · "));
+
+  // Dasselbe für alles, was in ihr bedient wird.
+  [
+    cssEl("nav", "ckViews", ["ck-views"], { "data-ft": "views" }),
+    cssEl("div", "", ["ck-brand"], { "data-ft": "brand" }),
+    cssEl("div", "", ["ck-right"]),
+  ].forEach((kind) => {
+    const tief = pfad.concat([kind]);
+    const g = versteckt(css, tief);
+    ok(!g.length, `${beschreibe(kind)} in der Kopfzeile ist unsichtbar: ${g.join(" · ")}`);
+    // Und der Umschalter darin.
+    const knopf = cssEl("button", "ckView_website", [], { "data-ft": "view", "aria-selected": "true" });
+    if (kind.id === "ckViews") {
+      const gg = versteckt(css, tief.concat([knopf]));
+      ok(!gg.length, `der Umschalter Website ist unsichtbar: ${gg.join(" · ")}`);
+    }
+  });
+
+  /* Kein Vorfahre trägt im Betrieb ein `hidden`: `#ck` wird geöffnet, `.wrap`
+     und <body> tragen gar keines. */
+  ok(!/<div class="wrap"[^>]*\shidden/.test(markup) && !/<body[^>]*\shidden/.test(markup),
+    "ein Vorfahre der Kopfzeile ist im Markup versteckt");
+  ok(/ck\.hidden = false;/.test(script), "das Cockpit wird nie geöffnet");
+
+  /* Ein echter Layoutzustand: Die Kopfzeile hat eine eigene Höhe, liegt als
+     erstes Kind über der Bühne und wird nicht überdeckt. */
+  ok(/\.ck-top\{[^}]*height:52px/.test(css.replace(/\s*\n\s*/g, "")),
+    "die Kopfzeile hat keine eigene Höhe");
+  ok(/\.ck\{[^}]*display:flex[^}]*flex-direction:column/.test(css.replace(/\s*\n\s*/g, "")),
+    "das Cockpit stapelt Kopfzeile und Bühne nicht untereinander");
+  ok(/\.ck-top\{[^}]*z-index:2/.test(css.replace(/\s*\n\s*/g, "")),
+    "die Kopfzeile liegt nicht über der Bühne");
+
+  /* Die Gegenprobe — sonst wäre der Test nur ein Ja-Sager: Der SEITENKOPF wird
+     im Cockpit sehr wohl ausgeblendet, und zwar über seine eigene Klasse. */
+  const seitenkopf = [
+    cssEl("html"), cssEl("body", "", ["ck-on"]), cssEl("div", "", ["wrap"]),
+    cssEl("header", "", ["page-head"]),
+  ];
+  ok(versteckt(css, seitenkopf).length,
+    "der alte Seitenkopf steht im Cockpit weiterhin da");
+  ok(!/body\.ck-on header\s*\{/.test(css),
+    "der Seitenkopf wird wieder über den Elementtyp ausgeblendet — das trifft auch das Cockpit");
+  ok(!passt("body.ck-on .page-head", pfad),
+    "die Regel für den Seitenkopf trifft die Kopfzeile des Cockpits");
+
+  /* Dasselbe Mass für das, was unter der Kopfzeile steht: die zentrale
+     Vorschau und die rechte Leiste in der Startansicht. */
+  const koerper = pfad.slice(0, 4).concat([cssEl("div", "", ["ck-body"])]);
+  const buehne = koerper.concat([cssEl("div", "ckStage", ["ck-stage"])]);
+  const vorschau = buehne.concat([
+    cssEl("section", "area"),
+    cssEl("article", "tilePreview", ["card", "tile"]),
+  ]);
+  ok(!versteckt(css, vorschau).length,
+    "die zentrale Vorschau ist unsichtbar: " + versteckt(css, vorschau).join(" · "));
+  const leiste = koerper.concat([cssEl("aside", "ckSide", ["ck-side"])]);
+  ok(!versteckt(css, leiste).length,
+    "die rechte Änderungsleiste ist unsichtbar: " + versteckt(css, leiste).join(" · "));
+
+  /* Und die Gegenprobe nach unten: Was `hidden` trägt, ist auch wirklich weg —
+     sonst stünde die Formularwand wieder unter der Vorschau. */
+  const bogen = buehne.concat([cssEl("section", "content", [], { hidden: "" })]);
+  ok(versteckt(css, bogen).length, "ein Bereich mit `hidden` bleibt sichtbar");
+  const kachelWeg = buehne.concat([
+    cssEl("section", "area"),
+    cssEl("article", "tileAdmin", ["card", "tile"], { hidden: "" }),
+  ]);
+  ok(versteckt(css, kachelWeg).length,
+    "eine Kachel mit `hidden` bleibt sichtbar — daraus würde wieder eine Kachelreihe");
+}
+
 /* ══ 2. Was die Kopfzeile im Betrieb trägt ═════════════════════════════════ */
 {
   const { dom } = await seite(daten());
   ok(dom.node("ck").hidden === false, "das Cockpit bleibt zu");
-  ok(dom.documentElement.getAttribute("data-ft-cockpit"),
+  ok(dom.documentElement.getAttribute("data-ft-cockpit") === BAUMARKE,
     "am Dokument fehlt die Baumarke — die Abnahme kann die Fassung nicht prüfen");
 
   // Links: FlowerTech und der Name des Vorhabens, aus den Daten.
