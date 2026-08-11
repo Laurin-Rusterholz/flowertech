@@ -111,7 +111,14 @@
   body.ck-on header{display:none}
   body.ck-on footer{display:none}
   .ck{display:flex;flex-direction:column;height:100vh;height:100dvh;background:var(--bg)}
+  /* `display:flex` schlaegt das UA-`[hidden]`. Ohne diese Zeile stuende die
+     Huelle schon vor den Daten da — mit leerer Kopfzeile ohne Umschalter. */
+  .ck[hidden]{display:none}
+  /* Die Kopfzeile ist FlowerTechs eigene, im aeusseren Dokument: Sie steht
+     ueber der Buehne und wird nie mitgescrollt. Was im eingebetteten Rahmen
+     steht, gehoert der fremden Seite und zaehlt hier nicht. */
   .ck-top{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:0 14px;height:52px;
+    position:relative;z-index:2;
     background:#0d0d13;border-bottom:1px solid var(--line);color:#f4f2f8}
   @media (prefers-color-scheme: light){ .ck-top{background:#16141c} }
   .ck-brand{display:flex;align-items:center;gap:9px;min-width:0;flex:0 0 auto}
@@ -241,13 +248,18 @@
        Mitte GENAU EINE Ansicht, rechts die Aenderungsleiste. Die Ansichten
        ersetzen einander — sie stapeln sich nicht mehr untereinander. -->
   <div class="ck" id="ck" hidden>
-    <header class="ck-top">
-      <div class="ck-brand"><span class="mk" aria-hidden="true">🌸</span>
-        <span><b>FlowerTech</b><i id="ckProject"></i></span></div>
-      <nav class="ck-views" id="ckViews" role="tablist" aria-label="Ansichten"></nav>
+    <!-- FlowerTechs eigene Kopfzeile — im aeusseren Dokument, nicht im
+         eingebetteten Rahmen. Die `data-ft`-Marken machen das in DevTools und
+         in den Tests eindeutig nachweisbar: `[data-ft="cockpit-header"]`
+         gehoert dieser Seite, alles innerhalb von #pvFrame nicht. -->
+    <header class="ck-top" id="ckTop" data-ft="cockpit-header">
+      <div class="ck-brand" data-ft="brand"><span class="mk" aria-hidden="true">🌸</span>
+        <span><b>FlowerTech</b><i id="ckProject" data-ft="project"></i></span></div>
+      <nav class="ck-views" id="ckViews" data-ft="views" role="tablist" aria-label="Ansichten"></nav>
       <div class="ck-right">
-        <button type="button" id="ckMobil" aria-pressed="false" title="Mobil-Ansicht">Mobil</button>
-        <button type="button" id="ckWish" class="primary">Änderungswunsch</button>
+        <button type="button" id="ckMobil" data-ft="mobil" aria-pressed="false"
+          title="Mobil-Ansicht">Mobil</button>
+        <button type="button" id="ckWish" data-ft="wish" class="primary">Änderungswunsch</button>
       </div>
     </header>
     <div class="ck-body">
@@ -489,6 +501,43 @@
   var ckAnsicht = "";
   var ckBereit = {};
   var ckInhalt = {};
+  /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
+     `document.documentElement.dataset.ftCockpit` in der Konsole. */
+  var CK_BUILD = "kopfzeile-1";
+
+  /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
+     Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
+     interne ID). Was es gibt: den Titel der Einladung und den Titel der
+     Leistungsuebersicht. „Ihre Angaben" ist der Vorgabetitel des Fragebogens
+     und benennt kein Vorhaben — dann bleibt die Zeile lieber leer. */
+  function projektName(data) {
+    var tiles = (data && data.tiles) || {};
+    var kandidaten = [
+      data && data.title,
+      tiles.testService && tiles.testService.title,
+      tiles.offer && tiles.offer.title,
+    ];
+    for (var i = 0; i < kandidaten.length; i++) {
+      var wert = String(kandidaten[i] == null ? "" : kandidaten[i]).trim();
+      if (wert && wert !== "Ihre Angaben") return wert;
+    }
+    return "";
+  }
+
+  /* Ein einzelner Bereich darf nie die ganze Seite mitreissen. Bisher lief der
+     Aufbau der Bereiche VOR dem Cockpit und ohne Netz: Stolperte ein Bereich
+     ueber eine unerwartete Form in den Daten, sprang die Kette in den
+     Fehlerzweig — die bereits gezeichnete Vorschau blieb stehen, die Kopfzeile
+     entstand nie. Genau so sieht eine Seite ohne Kopfzeile aus. Jetzt faellt
+     ein solcher Bereich einzeln aus, sichtbar als nicht verfuegbar. */
+  function sicher(fn, tile, id) {
+    try {
+      return fn(tile);
+    } catch (e) {
+      if (console && console.warn) console.warn("Bereich nicht darstellbar:", id);
+      return hide(id);
+    }
+  }
 
   function renderArea(data) {
     /* Ein aelterer, schon veroeffentlichter Datensatz kennt `tiles` gar nicht.
@@ -497,14 +546,14 @@
        nicht gab. */
     var hatBereiche = !!(data && data.tiles && typeof data.tiles === "object");
     var tiles = (data && data.tiles) || {};
-    var test = renderTest(tiles.testService);
-    var offer = renderOffer(tiles.offer);
-    var preview = renderPreview(tiles.preview);
+    var test = sicher(renderTest, tiles.testService, "tileTest");
+    var offer = sicher(renderOffer, tiles.offer, "tileOffer");
+    var preview = sicher(renderPreview, tiles.preview, "tilePreview");
     // Die Verwaltung erscheint nie allein. Sie gehört zur Vorschau — ohne
     // sichtbare Vorschau bleibt sie weg, auch wenn eine Adresse mitkäme.
-    var admin = preview ? renderAdmin(tiles.admin) : hide("tileAdmin");
-    var contract = renderContract(tiles.contract);
-    var terms = renderTerms(tiles.terms);
+    var admin = preview ? sicher(renderAdmin, tiles.admin, "tileAdmin") : hide("tileAdmin");
+    var contract = sicher(renderContract, tiles.contract, "tileContract");
+    var terms = sicher(renderTerms, tiles.terms, "tileTerms");
 
     var etwas = test || offer || preview || contract || admin || terms;
     var area = el("area");
@@ -518,7 +567,12 @@
       offerte: !!(offer || test), agb: !!(terms || contract), fragebogen: true,
     };
     if (area) area.hidden = false;
-    ckStart(data, !!preview, etwas);
+    // Auch das Cockpit selbst darf die Seite nicht mitreissen.
+    try {
+      ckStart(data, !!preview, etwas);
+    } catch (e) {
+      if (console && console.warn) console.warn("Cockpit unvollständig aufgebaut.");
+    }
     return etwas;
   }
 
@@ -537,9 +591,15 @@
       : { content: true, answered: false };
     ck.hidden = false;
     if (document.body && document.body.classList) document.body.classList.add("ck-on");
+    /* Eine Marke am Dokument selbst: So laesst sich in Chrome in einem Griff
+       feststellen, ob wirklich diese Fassung ausgeliefert wird — und dass die
+       Kopfzeile zum aeusseren Dokument gehoert, nicht zum fremden Rahmen. */
+    if (document.documentElement && document.documentElement.setAttribute) {
+      document.documentElement.setAttribute("data-ft-cockpit", CK_BUILD);
+    }
 
     var name = el("ckProject");
-    if (name) name.textContent = String((data && data.title) || "");
+    if (name) name.textContent = projektName(data);
 
     var views = el("ckViews");
     if (views) {
@@ -547,7 +607,7 @@
       // an querySelectorAll — und der Wechsel bleibt ohne Browser pruefbar.
       views.innerHTML = ANSICHTEN.map(function (a) {
         return '<button type="button" role="tab" id="ckView_' + esc(a.key) + '" ' +
-          'data-ansicht="' + esc(a.key) + '" ' +
+          'data-ft="view" data-ansicht="' + esc(a.key) + '" ' +
           'data-state="' + (ckBereit[a.key] ? "ready" : "locked") + '" aria-selected="false">' +
           esc(a.label) + "</button>";
       }).join("");
@@ -568,16 +628,27 @@
 
     var mobil = el("ckMobil");
     if (mobil) mobil.addEventListener("click", function () {
-      var an = mobil.getAttribute("aria-pressed") !== "true";
-      mobil.setAttribute("aria-pressed", String(an));
-      ["pvStage", "adminStage"].forEach(function (id) {
-        var st = el(id);
-        if (st) st.setAttribute("data-view", an ? "mobil" : "desktop");
-      });
+      ckMobilSetzen(mobil.getAttribute("aria-pressed") !== "true");
     });
 
     // Sobald eine Vorschau freigegeben ist, ist „Website" die Startansicht.
     ckZeige(hatVorschau ? "website" : "fragebogen");
+  }
+
+  /* Desktop oder Mobil — EIN Schalter, zwei Anzeigen. Der Knopf in der
+     Kopfzeile und das Paar im Vorschaurahmen zeigen immer denselben Stand;
+     sonst haette die Kundschaft zwei Schalter, die sich widersprechen. */
+  function ckMobilSetzen(an) {
+    var kopf = el("ckMobil");
+    if (kopf) kopf.setAttribute("aria-pressed", String(!!an));
+    var desktop = el("pvDesktop");
+    var mobil = el("pvMobil");
+    if (desktop) desktop.setAttribute("aria-pressed", String(!an));
+    if (mobil) mobil.setAttribute("aria-pressed", String(!!an));
+    ["pvStage", "adminStage"].forEach(function (id) {
+      var st = el(id);
+      if (st) st.setAttribute("data-view", an ? "mobil" : "desktop");
+    });
   }
 
   /* Eine Ansicht zeigen — die anderen weg. */
@@ -772,13 +843,10 @@
     var mobil = el("pvMobil");
     if (!stage || !frame) return;
 
-    function view(mode) {
-      stage.setAttribute("data-view", mode);
-      if (desktop) desktop.setAttribute("aria-pressed", String(mode === "desktop"));
-      if (mobil) mobil.setAttribute("aria-pressed", String(mode === "mobil"));
-    }
-    if (desktop) desktop.addEventListener("click", function () { view("desktop"); });
-    if (mobil) mobil.addEventListener("click", function () { view("mobil"); });
+    // Beide Wege fuehren durch dieselbe Stelle — der Knopf in der Kopfzeile
+    // und das Paar am Rahmen bleiben dadurch einig.
+    if (desktop) desktop.addEventListener("click", function () { ckMobilSetzen(false); });
+    if (mobil) mobil.addEventListener("click", function () { ckMobilSetzen(true); });
 
     var geladen = false;
     frame.addEventListener("load", function () {

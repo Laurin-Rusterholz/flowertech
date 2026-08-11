@@ -457,7 +457,7 @@ const alleKnoten = (dom) => IDS.map((id) => {
     "es wurde eine zweite Adresse erfunden");
   ok(/OFFER_STATES/.test(page), "die Seite prüft den Versandstatus der Offerte nicht selbst");
   ok(/entschaerfen/.test(page), "das Offertendokument wird nicht zusätzlich entschärft");
-  ok(/preview \? renderAdmin/.test(page),
+  ok(/preview \? sicher\(renderAdmin/.test(page),
     "die Verwaltung hängt nicht an der sichtbaren Vorschau");
 }
 

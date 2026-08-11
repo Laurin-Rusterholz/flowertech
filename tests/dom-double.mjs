@@ -128,6 +128,17 @@ export function makeDom({ innerWidth = 1200, innerHeight = 900 } = {}) {
       node.tagName = name.toUpperCase();
       if (cls) node.className = cls;
       if (dataT) node.dataset.t = dataT;
+      /* Beschreibende Attribute wie im Browser übernehmen: Erzeugtes HTML, das
+         `data-ft="view"` oder `aria-selected` trägt, muss danach auch über
+         getAttribute auffindbar sein — sonst prüfte der Test nur die
+         Zeichenkette, aus der er gebaut wurde. */
+      (tag.match(/\s(data-[\w-]+|aria-[\w-]+|role)="([^"]*)"/g) || []).forEach((paar) => {
+        const [, schluessel, wert] = /\s([\w-]+)="([^"]*)"/.exec(paar);
+        node.attrs[schluessel] = wert;
+        if (schluessel.indexOf("data-") === 0) {
+          node.dataset[schluessel.slice(5).replace(/-([a-z])/g, (m, c) => c.toUpperCase())] = wert;
+        }
+      });
       const value = (/\svalue="([^"]*)"/.exec(tag) || [])[1];
       if (value != null && !node.value) node.value = value;
       if (/\shidden(?=[\s>/])/.test(tag)) node.hidden = true;
@@ -144,9 +155,13 @@ export function makeDom({ innerWidth = 1200, innerHeight = 900 } = {}) {
   }
 
   const body = mk("BODY", "body");
+  /* Das Wurzelelement trägt die Baumarke der ausgelieferten Fassung
+     (`data-ft-cockpit`) — die Seite setzt sie, die Abnahme liest sie. */
+  const documentElement = mk("HTML");
   const document = {
     title: "",
     body,
+    documentElement,
     getElementById: (id) => byId[id] || null,
     createElement: (tag) => mk(tag),
     addEventListener() {},
@@ -166,7 +181,7 @@ export function makeDom({ innerWidth = 1200, innerHeight = 900 } = {}) {
   window.window = window;
 
   return {
-    window, document, body, byId, types,
+    window, document, body, documentElement, byId, types,
     node: (id) => byId[id] || null,
     ensure: (id, tag) => (byId[id] = byId[id] || mk(tag || "DIV", id)),
     register, mk,
