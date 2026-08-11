@@ -320,7 +320,13 @@ const alleKnoten = (dom) => IDS.map((id) => {
   zeige(dom, "website");
   const kachel = dom.node("tilePreview");
   ok(kachel.hidden === false, "die freigegebene Vorschau fehlt");
-  ok(/Website-Vorschau/.test(kachel.innerHTML), "die Kachel ist nicht benannt");
+  /* Die Ansicht ist in der Kopfzeile benannt — in der Bühne steht die Website
+     selbst. Eine eigene Überschrift wäre eine zweite Kopfzeile. */
+  ok(!/<h2>/.test(kachel.innerHTML), "über der Vorschau steht wieder eine eigene Überschrift");
+  /* Eingebettet wird die Website, nicht eine Hülle um sie herum: die Wurzel
+     des Hosts, mit der Einbett-Absprache. */
+  ok(/src="https:\/\/vorschau\.lehner\.ch\/\?embed=flowertech"/.test(kachel.innerHTML),
+    "die Bühne zeigt nicht die Website selbst");
   ok(dom.node("previewOpen"), "es fehlt der Weg zur Vorschau");
   ok(kachel.innerHTML.includes('href="https://vorschau.lehner.ch/entwurf"'),
     "die Vorschau zeigt auf eine andere Adresse");
