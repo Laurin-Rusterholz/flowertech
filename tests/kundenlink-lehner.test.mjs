@@ -52,8 +52,9 @@ const IDS = [
   // Cockpit: Huelle, Umschalter, Sperrzustand und Aenderungsleiste.
   "ck", "ckViews", "ckProject", "ckMobil", "ckDesktop", "ckReload", "ckWish",
   "ckStage", "ckSide", "ckLock",
-  "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_agb", "ckView_fragebogen",
-  "ckWishes", "crArea", "pvStage", "adminStage",
+  "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_vertrag",
+  "ckView_agb", "ckView_fragebogen",
+  "ckWishes", "crArea", "pvStage",
   "visionRoom", "vrLead", "visionRoomMount", "vrCarriers",
 ];
 
@@ -445,21 +446,30 @@ const sichtbar = (dom) => IDS.map((id) => {
     },
   }));
   const admin = String(dom.node("tileAdmin").innerHTML || "");
-  ok(/<h2>Verwaltung<\/h2>/.test(admin), "die Verwaltung ist kein eigener Bereich");
+  ok(/id="kbStatus"/.test(admin) && /Ihre Verwaltung/.test(admin),
+    "die Verwaltung ist kein eigener Arbeitsbereich");
   /* Die live erreichbare Verwaltung bringt eine eigene Kopfzeile und eine
      eigene Bedienung mit. Eingebettet stuenden zwei Navigationen uebereinander
      — genau die Doppelung, die diese Fassung ablöst. Deshalb: eine eigene,
      benannte FlowerTech-Ansicht mit EINEM klaren Weg nach draussen. */
-  ok(!/<iframe/.test(admin), "die Verwaltung wird als zweites Cockpit eingebettet");
+  /* Eingebettet ist hier genau eine Sache: die eigene Website als Vorschau.
+     Das fremde Verwaltungsprodukt mit seiner eigenen Kopfzeile ist es NICHT —
+     das waere die Doppelung, die diese Fassung ablöst. */
+  const rahmen = admin.match(/<iframe[^>]*src="([^"]*)"/g) || [];
+  ok(rahmen.every((r) => r.indexOf('src="https://beispiel-lehner.netlify.app/') >= 0),
+    "in der Verwaltung steckt ein fremdes Cockpit");
   /* Und sie fuehrt auch nicht hinaus: Die Adresse des fremden Produkts ist ein
      technisches Ziel, kein Kundenweg. Gezeigt werden die Bereiche, die spaeter
      gepflegt werden — jeder mit dem direkten Weg zum Aenderungswunsch. */
   ok(!/<a\s/.test(admin) && !/admin\.lehner\.ch/.test(admin),
     "die Verwaltung führt aus dem Kundenlink hinaus");
-  ok(/id="adminAreas"/.test(admin), "die Verwaltung zeigt keine Bereiche");
-  ok(/Änderung wünschen/.test(admin), "aus der Verwaltung führt kein Weg zum Wunsch");
-  ok(/noch nicht mit Ihren eigenen Inhalten/.test(admin),
-    "die Verwaltung behauptet, bereits mit den Inhalten verbunden zu sein");
+  ok(/id="kbNavList"/.test(admin) && /id="kbWork"/.test(admin),
+    "die Verwaltung ist kein Arbeitsbereich");
+  // Die Arbeitsflaeche wird gesondert gefuellt — dort steht der Weg zum Wunsch.
+  ok(/Änderung wünschen/.test(String(dom.node("kbWork").innerHTML || "")),
+    "aus der Verwaltung führt kein Weg zum Wunsch");
+  ok(/Freigabe &amp; Versionen/.test(admin) && /Weitere Module/.test(admin),
+    "die Verwaltung zeigt nicht die ganze Funktionsstruktur");
 }
 
 /* ══ 6d. Die AGB bleiben unveraenderlich ═══════════════════════════════════ */

@@ -50,7 +50,9 @@ const IDS = [
   "ck", "ckTop", "ckViews", "ckProject", "ckMobil", "ckWish", "ckStage", "ckSide", "ckLock",
   "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_vertrag",
   "ckView_agb", "ckView_fragebogen",
-  "ckWishes", "crArea", "crTitle", "pvStage", "adminStage",
+  "ckWishes", "crArea", "crTitle", "pvStage",
+  "kbStatus", "kbNavList", "kbWork", "kbSeite", "kbToggle", "kbWunsch", "kbFreigabe",
+  "kbFrame", "kbStage", "kbMini",
   "visionRoom", "vrLead", "visionRoomMount", "vrCarriers",
 ];
 const ZENTRAL = ["content", "answered", "tilePreview", "tileAdmin", "tileOffer",
@@ -405,49 +407,168 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     "die Offerte führt aus dem Kundenlink hinaus");
 }
 
-/* ══ 3c. Die Verwaltung liegt IM Kundenlink ════════════════════════════════ */
+/* ══ 3c. Die Verwaltung ist ein echtes Kunden-Backend ══════════════════════ */
 {
-  /* Vorher stand hier „öffnet sich in einem eigenen Tab … lässt sich deshalb
-     nicht einbetten" samt Verweis nach draussen. Das war ein zweiter Ort — der
-     eine Kundenlink hörte dort auf. Jetzt zeigt FlowerTech die Verwaltung
-     selbst, im gleichen Bild, mit dem direkten Weg zum Änderungswunsch. */
+  /* Vorher: drei Platzhalter und ein Verweis nach draussen. Jetzt ein Backend
+     im Aufbau der echten Verwaltung — Stand oben, Bereichsleiste links,
+     Arbeitsfläche in der Mitte, Vorschau daneben. Geprüft wird beides: dass
+     die ganze Funktionsstruktur da ist, und dass keine Rechte mitkommen, die
+     der Kundschaft nicht gehören. */
   const { dom } = await seite(daten());
   zeige(dom, "verwaltung");
-  const admin = String(dom.node("tileAdmin").innerHTML || "");
+  const admin = () => String(dom.node("tileAdmin").innerHTML || "");
 
   ok(zentralSichtbar(dom).join() === "tileAdmin",
     "in der Verwaltung steht zentral noch etwas anderes");
-  ok(!/<a\s/.test(admin), "die Verwaltung enthält einen Verweis");
-  ok(!/https?:\/\//.test(admin), "die Verwaltung zeigt eine Adresse");
-  ["Verwaltung öffnen", "in einem eigenen Tab", "nicht in diese Ansicht einbetten",
-    "Anmeldebereich", "admin.lehner.ch", "Login", "anmelden"].forEach((wort) => {
-    ok(!admin.includes(wort), `in der Verwaltung steht „${wort}“`);
-  });
-  ok(/Sie bleiben auf dieser Seite/.test(admin), "die Verwaltung sagt nicht, wo man ist");
 
-  // Die Bereiche kommen aus dem Leistungsumfang des Projekts.
-  ok(/id="adminAreas"/.test(admin), "die Verwaltung zeigt keine Bereiche");
-  ["Startseite", "Menü", "Kontakt"].forEach((name) => {
-    ok(admin.includes(name), `der Bereich „${name}“ fehlt in der Verwaltung`);
+  // ── Der Rahmen: Stand, Leiste, Arbeitsfläche, Vorschau ──────────────────
+  ["kbStatus", "kbNavList", "kbWork", "kbSeite"].forEach((id) => {
+    ok(!!dom.node(id), `dem Backend fehlt ${id}`);
   });
-  // Und sie behauptet nicht, schon mit den Inhalten verbunden zu sein.
-  ok(/noch nicht mit Ihren eigenen Inhalten/.test(admin),
-    "die Verwaltung behauptet, bereits mit den Inhalten verbunden zu sein");
+  ok(/Lehner Gartenbau/.test(admin()), "der Projektstand nennt das Vorhaben nicht");
 
-  /* Aus einem Bereich heraus einen Wunsch anlegen: dieselbe Leiste, Kategorie
-     „Verwaltung", Bereich schon im Feld — und nichts wird dabei gesendet. */
-  const { dom: d2, posted } = await seite(daten());
-  zeige(d2, "verwaltung");
+  // ── Alle Funktionsgruppen aus dem Verwaltungs-Repo ──────────────────────
+  const BEREICHE = [
+    ["stand", "Übersicht"],
+    ["wunsch", "Website &amp; Änderungswünsche"],
+    ["design", "Start &amp; Design"],
+    ["seo", "SEO &amp; Teilen"],
+    ["seiten", "Seiten &amp; Navigation"],
+    ["abschnitte", "Abschnitte / Inhalte"],
+    ["sprachen", "Sprachen"],
+    ["recht", "Rechtliches"],
+    ["zucht", "Über uns / Zucht"],
+    ["kitten", "Kitten &amp; Termine"],
+    ["referenzen", "Referenzen / Mitgliedschaften"],
+    ["galerie", "Galerie"],
+    ["kontakt", "Kontakt"],
+    ["anfragen", "Anfragen"],
+    ["medien", "Medien"],
+    ["freigabe", "Freigabe &amp; Versionen"],
+    ["einstellungen", "Einstellungen / Domain"],
+    ["module", "Weitere Module"],
+  ];
+  /* Die Leiste wird als Teil der Kachel gesetzt — gelesen wird deshalb dort,
+     wo das Markup wirklich zugewiesen wurde. */
+  const nav = admin();
+  BEREICHE.forEach(([id, label]) => {
+    ok(nav.includes('id="kbNav_' + id + '"'), `in der Leiste fehlt „${label}“`);
+    ok(nav.includes(label), `die Leiste beschriftet ${id} nicht mit „${label}“`);
+  });
+  ok((nav.match(/class="kb-nav"/g) || []).length === BEREICHE.length,
+    "die Leiste trägt nicht genau die vereinbarten Bereiche");
+  ["Übersicht", "Website", "Inhalte", "Betrieb"].forEach((gruppe) => {
+    ok(new RegExp('class="kb-gruppe">' + gruppe).test(nav), `die Gruppe „${gruppe}“ fehlt`);
+  });
+
+  /* ── Jeder Bereich hat eigenen Inhalt ────────────────────────────────────
+     Kein Abschnitt darf denselben Satz wiederholen: Die Einleitungen werden
+     gesammelt und müssen alle verschieden sein. */
+  const leads = [];
+  BEREICHE.forEach(([id, label]) => {
+    dom.node("kbNav_" + id).click();
+    const arbeit = String(dom.node("kbWork").innerHTML || "");
+    ok(dom.node("kbNav_" + id).getAttribute("aria-selected") === "true",
+      `„${label}“ wird nach dem Klick nicht als gewählt markiert`);
+    ok(arbeit.includes(label), `die Arbeitsfläche von ${id} ist nicht benannt`);
+    ok(/class="kb-stand"/.test(arbeit), `${id} zeigt keinen Status`);
+    ok(/id="kbWunsch"/.test(arbeit), `${id} hat keinen Weg zum Änderungswunsch`);
+    const lead = (/<p class="kb-lead">([\s\S]*?)<\/p>/.exec(arbeit) || [])[1] || "";
+    ok(lead.length > 60, `${id} erklärt sich nicht`);
+    ok(!leads.includes(lead), `${id} wiederholt die Einleitung eines anderen Bereichs`);
+    leads.push(lead);
+    // Entweder Felder, ein Ablauf, Kennzahlen oder die Vorschau — nie nur Text.
+    ok(/kb-felder|kb-stats|kb-fluss|kb-vorschau-gross/.test(arbeit),
+      `${id} zeigt keinen Arbeitsbereich`);
+  });
+
+  // Nicht beauftragte Funktionen verschwinden nicht — sie stehen als Modul da.
+  dom.node("kbNav_module").click();
+  const module = String(dom.node("kbWork").innerHTML || "");
+  ok(/nicht beauftragt/.test(module), "nicht beauftragte Module sind nicht als solche benannt");
+  ["Online-Verkauf", "Online-Terminbuchung"].forEach((m) => {
+    ok(module.includes(m), `das Modul „${m}“ fehlt`);
+  });
+  ["Shop", "Booking", "DJ", "Sam Sparking", "Show"].forEach((wort) => {
+    ok(!module.includes(wort), `im Modulbereich steht „${wort}“`);
+  });
+
+  // ── Die Website-Vorschau bleibt eingebettet und benutzbar ───────────────
+  dom.node("kbNav_wunsch").click();
+  const wunsch = String(dom.node("kbWork").innerHTML || "");
+  ok(/id="kbFrame"/.test(wunsch), "in „Website & Änderungswünsche“ fehlt die Vorschau");
+  ok(wunsch.includes('src="https://beispiel-lehner.netlify.app/?embed=flowertech"'),
+    "die Vorschau im Backend zeigt nicht die vereinbarte Adresse");
+  ok(/sandbox="allow-scripts allow-same-origin allow-forms allow-popups"/.test(wunsch),
+    "die Vorschau im Backend ist nicht benutzbar");
+  // Und der Umschalter für die Vorschau daneben.
+  ok(dom.node("kbSeite").hidden === true, "in der grossen Vorschau steht sie doppelt");
+  dom.node("kbNav_seo").click();
+  ok(dom.node("kbSeite").hidden === false, "die Vorschau daneben fehlt");
+  dom.node("kbToggle").click();
+  ok(dom.node("kbSeite").hidden === true, "die Vorschau lässt sich nicht wegschalten");
+  dom.node("kbToggle").click();
+  ok(dom.node("kbSeite").hidden === false, "die Vorschau kommt nicht zurück");
+
+  // ── Kundenrechte: nichts, was der Kundschaft nicht gehört ───────────────
+  const alles = admin();
+  /* Die eigene Website-Adresse steht zu Recht im Rahmen — sie ist der Sinn der
+     Vorschau. Geprüft wird der Text daneben. */
+  const text = alles.replace(/https?:\/\/[^"'\s]+/g, "");
+  ["admin.lehner.ch", "firebase", "Firebase", "netlify", "Netlify", "API-", "api-key",
+    "apiKey", "Passwort", "passwort", "Login", "Anmeldung", "anmelden", "Build-Hook",
+    "Import", "Export", "JSON", "Datenbank", "Token"].forEach((wort) => {
+    ok(!text.includes(wort), `im Kunden-Backend steht „${wort}“`);
+  });
+  ok(!/<a\s/.test(alles), "das Kunden-Backend führt aus dem Kundenlink hinaus");
+  // Genau eine Adresse darf vorkommen: die Vorschau der eigenen Website.
+  const adressen = (alles.match(/https?:\/\/[^"'\s]+/g) || [])
+    .filter((u) => u.indexOf("https://beispiel-lehner.netlify.app/") !== 0);
+  ok(!adressen.length, `im Kunden-Backend stehen fremde Adressen: ${adressen.join(", ")}`);
+  // Nichts veröffentlicht, nichts speichert, nichts überträgt.
+  ["Publizieren", "publizieren", "Veröffentlichen", "veröffentlichen", "Speichern",
+    "speichern", "Hochladen", "hochladen", "Löschen", "löschen"].forEach((wort) => {
+    ok(!/<button[^>]*>[^<]*(Publizieren|Veröffentlichen|Speichern|Hochladen|Löschen)/.test(alles),
+      `es gibt einen Knopf „${wort}“`);
+  });
+
+  // ── Freigabe: bereitet höchstens eine Anfrage vor ───────────────────────
+  const { dom: d3, posted } = await seite(daten());
+  zeige(d3, "verwaltung");
   const vorher = posted.length;
+  d3.node("kbNav_freigabe").click();
+  const frei = String(d3.node("kbWork").innerHTML || "");
+  ok(/Fassung/.test(frei), "die Freigabe zeigt keine Fassungen");
+  ok(/erst nach Ihrer Freigabe/.test(frei), "die Freigabe erklärt den Ablauf nicht");
+  ok(/ausschliesslich durch FlowerTech/.test(frei),
+    "es steht nicht da, wer veröffentlicht");
+  d3.node("kbFreigabe").click();
+  ok(posted.length === vorher, "die Freigabe hat etwas gesendet");
+  ok(d3.node("crArea").value === "Verwaltung", "die Freigabeanfrage landet im falschen Bereich");
+  ok(/^Freigabe: /.test(String(d3.node("crTitle").value || "")),
+    `die Freigabeanfrage ist nicht vorbereitet: ${d3.node("crTitle").value}`);
+
+  // ── Anfragen zeigen keine fremden Nachrichten ───────────────────────────
+  d3.node("kbNav_anfragen").click();
+  ok(/keine Nachrichten angezeigt/.test(String(d3.node("kbWork").innerHTML || "")),
+    "die Anfragen sagen nicht, dass hier keine Nachrichten stehen");
+
+  /* ── Aus einem Bereich heraus einen Wunsch anlegen ───────────────────────
+     Dieselbe Leiste, Kategorie „Verwaltung", der betroffene Bereich schon im
+     Feld — und nichts wird dabei gesendet. */
+  const { dom: d2, posted: p2 } = await seite(daten());
+  zeige(d2, "verwaltung");
+  const vorher2 = p2.length;
   let fokus = false;
   d2.node("crTitle").focus = () => { fokus = true; };
-  d2.node("admWish0").click();
+  d2.node("kbNav_galerie").click();
+  d2.node("kbWunsch").click();
   ok(d2.node("ckSide").hidden === false, "der Wunsch aus der Verwaltung öffnet keine Leiste");
   ok(d2.node("crArea").value === "Verwaltung", "der Wunsch landet nicht im Bereich Verwaltung");
-  ok(/^Startseite: /.test(String(d2.node("crTitle").value || "")),
+  ok(/^Galerie: /.test(String(d2.node("crTitle").value || "")),
     `der Bereich steht nicht im Feld: ${d2.node("crTitle").value}`);
   ok(fokus, "der Fokus landet nicht im Feld");
-  ok(posted.length === vorher, "aus der Verwaltung heraus wurde etwas gesendet");
+  ok(p2.length === vorher2, "aus der Verwaltung heraus wurde etwas gesendet");
 }
 
 /* ══ 3d. Der Vertrag — ein Entwurf, der sich als solcher zeigt ═════════════ */
