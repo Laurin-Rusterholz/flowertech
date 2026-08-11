@@ -101,6 +101,77 @@
   .pv-stage[data-view="mobil"] .pv-frame{max-width:390px}
   .pv-note{font-size:13px;color:var(--muted);margin:10px 0 0}
   .pv-fallback{margin:12px 0 0}
+
+  /* ── Vorschau-Cockpit ───────────────────────────────────────────────────
+     Eine ruhige, breite Ansicht statt gestapelter Abschnitte: oben eine
+     schmale dunkle Kopfzeile mit Umschaltern, in der Mitte gross die
+     Vorschau, rechts die Aenderungsleiste. Es ist immer GENAU EINE Ansicht
+     zentral — die anderen ersetzen sie, statt darunter aufzugehen. */
+  body.ck-on .wrap{max-width:none;padding:0}
+  body.ck-on header{display:none}
+  body.ck-on footer{display:none}
+  .ck{display:flex;flex-direction:column;height:100vh;height:100dvh;background:var(--bg)}
+  .ck-top{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:0 14px;height:52px;
+    background:#0d0d13;border-bottom:1px solid var(--line);color:#f4f2f8}
+  @media (prefers-color-scheme: light){ .ck-top{background:#16141c} }
+  .ck-brand{display:flex;align-items:center;gap:9px;min-width:0;flex:0 0 auto}
+  .ck-brand .mk{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font-size:15px;
+    background:linear-gradient(135deg,rgba(200,255,46,.2),rgba(160,107,255,.24));
+    border:1px solid rgba(160,107,255,.4)}
+  .ck-brand b{font-size:13.5px;letter-spacing:-.01em;white-space:nowrap}
+  .ck-brand i{display:block;font-style:normal;font-size:11.5px;color:#9a94a8;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+  .ck-views{display:flex;gap:4px;overflow-x:auto;flex:1 1 auto;min-width:0;scrollbar-width:none}
+  .ck-views::-webkit-scrollbar{display:none}
+  .ck-views button{flex:0 0 auto;background:transparent;border:1px solid transparent;color:#9a94a8;
+    font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:9px;cursor:pointer}
+  .ck-views button:hover{color:#f4f2f8;background:rgba(255,255,255,.06)}
+  .ck-views button[aria-selected="true"]{color:#0d0d13;background:linear-gradient(135deg,var(--lime),var(--cyan))}
+  .ck-views button[data-state="locked"]{opacity:.5}
+  .ck-right{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+  .ck-right button{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:9px;cursor:pointer;
+    background:transparent;border:1px solid rgba(255,255,255,.18);color:#f4f2f8}
+  .ck-right button[aria-pressed="true"]{background:rgba(160,107,255,.28);border-color:transparent}
+  .ck-right button.primary{background:linear-gradient(135deg,var(--lime),var(--cyan));color:#0d0d13;border:0}
+  .ck-body{flex:1 1 auto;display:flex;min-height:0;min-width:0}
+  .ck-stage{flex:1 1 auto;min-width:0;min-height:0;overflow:auto;padding:16px}
+  /* Nur die aktive Ansicht steht zentral. */
+  .ck-stage > [hidden]{display:none}
+  .ck-side{flex:0 0 330px;min-width:0;border-left:1px solid var(--line);background:var(--card);
+    overflow:auto;padding:16px}
+  .ck-side[hidden]{display:none}
+  .ck-side h3{font-size:14px;margin:0 0 4px}
+  .ck-side .sub{margin-bottom:12px}
+  .ck-side label{margin-bottom:12px}
+  .ck-side button[type="submit"]{width:100%;padding:11px 16px;font-size:14px}
+  .ck-wishes{margin:0 0 14px;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+  .ck-wishes li{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.45}
+  .ck-wishes .k{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  /* Die Vorschau fuellt die Mitte, mit Browserrahmen. */
+  .ck-stage .pv-stage{height:100%;min-height:420px;align-items:stretch}
+  .ck-stage .pv-frame{height:100%;min-height:400px}
+  .ck-shell{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card);
+    display:flex;flex-direction:column;height:100%}
+  .ck-shell-bar{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:7px 11px;
+    border-bottom:1px solid var(--line);background:var(--bg)}
+  .ck-dots{display:flex;gap:5px}
+  .ck-dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
+  .ck-addr{flex:1 1 auto;min-width:0;font-size:11.5px;color:var(--muted);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;background:var(--card);border:1px solid var(--line);
+    border-radius:7px;padding:4px 9px}
+  /* Ansicht nicht verfuegbar: inline, mittig, erklaert. */
+  .ck-lock{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;height:100%;min-height:320px;gap:9px;color:var(--muted);padding:30px 20px}
+  .ck-lock .ico{font-size:30px}
+  .ck-lock b{color:var(--text);font-size:16px}
+  .ck-lock p{margin:0;max-width:440px;font-size:14px;line-height:1.6}
+  @media (max-width:900px){
+    .ck-body{flex-direction:column}
+    .ck-side{flex:0 0 auto;border-left:0;border-top:1px solid var(--line);max-height:52vh}
+    .ck-brand i{display:none}
+    .ck-stage{padding:10px}
+  }
   /* ── Ihr Bereich ────────────────────────────────────────────────────────
      Dieselbe Adresse zeigt mit der Zeit mehr: die versendete Offerte, später
      die freigegebene Vorschau und die Verwaltung. Was nicht freigegeben ist,
@@ -165,7 +236,24 @@
     <p class="sub" id="errorText"></p>
   </div>
 
-  <main id="content" hidden>
+  <!-- ── Vorschau-Cockpit ──────────────────────────────────────────────
+       Eine ruhige, breite Ansicht: schmale Kopfzeile mit Umschaltern, in der
+       Mitte GENAU EINE Ansicht, rechts die Aenderungsleiste. Die Ansichten
+       ersetzen einander — sie stapeln sich nicht mehr untereinander. -->
+  <div class="ck" id="ck" hidden>
+    <header class="ck-top">
+      <div class="ck-brand"><span class="mk" aria-hidden="true">🌸</span>
+        <span><b>FlowerTech</b><i id="ckProject"></i></span></div>
+      <nav class="ck-views" id="ckViews" role="tablist" aria-label="Ansichten"></nav>
+      <div class="ck-right">
+        <button type="button" id="ckMobil" aria-pressed="false" title="Mobil-Ansicht">Mobil</button>
+        <button type="button" id="ckWish" class="primary">Änderungswunsch</button>
+      </div>
+    </header>
+    <div class="ck-body">
+      <div class="ck-stage" id="ckStage">
+
+  <section id="content" hidden>
     <section class="card">
       <p class="sub" id="intro"></p>
     </section>
@@ -192,7 +280,7 @@
       <p class="sub" style="margin-top:12px">Ihre Angaben gehen direkt zu FlowerTech. Unverbindlich —
         Sie erhalten eine Rückmeldung, keine Rechnung.</p>
     </form>
-  </main>
+  </section>
 
   <!-- Der Fragebogen ist beantwortet oder abgeschlossen, aber es gibt schon
        etwas zu sehen: dann kein Fehlerkasten, sondern eine ruhige Notiz über
@@ -205,13 +293,6 @@
   <!-- Ihr Bereich: EINE Adresse, fuenf Bereiche. Sie stehen immer alle da —
        was noch nicht bereit ist, zeigt einen erklaerten Wartezustand statt zu
        fehlen. Ein zweiter Link entsteht nie. -->
-  <nav class="pnav" id="pnav" role="tablist" aria-label="Bereiche" hidden></nav>
-  <div class="phead" id="phead" hidden>
-    <span class="pstatus" id="pstatus"></span>
-    <span class="pbar" aria-hidden="true"><i id="pbarFill" style="width:0%"></i></span>
-    <span class="pcount" id="pcount"></span>
-  </div>
-
   <section id="area" hidden aria-label="Ihr Bereich">
     <article class="card tile" id="tileTest" hidden></article>
     <article class="card tile" id="tileOffer" hidden></article>
@@ -219,7 +300,15 @@
     <article class="card tile" id="tileContract" hidden></article>
     <article class="card tile" id="tileAdmin" hidden></article>
     <article class="card tile" id="tileTerms" hidden></article>
+    <!-- Nicht verfuegbare Ansicht: inline und erklaert, nie eine leere Karte. -->
+    <div class="ck-lock" id="ckLock" hidden></div>
   </section>
+
+      </div>
+      <!-- Aenderungsleiste: fest sichtbar neben der Vorschau. -->
+      <aside class="ck-side" id="ckSide" hidden aria-label="Änderungswünsche"></aside>
+    </div>
+  </div>
 
   <footer id="footer">FlowerTech</footer>
 </div>
@@ -291,6 +380,7 @@
   function fail(title, text) {
     el("loading").hidden = true;
     el("content").hidden = true;
+    ckFragebogen(false, false);
     el("error").hidden = false;
     el("errorTitle").textContent = title;
     el("errorText").textContent = text;
@@ -347,7 +437,10 @@
   function ruhend(name, titel, text) {
     el("loading").hidden = true;
     el("content").hidden = true;
-    el("answered").hidden = false;
+    // Die Notiz gehoert in die Fragebogen-Ansicht. Steht gerade die Website
+    // vorne, wird sie dort NICHT zusaetzlich untergeschoben — sonst waere die
+    // gestapelte Wand wieder da, die das Cockpit gerade abloest.
+    if (!ckFragebogen(false, true)) el("answered").hidden = false;
     el("answeredTitle").textContent = titel;
     el("answeredText").textContent = text;
     el("subtitle").textContent = name;
@@ -367,32 +460,41 @@
      --------------------------------------------------------------------- */
   var OFFER_STATES = ["sent", "accepted", "declined", "expired"];
 
-  /* Die fuenf Bereiche dieses einen Links. Sie stehen IMMER alle da: Was noch
-     nicht bereit ist, bekommt einen erklaerten Wartezustand statt zu fehlen.
-     Vorher war eine nicht freigegebene Stufe schlicht unsichtbar — die
-     Kundschaft konnte nicht wissen, dass es sie ueberhaupt gibt. */
-  var BEREICHE = [
-    { key: "intake", label: "Fragebogen", ziel: "content",
-      warte: "" },
-    { key: "offer", label: "Offerte", ziel: "tileOffer",
-      warte: "Ihre Kosten werden gerade vorbereitet. Sobald die Offerte steht, "
-        + "erscheint sie hier — Sie müssen nichts weiter tun." },
-    { key: "preview", label: "Website-Vorschau", ziel: "tilePreview",
+  /* ── Vorschau-Cockpit ───────────────────────────────────────────────────
+     Genau EINE Ansicht steht zentral; die anderen ersetzen sie. Kein
+     Kachelband, keine gestapelten Artikel, keine Formularwand ueber der
+     Vorschau. Startansicht ist „Website", sobald eine Vorschau freigegeben
+     ist — vorher der Fragebogen.
+
+     `nodes` sind die Knoten, die zu einer Ansicht gehoeren. Test-Uebersicht
+     und Vertrag sind keine eigenen Umschalter: Die Kostenuebersicht gehoert
+     zur Offerte, der Vertrag zu „AGB & Kunde". */
+  var ANSICHTEN = [
+    { key: "website", label: "Website", nodes: ["tilePreview"],
       warte: "Ihre Website entsteht gerade. Sobald ein Stand zum Anschauen bereit ist, "
-        + "sehen Sie ihn hier direkt auf dieser Seite — und können Änderungswünsche melden." },
-    { key: "admin", label: "Verwaltung", ziel: "tileAdmin",
+        + "sehen Sie ihn hier — direkt auf dieser Seite." },
+    { key: "verwaltung", label: "Verwaltung", nodes: ["tileAdmin"],
       warte: "Die Verwaltung kommt gemeinsam mit der Website-Vorschau. Dort pflegen Sie "
         + "später Ihre eigenen Inhalte." },
-    { key: "terms", label: "AGB & Kunde", ziel: "tileTerms",
+    { key: "offerte", label: "Offerte", nodes: ["tileOffer", "tileTest"],
+      warte: "Ihre Kosten werden gerade vorbereitet. Sobald die Offerte steht, erscheint "
+        + "sie hier — Sie müssen nichts weiter tun." },
+    { key: "agb", label: "AGB & Kunde", nodes: ["tileTerms", "tileContract"],
       warte: "Die allgemeinen Geschäftsbedingungen stehen auf jeder gültigen Einladung." },
+    { key: "fragebogen", label: "Fragebogen", nodes: ["content", "answered"],
+      warte: "" },
   ];
+  var ALLE_KNOTEN = ["content", "answered", "tilePreview", "tileAdmin",
+    "tileOffer", "tileTest", "tileTerms", "tileContract"];
+  var ckAnsicht = "";
+  var ckBereit = {};
+  var ckInhalt = {};
 
   function renderArea(data) {
     /* Ein aelterer, schon veroeffentlichter Datensatz kennt `tiles` gar nicht.
-       Fuer den bleibt alles wie bisher: kein Bereich, keine Wartezustaende —
-       sonst behauptete eine alte Veroeffentlichung ploetzlich Stufen, die es
-       zu ihrer Zeit nicht gab. Erst ein Datensatz MIT `tiles` bekommt das
-       Portal mit seinen fuenf Bereichen. */
+       Fuer den bleibt alles wie bisher: kein Cockpit, kein Umschalten — sonst
+       behauptete eine alte Veroeffentlichung Ansichten, die es zu ihrer Zeit
+       nicht gab. */
     var hatBereiche = !!(data && data.tiles && typeof data.tiles === "object");
     var tiles = (data && data.tiles) || {};
     var test = renderTest(tiles.testService);
@@ -401,84 +503,138 @@
     // Die Verwaltung erscheint nie allein. Sie gehört zur Vorschau — ohne
     // sichtbare Vorschau bleibt sie weg, auch wenn eine Adresse mitkäme.
     var admin = preview ? renderAdmin(tiles.admin) : hide("tileAdmin");
-    // Die AGB stehen zuunterst und sind an keine Stufe gebunden: Sie sind auf
-    // jedem gültigen Kundenlink dieselbe zentrale Fassung.
     var contract = renderContract(tiles.contract);
     var terms = renderTerms(tiles.terms);
 
     var etwas = test || offer || preview || contract || admin || terms;
     var area = el("area");
     if (!hatBereiche) {
-      // Alter Datensatz: unveraendertes Verhalten.
       if (area) area.hidden = !etwas;
       return etwas;
     }
 
-    var bereit = { intake: true, offer: !!offer, preview: !!preview, admin: !!admin, terms: !!terms };
-    lockedStates(bereit);
-    renderNav(bereit);
-    // Ab hier steht der Bereich immer — die Wartezustaende gehoeren dazu.
+    ckBereit = {
+      website: !!preview, verwaltung: !!admin,
+      offerte: !!(offer || test), agb: !!(terms || contract), fragebogen: true,
+    };
     if (area) area.hidden = false;
+    ckStart(data, !!preview, etwas);
     return etwas;
   }
 
-  /* Ein nicht bereiter Bereich ist nicht leer, sondern erklaert. */
-  function lockedStates(bereit) {
-    BEREICHE.forEach(function (b) {
-      if (b.key === "intake" || bereit[b.key]) return;
-      var node = el(b.ziel);
-      if (!node) return;
-      node.className = "card tile locked";
-      node.innerHTML = "<h2>" + esc(b.label) + "</h2>" +
-        '<p class="lockmsg"><span class="ico" aria-hidden="true">⏳</span>' +
-        "<span><b>Wird vorbereitet.</b> " + esc(b.warte) + "</span></p>";
-      node.hidden = false;
-    });
-    // Bereite Bereiche tragen wieder ihre normale Gestalt.
-    BEREICHE.forEach(function (b) {
-      if (b.key === "intake" || !bereit[b.key]) return;
-      var node = el(b.ziel);
-      if (node) node.className = "card tile";
-    });
-  }
+  /* Das Cockpit aufbauen und die Startansicht waehlen. */
+  function ckStart(data, hatVorschau, etwas) {
+    var ck = el("ck");
+    if (!ck) return;
+    /* Welche der beiden Fragebogen-Ansichten gilt, sagt der Datensatz — nicht
+       der DOM. Beide sind statische Behaelter; ihr Inhalt steckt in
+       Unterknoten, und die Seite entscheidet zwischen Fehlerkasten, Notiz und
+       Bogen erst NACH dem Bereichsaufbau. Erledigt ohne Inhalt endet im
+       Fehlerkasten — dann gehoert hier weder Bogen noch Notiz hinein. */
+    var erledigt = data && (data.status === "answered" || data.status === "closed");
+    ckInhalt = erledigt
+      ? { content: false, answered: !!etwas }
+      : { content: true, answered: false };
+    ck.hidden = false;
+    if (document.body && document.body.classList) document.body.classList.add("ck-on");
 
-  /* Die Bereichsleiste samt Fortschritt. Ein Klick springt zum Bereich —
-     derselbe Link, dieselbe Seite, kein zweiter Einstieg. */
-  function renderNav(bereit) {
-    var nav = el("pnav");
-    if (!nav) return;
-    nav.innerHTML = BEREICHE.map(function (b) {
-      var da = b.key === "intake" ? true : !!bereit[b.key];
-      return '<button type="button" role="tab" data-ziel="' + esc(b.ziel) + '" ' +
-        'data-bereich="' + esc(b.key) + '" data-state="' + (da ? "ready" : "locked") + '" ' +
-        'aria-selected="false"><span class="dot" aria-hidden="true"></span>' + esc(b.label) + "</button>";
-    }).join("");
-    nav.hidden = false;
-    Array.prototype.forEach.call(nav.querySelectorAll("button"), function (btn) {
-      btn.addEventListener("click", function () {
-        Array.prototype.forEach.call(nav.querySelectorAll("button"), function (b) {
-          b.setAttribute("aria-selected", String(b === btn));
-        });
-        var ziel = el(btn.getAttribute("data-ziel"));
-        if (ziel && ziel.scrollIntoView) ziel.scrollIntoView({ behavior: "smooth", block: "start" });
+    var name = el("ckProject");
+    if (name) name.textContent = String((data && data.title) || "");
+
+    var views = el("ckViews");
+    if (views) {
+      // Jeder Umschalter traegt eine eigene id: So haengt die Verdrahtung nicht
+      // an querySelectorAll — und der Wechsel bleibt ohne Browser pruefbar.
+      views.innerHTML = ANSICHTEN.map(function (a) {
+        return '<button type="button" role="tab" id="ckView_' + esc(a.key) + '" ' +
+          'data-ansicht="' + esc(a.key) + '" ' +
+          'data-state="' + (ckBereit[a.key] ? "ready" : "locked") + '" aria-selected="false">' +
+          esc(a.label) + "</button>";
+      }).join("");
+      ANSICHTEN.forEach(function (a) {
+        var btn = el("ckView_" + a.key);
+        if (btn) btn.addEventListener("click", function () { ckZeige(a.key); });
+      });
+    }
+
+    var wish = el("ckWish");
+    if (wish) wish.addEventListener("click", function () {
+      ckZeige("website");
+      var seite = el("ckSide");
+      if (seite) seite.hidden = false;
+      var feld = el("crTitle");
+      if (feld && feld.focus) feld.focus();
+    });
+
+    var mobil = el("ckMobil");
+    if (mobil) mobil.addEventListener("click", function () {
+      var an = mobil.getAttribute("aria-pressed") !== "true";
+      mobil.setAttribute("aria-pressed", String(an));
+      ["pvStage", "adminStage"].forEach(function (id) {
+        var st = el(id);
+        if (st) st.setAttribute("data-view", an ? "mobil" : "desktop");
       });
     });
 
-    // Fortschritt: wie viele der fuenf Bereiche wirklich offen sind.
-    var offen = BEREICHE.filter(function (b) { return b.key === "intake" || bereit[b.key]; }).length;
-    var kopf = el("phead");
-    var fill = el("pbarFill");
-    var count = el("pcount");
-    var status = el("pstatus");
-    if (fill) fill.style.width = Math.round((offen / BEREICHE.length) * 100) + "%";
-    if (count) count.textContent = offen + " von " + BEREICHE.length + " Bereichen offen";
-    if (status) {
-      status.textContent = bereit.preview
-        ? "Ihre Website steht zum Anschauen bereit."
-        : bereit.offer ? "Ihre Offerte liegt vor."
-          : "Wir haben Ihre Angaben — der Rest folgt hier auf derselben Seite.";
+    // Sobald eine Vorschau freigegeben ist, ist „Website" die Startansicht.
+    ckZeige(hatVorschau ? "website" : "fragebogen");
+  }
+
+  /* Eine Ansicht zeigen — die anderen weg. */
+  function ckZeige(key) {
+    var treffer = null;
+    ANSICHTEN.forEach(function (a) { if (a.key === key) treffer = a; });
+    if (!treffer) return;
+    ckAnsicht = key;
+
+    ALLE_KNOTEN.forEach(function (id) {
+      var node = el(id);
+      if (node && treffer.nodes.indexOf(id) < 0) node.hidden = true;
+    });
+    var etwasSichtbar = false;
+    treffer.nodes.forEach(function (id) {
+      var node = el(id);
+      if (!node) return;
+      // Ein Knoten ohne Inhalt bleibt weg — dafuer greift der Sperrzustand.
+      // Die beiden Fragebogen-Behaelter tragen ihren Inhalt in Unterknoten;
+      // fuer sie zaehlt der beim Aufbau festgehaltene Stand.
+      var da = Object.prototype.hasOwnProperty.call(ckInhalt, id)
+        ? !!ckInhalt[id] : !!String(node.innerHTML || "").trim();
+      if (da) { node.hidden = false; etwasSichtbar = true; }
+    });
+
+    // Nicht verfuegbar: inline erklaert, mittig, statt leerer Karte.
+    var lock = el("ckLock");
+    if (lock) {
+      if (etwasSichtbar) { lock.hidden = true; lock.innerHTML = ""; }
+      else {
+        lock.innerHTML = '<div class="ico" aria-hidden="true">⏳</div>' +
+          "<b>" + esc(treffer.label) + " — wird vorbereitet</b>" +
+          "<p>" + esc(treffer.warte) + "</p>";
+        lock.hidden = false;
+      }
     }
-    if (kopf) kopf.hidden = false;
+
+    ANSICHTEN.forEach(function (a) {
+      var btn = el("ckView_" + a.key);
+      if (btn) btn.setAttribute("aria-selected", String(a.key === key));
+    });
+    // Die Aenderungsleiste gehoert zur Website-Ansicht.
+    var seite = el("ckSide");
+    if (seite) seite.hidden = !(key === "website" && ckBereit.website);
+  }
+
+  /* Bogen, Notiz und Fehlerkasten entscheiden sich ERST nach dem Bereichsaufbau
+     — sie duerfen die gewaehlte Ansicht deshalb nicht ueberstimmen. Statt
+     `hidden` selbst zu setzen, melden sie hier, was es zu zeigen gaebe; wann es
+     drankommt, entscheidet das Cockpit. Ohne Cockpit (alter Datensatz) gibt die
+     Funktion `false` zurueck, und die Seite schaltet wie bisher selbst. */
+  function ckFragebogen(hatBogen, hatNotiz) {
+    ckInhalt = { content: !!hatBogen, answered: !!hatNotiz };
+    var ck = el("ck");
+    if (!ck || ck.hidden || !ckAnsicht) return false;
+    ckZeige(ckAnsicht);
+    return true;
   }
 
   function hide(id) {
@@ -571,12 +727,16 @@
         '<a class="btnlink ghost" id="previewOpen" href="' + esc(url) +
           '" target="_blank" rel="noopener noreferrer">In neuem Tab öffnen</a>' +
       "</div>" +
+      '<div class="ck-shell"><div class="ck-shell-bar">' +
+        '<span class="ck-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+        '<span class="ck-addr">' + esc(url) + "</span>" +
+      "</div>" +
       '<div class="pv-stage" id="pvStage" data-view="desktop">' +
         '<iframe class="pv-frame" id="pvFrame" title="Vorschau Ihrer Website" ' +
           'loading="lazy" referrerpolicy="no-referrer" ' +
           'sandbox="allow-scripts allow-same-origin" ' +
           'src="' + esc(url) + '"></iframe>' +
-      "</div>" +
+      "</div></div>" +
       // Die Adresse bleibt ausgeschrieben lesbar — zum Kopieren und fuer ein
       // anderes Geraet.
       '<p class="pv-note">Angezeigt wird: <span id="previewUrlText">' + esc(url) + "</span></p>" +
@@ -589,31 +749,9 @@
         '<div class="acts"><a class="btnlink" href="' + esc(url) +
           '" target="_blank" rel="noopener noreferrer">Vorschau in neuem Tab öffnen</a></div>' +
       "</div>" +
-      (feedback
-        ? '<p class="meta" id="changeIntro">Etwas soll anders sein? Schreiben Sie es hier ' +
-            "direkt auf — der Wunsch landet bei uns an Ihrem Vorhaben.</p>" +
-          '<form id="changeForm" novalidate style="margin-top:18px">' +
-            '<label for="crTitle"><span class="lbl">Was soll geändert werden? ' +
-              '<span class="req">· Pflichtfeld</span></span>' +
-              '<input id="crTitle" maxlength="160" required aria-required="true"></label>' +
-            '<label for="crDetail"><span class="lbl">Details ' +
-              '<span class="sub" style="font-weight:400">· freiwillig</span></span>' +
-              '<textarea id="crDetail" maxlength="1500"></textarea></label>' +
-            '<label for="crBy"><span class="lbl">Ihr Name ' +
-              '<span class="sub" style="font-weight:400">· freiwillig</span></span>' +
-              '<input id="crBy" maxlength="120"></label>' +
-            '<label class="hp" aria-hidden="true">Bitte leer lassen' +
-              '<input id="crHp" tabindex="-1" autocomplete="off"></label>' +
-            '<button type="submit" id="crSubmit">Änderungswunsch senden</button>' +
-            '<div class="status" id="crStatus" role="status" aria-live="polite"></div>' +
-          "</form>"
-        // Ohne geöffnete Rückmeldung bleibt der Einstieg trotzdem benannt: Es
-        // soll nie eine Vorschau ohne Weg zurück geben.
-        : '<p class="meta" id="changeClosed">Änderungswünsche nehmen wir gerne auf — ' +
-          "antworten Sie einfach auf unsere letzte Nachricht, dann tragen wir sie " +
-          "an Ihrem Vorhaben nach.</p>");
+      "";
+    ckSeite(feedback);
     el("tilePreview").hidden = false;
-    if (feedback) el("changeForm").addEventListener("submit", sendChange);
     wirePreviewFrame(url);
     return true;
   }
@@ -768,6 +906,60 @@
     return true;
   }
 
+  /* Die Aenderungsleiste. Sie steht fest neben der Vorschau — nicht darunter
+     und nicht auf einer eigenen Seite. Die Kategorie geht als `area` mit; das
+     Feld kennt der Empfaenger seit jeher, der Datenvertrag bleibt unberuehrt. */
+  var ckWuensche = [];
+
+  function ckSeite(feedback) {
+    var seite = el("ckSide");
+    if (!seite) return;
+    if (!feedback) {
+      seite.innerHTML = "<h3>Änderungswünsche</h3>" +
+        '<p class="sub">Wir nehmen sie gerne auf — antworten Sie einfach auf unsere ' +
+        "letzte Nachricht, dann tragen wir sie an Ihrem Vorhaben nach.</p>";
+      return;
+    }
+    seite.innerHTML = "<h3>Änderungswünsche</h3>" +
+      '<p class="sub" id="changeIntro">Etwas soll anders sein? Schreiben Sie es hier auf — ' +
+        "der Wunsch landet bei uns an Ihrem Vorhaben.</p>" +
+      '<ul class="ck-wishes" id="ckWishes"></ul>' +
+      '<form id="changeForm" novalidate>' +
+        '<label for="crArea"><span class="lbl">Bereich</span>' +
+          '<select id="crArea"><option value="Website">Website</option>' +
+          '<option value="Verwaltung">Verwaltung</option></select></label>' +
+        '<label for="crTitle"><span class="lbl">Was soll geändert werden? ' +
+          '<span class="req">· Pflichtfeld</span></span>' +
+          '<input id="crTitle" maxlength="160" required aria-required="true"></label>' +
+        '<label for="crDetail"><span class="lbl">Details ' +
+          '<span class="sub" style="font-weight:400">· freiwillig</span></span>' +
+          '<textarea id="crDetail" maxlength="1500"></textarea></label>' +
+        '<label for="crBy"><span class="lbl">Ihr Name ' +
+          '<span class="sub" style="font-weight:400">· freiwillig</span></span>' +
+          '<input id="crBy" maxlength="120"></label>' +
+        '<label class="hp" aria-hidden="true">Bitte leer lassen' +
+          '<input id="crHp" tabindex="-1" autocomplete="off"></label>' +
+        '<button type="submit" id="crSubmit">Änderungswunsch senden</button>' +
+        '<div class="status" id="crStatus" role="status" aria-live="polite"></div>' +
+      "</form>";
+    var form = el("changeForm");
+    if (form) form.addEventListener("submit", sendChange);
+    ckListe();
+  }
+
+  /* Bereits gesendete Wuensche dieses Besuchs. Der veroeffentlichte Datensatz
+     traegt keine Wunschliste — es wird deshalb nichts behauptet, was nicht da
+     ist: gezeigt wird, was hier gerade abgeschickt wurde. */
+  function ckListe() {
+    var liste = el("ckWishes");
+    if (!liste) return;
+    if (!ckWuensche.length) { liste.innerHTML = ""; liste.hidden = true; return; }
+    liste.hidden = false;
+    liste.innerHTML = ckWuensche.map(function (w) {
+      return "<li><span class=\"k\">" + esc(w.area) + " · gesendet</span>" + esc(w.title) + "</li>";
+    }).join("");
+  }
+
   /* Dieselbe ehrliche Blockade-Erkennung wie bei der Vorschau. */
   function wireEmbed(frameId, fallbackId, stageId) {
     var frame = el(frameId);
@@ -800,11 +992,17 @@
     status.textContent = "Wird gesendet …";
     post({
       token: token, kind: "change",
-      payload: { title: titel, detail: detail, requestedBy: el("crBy").value },
+      payload: {
+        title: titel, detail: detail, requestedBy: el("crBy").value,
+        // Der Empfaenger kennt `area` seit jeher — kein neuer Datenvertrag.
+        area: (el("crArea") || {}).value || "Website",
+      },
       website: el("crHp").value,
       idempotencyKey: idemKey([token, "change", titel, detail]),
     })
       .then(function (data) {
+        ckWuensche.unshift({ title: titel, area: (el("crArea") || {}).value || "Website" });
+        ckListe();
         el("crTitle").value = "";
         el("crDetail").value = "";
         status.className = "status show ok";
@@ -934,7 +1132,7 @@
   function render(data) {
     questions = data.questions;
     el("loading").hidden = true;
-    el("content").hidden = false;
+    if (!ckFragebogen(true, false)) el("content").hidden = false;
     el("title").textContent = data.title || "Ihre Angaben";
     document.title = (data.title || "Ihre Angaben") + " — FlowerTech";
     el("subtitle").textContent = (data.company && data.company.name) || "FlowerTech";

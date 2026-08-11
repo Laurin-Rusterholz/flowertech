@@ -38,10 +38,12 @@ const TOKEN = "e".repeat(30);
 const IDS = [
   "loading", "error", "errorTitle", "errorText", "content", "title", "subtitle", "intro",
   "form", "fields", "hp", "submit", "need", "status", "footer",
-  "answered", "answeredTitle", "answeredText", "area", "tileOffer", "tilePreview", "tileAdmin",
+  "answered", "answeredTitle", "answeredText", "area", "ck", "ckSide", "ckLock", "tileOffer", "tilePreview", "tileAdmin",
   "tileTerms", "tileTest", "tileContract",
-  // Die Bereichsleiste und der Fortschritt gehoeren seit dem Portal-Umbau dazu.
-  "pnav", "phead", "pstatus", "pbarFill", "pcount",
+  // Cockpit: Huelle, Umschalter, Sperrzustand und Aenderungsleiste.
+  "ck", "ckViews", "ckProject", "ckMobil", "ckWish", "ckStage", "ckSide", "ckLock",
+  "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_agb", "ckView_fragebogen",
+  "ckWishes", "crArea", "pvStage", "adminStage",
   "visionRoom", "vrLead", "visionRoomMount", "vrCarriers",
 ];
 
@@ -52,8 +54,8 @@ async function seite(daten, { openDouble = null } = {}) {
   // Ausgangslage wie im Markup: Diese Bereiche tragen dort `hidden`. Nur so
   // prüft der Test wirklich, dass die Seite sie öffnet — statt dass sie ohnehin
   // offen waren.
-  ["error", "content", "answered", "area", "tileOffer", "tilePreview", "tileAdmin",
-   "tileTerms", "tileTest", "tileContract", "pnav", "phead", "visionRoom"]
+  ["error", "content", "answered", "area", "ck", "ckSide", "ckLock", "tileOffer", "tilePreview", "tileAdmin",
+   "tileTerms", "tileTest", "tileContract", "visionRoom"]
     .forEach((id) => { dom.node(id).hidden = true; });
   const posted = [];
   const fetchDouble = (url, init) => {
@@ -109,16 +111,29 @@ const VERWALTUNG = { label: "Verwaltung", url: "https://admin.lehner.ch/login", 
 /* Ein Bereich, der wartet: sichtbar, als wartend gekennzeichnet, mit
    Begruendung — und ohne jede Adresse oder Angabe aus dem Vorgang. Genau das
    trat an die Stelle des frueheren "gar nicht da". */
-const wartet = (dom, id) => {
-  const node = dom.node(id);
-  if (!node || node.hidden) return false;
-  const html = String(node.innerHTML || "");
-  return /Wird vorbereitet/.test(html) && /locked/.test(node.className || "")
-    && !/https?:\/\//.test(html);
+const zeige = (dom, key) => { const b = dom.node("ckView_" + key); if (b) b.click(); };
+
+/* Eine Ansicht, die noch nicht bereit ist: Der zentrale Bereich traegt einen
+   erklaerten Sperrzustand — inline, mittig, ohne leere Karte und ohne
+   Adresse. Genau das trat an die Stelle des frueheren "gar nicht da". */
+const wartet = (dom, key, knoten) => {
+  zeige(dom, key);
+  const lock = dom.node("ckLock");
+  if (!lock || lock.hidden) return false;
+  const html = String(lock.innerHTML || "");
+  if (!/wird vorbereitet/i.test(html) || /https?:\/\//.test(html)) return false;
+  // Und der zugehoerige Knoten steht nicht daneben.
+  return !knoten || dom.node(knoten).hidden === true;
 };
 
 // Was die Kundschaft am Ende WIRKLICH vor sich hat: alles Gerenderte zusammen.
-const sichtbar = (dom) => IDS.map((id) => {
+const sichtbar = (dom) => {
+  // Das Cockpit zeigt immer nur EINE Ansicht. Fuer Leck-Pruefungen wird
+  // deshalb durch alle geschaltet und alles Gerenderte eingesammelt.
+  ["website", "verwaltung", "offerte", "agb", "fragebogen"].forEach((k) => zeige(dom, k));
+  return alleKnoten(dom);
+};
+const alleKnoten = (dom) => IDS.map((id) => {
   const n = dom.node(id);
   if (!n || n.hidden) return "";
   return String(n.innerHTML || "") + " " + String(n.textContent || "");
@@ -135,22 +150,19 @@ const sichtbar = (dom) => IDS.map((id) => {
      trotzdem verboten: Jeder Wartezustand traegt Titel und Begruendung. */
   const { dom } = await seite(basis());
   ok(dom.node("content").hidden === false, "der Fragebogen wird nicht gezeigt");
-  ok(dom.node("area").hidden === false, "die Bereiche fehlen ganz");
-  ["tileOffer", "tilePreview", "tileAdmin"].forEach((id) => {
-    const node = dom.node(id);
-    ok(node.hidden === false, `der Bereich ${id} fehlt statt zu warten`);
-    const html = String(node.innerHTML || "");
-    ok(html.length > 40, `der Bereich ${id} ist ein leerer Platzhalter`);
-    ok(/Wird vorbereitet/.test(html), `der Bereich ${id} erklärt den Wartezustand nicht`);
-    ok(/class="card tile locked"/.test(String(node.className ? `class="${node.className}"` : "")) || /locked/.test(node.className || ""),
-      `der Bereich ${id} ist nicht als wartend gekennzeichnet`);
-    // Und keine echte Adresse — ein Wartezustand verweist nirgendwohin.
-    ok(!/https?:\/\//.test(html), `der wartende Bereich ${id} zeigt eine Adresse`);
+  ok(dom.node("ck").hidden === false, "das Cockpit fehlt ganz");
+  // Ohne Vorschau ist der Fragebogen die Startansicht.
+  ok(dom.node("content").hidden === false, "der Fragebogen ist nicht die Startansicht");
+  ok(dom.node("ckSide").hidden === true, "die Änderungsleiste steht ohne Vorschau da");
+  // Die Umschalter tragen die vier Ansichten plus Fragebogen.
+  const nav = String(dom.node("ckViews").innerHTML || "");
+  ["Website", "Verwaltung", "Offerte", "AGB &amp; Kunde", "Fragebogen"].forEach((label) => {
+    ok(nav.includes(label), `die Kopfzeile nennt „${label}“ nicht`);
   });
-  // Die Bereichsleiste steht mit allen fuenf Bereichen da.
-  const nav = String(dom.node("pnav").innerHTML || "");
-  ["Fragebogen", "Offerte", "Website-Vorschau", "Verwaltung", "AGB &amp; Kunde"].forEach((label) => {
-    ok(nav.includes(label), `die Bereichsleiste nennt „${label}“ nicht`);
+  // Kein Kachelband, keine gestapelten Artikel: Wer eine noch nicht bereite
+  // Ansicht waehlt, bekommt den inline erklaerten Sperrzustand.
+  ["website", "verwaltung", "offerte"].forEach((key) => {
+    ok(wartet(dom, key), `die Ansicht ${key} erklärt den Sperrzustand nicht`);
   });
   ok(dom.node("answered").hidden === true, "der Hinweis für den erledigten Bogen steht schon da");
   ok(dom.node("error").hidden === true, "die Seite meldet einen Fehler");
@@ -171,7 +183,7 @@ const sichtbar = (dom) => IDS.map((id) => {
      Fuer den bleibt es beim alten Verhalten — sonst behauptete eine alte
      Veroeffentlichung ploetzlich Stufen, die es zu ihrer Zeit nicht gab. */
   ok(dom.node("area").hidden === true, "ohne Kacheln entsteht trotzdem ein Bereich");
-  ok(dom.node("pnav").hidden === true, "ein alter Datensatz bekommt eine Bereichsleiste");
+  ok(dom.node("ck").hidden === true, "ein alter Datensatz bekommt ein Cockpit");
   ok(dom.node("error").hidden === true, "ein Datensatz ohne Kacheln gilt als Fehler");
   ok(dom.node("title").textContent === "Ihre Angaben", "der Titel fehlt");
 }
@@ -182,20 +194,21 @@ const sichtbar = (dom) => IDS.map((id) => {
 {
   const entwurf = Object.assign({}, OFFERTE, { status: "draft", statusLabel: "Entwurf" });
   const { dom } = await seite(basis({ stage: "offer", tiles: { offer: entwurf, preview: null, admin: null } }));
-  ok(wartet(dom, "tileOffer"), "ein Offerten-ENTWURF wird der Kundschaft gezeigt");
-  ok(dom.node("area").hidden === false, "die Bereiche fehlen beim Entwurf ganz");
+  ok(wartet(dom, "offerte", "tileOffer"), "ein Offerten-ENTWURF wird der Kundschaft gezeigt");
+  ok(dom.node("ck").hidden === false, "das Cockpit fehlt beim Entwurf ganz");
   ok(!/OF-2026-001/.test(sichtbar(dom)), "die Nummer des Entwurfs steht auf der Seite");
 
   // Auch „versendet" ohne echten Versandzeitpunkt zählt nicht.
   const ohneVersand = Object.assign({}, OFFERTE, { sentAt: "" });
   const zweite = await seite(basis({ tiles: { offer: ohneVersand, preview: null, admin: null } }));
-  ok(wartet(zweite.dom, "tileOffer"),
+  ok(wartet(zweite.dom, "offerte", "tileOffer"),
     "eine Offerte ohne echten Versandzeitpunkt wird gezeigt");
 }
 
 // ── 4. Die versendete Offerte: Dokument, Betrag, Gültigkeit, Status ──────
 {
   const { dom } = await seite(basis({ stage: "offer", tiles: { offer: OFFERTE, preview: null, admin: null } }));
+  zeige(dom, "offerte");
   const kachel = dom.node("tileOffer");
   ok(kachel.hidden === false, "die versendete Offerte fehlt");
   ok(dom.node("area").hidden === false, "der Bereich bleibt zu");
@@ -218,9 +231,15 @@ const sichtbar = (dom) => IDS.map((id) => {
   ok(dom.node("offerPrint"), "es gibt keinen Weg zu einem PDF");
   ok(/Drucken \/ als PDF speichern/.test(kachel.innerHTML), "der PDF-Weg ist nicht benannt");
 
-  // Stufe 1 bleibt: Der Fragebogen ist weiterhin ausfüllbar.
-  ok(dom.node("content").hidden === false, "die Offerte verdrängt den Fragebogen");
-  ok(wartet(dom, "tilePreview") && wartet(dom, "tileAdmin"),
+  /* Stufe 1 bleibt erreichbar — aber sie dominiert den Bildschirm nicht mehr.
+     Im Cockpit steht immer genau EINE Ansicht zentral; der Fragebogen ist ein
+     Umschalter wie die anderen. */
+  ok(dom.node("ckView_fragebogen"), "der Fragebogen ist nicht mehr erreichbar");
+  zeige(dom, "fragebogen");
+  ok(dom.node("content").hidden === false, "der Fragebogen lässt sich nicht mehr öffnen");
+  zeige(dom, "offerte");
+  ok(dom.node("content").hidden === true, "der Fragebogen steht weiterhin über der Offerte");
+  ok(wartet(dom, "website", "tilePreview") && wartet(dom, "verwaltung", "tileAdmin"),
     "mit der Offerte erscheinen auch Vorschau oder Verwaltung");
 }
 
@@ -260,12 +279,14 @@ const sichtbar = (dom) => IDS.map((id) => {
     status: "answered", stage: "offer", tiles: { offer: OFFERTE, preview: null, admin: null },
   }));
   ok(dom.node("error").hidden === true, "die Seite meldet einen Fehler, obwohl es etwas zu sehen gibt");
+  zeige(dom, "fragebogen");
   ok(dom.node("content").hidden === true, "der beantwortete Fragebogen lässt sich erneut ausfüllen");
   ok(dom.node("answered").hidden === false, "der Zustand wird nicht benannt");
   ok(/bei uns/.test(dom.node("answeredTitle").textContent),
     `der Zustand wird nicht freundlich benannt: ${dom.node("answeredTitle").textContent}`);
   ok(/derselben Adresse/.test(dom.node("answeredText").textContent),
     "es wird nicht gesagt, dass alles an derselben Adresse steht");
+  zeige(dom, "offerte");
   ok(dom.node("tileOffer").hidden === false, "die Offerte verschwindet mit dem beantworteten Bogen");
   ok(dom.node("subtitle").textContent === "FlowerTech", "der Absender fehlt");
 }
@@ -274,7 +295,7 @@ const sichtbar = (dom) => IDS.map((id) => {
 {
   const { dom } = await seite(basis({ status: "closed" }));
   ok(dom.node("error").hidden === false, "ein abgeschlossener Bogen ohne Inhalt wird nicht benannt");
-  ok(dom.node("area").hidden === false, "ein abgeschlossener Bogen zeigt die Bereiche nicht");
+  ok(dom.node("ck").hidden === false, "ein abgeschlossener Bogen zeigt das Cockpit nicht");
   ok(dom.node("answered").hidden === true, "es steht eine Notiz da, obwohl es nichts zu sehen gibt");
 }
 
@@ -284,11 +305,11 @@ const sichtbar = (dom) => IDS.map((id) => {
 {
   const unsicher = Object.assign({}, VORSCHAU, { url: "http://vorschau.lehner.ch/entwurf" });
   const { dom } = await seite(basis({ tiles: { offer: null, preview: unsicher, admin: null } }));
-  ok(wartet(dom, "tilePreview"), "eine unverschlüsselte Vorschau-Adresse wird verlinkt");
+  ok(wartet(dom, "website", "tilePreview"), "eine unverschlüsselte Vorschau-Adresse wird verlinkt");
   ok(!/vorschau\.lehner\.ch/.test(sichtbar(dom)), "die unsichere Adresse steht trotzdem auf der Seite");
 
   const leer = await seite(basis({ tiles: { offer: null, preview: null, admin: null } }));
-  ok(wartet(leer.dom, "tilePreview"), "ohne Freigabe erscheint eine Vorschau");
+  ok(wartet(leer.dom, "website", "tilePreview"), "ohne Freigabe erscheint eine Vorschau");
 }
 
 // ── 9. Die freigegebene Vorschau samt Änderungswunsch ────────────────────
@@ -296,6 +317,7 @@ const sichtbar = (dom) => IDS.map((id) => {
   const { dom, posted } = await seite(basis({
     stage: "preview", tiles: { offer: null, preview: VORSCHAU, admin: null },
   }));
+  zeige(dom, "website");
   const kachel = dom.node("tilePreview");
   ok(kachel.hidden === false, "die freigegebene Vorschau fehlt");
   ok(/Website-Vorschau/.test(kachel.innerHTML), "die Kachel ist nicht benannt");
@@ -358,21 +380,24 @@ const sichtbar = (dom) => IDS.map((id) => {
 // ── 11. Die Verwaltung: eigene Freigabe, nie vor der Vorschau ───────────
 {
   const alleine = await seite(basis({ tiles: { offer: null, preview: null, admin: VERWALTUNG } }));
-  ok(wartet(alleine.dom, "tileAdmin"), "die Verwaltung erscheint ohne Vorschau");
+  ok(wartet(alleine.dom, "verwaltung", "tileAdmin"), "die Verwaltung erscheint ohne Vorschau");
   ok(!/admin\.lehner\.ch/.test(sichtbar(alleine.dom)),
     "die Verwaltungsadresse steht trotzdem auf der Seite");
-  ok(alleine.dom.node("area").hidden === false, "die Bereiche fehlen ganz");
+  ok(alleine.dom.node("ck").hidden === false, "das Cockpit fehlt ganz");
 
   const zusammen = await seite(basis({
     stage: "preview", tiles: { offer: OFFERTE, preview: VORSCHAU, admin: VERWALTUNG },
   }));
+  zeige(zusammen.dom, "verwaltung");
   const kachel = zusammen.dom.node("tileAdmin");
   ok(kachel.hidden === false, "die freigegebene Verwaltung fehlt");
   ok(kachel.innerHTML.includes('href="https://admin.lehner.ch/login"'),
     "die Verwaltung zeigt auf eine andere Adresse");
   ok(/rel="noopener noreferrer"/.test(kachel.innerHTML), "der Verwaltungsverweis gibt den Token weiter");
-  // Alle drei Stufen nebeneinander — eine Adresse.
-  ["tileOffer", "tilePreview", "tileAdmin"].forEach((id) => {
+  /* Alle Stufen auf EINER Adresse — im Cockpit aber nacheinander, nicht
+     uebereinander gestapelt: jede Ansicht ersetzt die zentrale Flaeche. */
+  [["tileOffer", "offerte"], ["tilePreview", "website"], ["tileAdmin", "verwaltung"]].forEach(([id, key]) => {
+    zeige(zusammen.dom, key);
     ok(zusammen.dom.node(id).hidden === false, `auf der letzten Stufe fehlt ${id}`);
   });
   ok(!/http:\/\//.test(sichtbar(zusammen.dom)), "es steht eine unverschlüsselte Adresse auf der Seite");
