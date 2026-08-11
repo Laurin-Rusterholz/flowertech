@@ -196,20 +196,95 @@
   .ck-liste li{margin-bottom:6px}
   .linkish{background:none;border:0;padding:0;font:inherit;color:var(--cyan);
     text-decoration:underline;cursor:pointer}
-  /* Die Verwaltung als Kundenansicht: ihre Bereiche, jeder mit dem direkten
-     Weg zum Wunsch. Kein zweites Cockpit, kein Weg nach draussen. */
-  .adm{max-width:820px}
-  .adm-kopf h2{margin-bottom:2px}
-  .adm-raster{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));
-    gap:12px;margin:16px 0 6px}
-  .adm-feld{border:1px solid var(--line);border-radius:12px;padding:13px 14px;
-    background:var(--card);display:flex;flex-direction:column;gap:6px}
-  .adm-feld h3{margin:0;font-size:14.5px}
-  .adm-hint{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;flex:1 1 auto}
-  .adm-btn{align-self:flex-start;background:transparent;border:1px solid var(--line);
-    color:var(--text);font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:9px;
-    cursor:pointer}
-  .adm-btn:hover{border-color:rgba(160,107,255,.5)}
+  /* ── Kunden-Backend (Ansicht „Verwaltung") ──────────────────────────────
+     Aufbau der echten Verwaltung: Stand oben, Bereichsleiste links,
+     Arbeitsflaeche in der Mitte, Vorschau daneben. Randlos in der Buehne, im
+     dunklen Bild der uebrigen Oberflaeche. */
+  .kb{display:flex;flex-direction:column;height:100%;min-height:0}
+  .kb-status{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:11px 16px;border-bottom:1px solid var(--line);background:#12111a}
+  .kb-status-l b{display:block;font-size:14.5px;letter-spacing:-.01em}
+  .kb-status-l span{font-size:12px;color:var(--muted)}
+  .kb-status-r{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .kb-chip{font-size:11.5px;color:var(--muted);border:1px solid var(--line);
+    border-radius:99px;padding:3px 10px;white-space:nowrap}
+  .kb-status-r button{font-size:12px;font-weight:600;padding:6px 12px;border-radius:9px;
+    background:transparent;border:1px solid var(--line);color:var(--text);cursor:pointer}
+  .kb-status-r button[aria-pressed="true"]{background:rgba(160,107,255,.26);
+    border-color:transparent}
+  .kb-body{flex:1 1 auto;display:flex;min-height:0}
+  /* Bereichsleiste */
+  .kb-leiste{flex:0 0 216px;overflow-y:auto;padding:10px 9px 26px;
+    border-right:1px solid var(--line);background:#100f17}
+  .kb-gruppe{display:block;padding:14px 9px 5px;font-size:10.5px;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;color:#6f6980}
+  .kb-nav{display:flex;width:100%;align-items:center;gap:8px;background:none;border:0;
+    color:var(--muted);border-radius:9px;font:inherit;font-size:13px;text-align:left;
+    padding:7px 9px;cursor:pointer}
+  .kb-nav::before{content:"";width:6px;height:6px;border-radius:50%;flex:none;
+    background:var(--line)}
+  .kb-nav[data-stand="bereit"]::before{background:var(--ok)}
+  .kb-nav[data-stand="arbeit"]::before{background:var(--lime)}
+  .kb-nav[data-stand="geplant"]::before{background:rgba(160,107,255,.7)}
+  .kb-nav:hover{background:rgba(255,255,255,.05);color:var(--text)}
+  .kb-nav[aria-selected="true"]{background:rgba(160,107,255,.2);color:var(--text);
+    font-weight:650}
+  /* Arbeitsflaeche */
+  .kb-work{flex:1 1 auto;min-width:0;overflow-y:auto;padding:22px 24px 40px}
+  .kb-kopf{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap}
+  .kb-kopf h2{margin:0}
+  .kb-stand{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+    border-radius:99px;padding:3px 9px;border:1px solid var(--line);color:var(--muted)}
+  .kb-stand[data-stand="bereit"]{color:var(--ok);border-color:rgba(123,216,143,.4)}
+  .kb-stand[data-stand="arbeit"]{color:var(--lime);border-color:rgba(200,255,46,.35)}
+  .kb-lead{margin:7px 0 18px;color:var(--muted);font-size:14px;line-height:1.65;max-width:66ch}
+  .kb-felder{border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    background:var(--card);max-width:660px}
+  .kb-zeile{display:flex;gap:14px;padding:10px 13px;border-bottom:1px solid var(--line);
+    font-size:13.5px}
+  .kb-zeile:last-child{border-bottom:0}
+  .kb-name{flex:0 0 42%;color:var(--text);font-weight:600}
+  .kb-wert{flex:1 1 auto;color:var(--muted)}
+  .kb-wert.leer{font-style:italic;opacity:.75}
+  .kb-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));
+    gap:11px;margin-bottom:20px}
+  .kb-stat{border:1px solid var(--line);border-radius:12px;padding:12px 13px;
+    background:var(--card);display:flex;flex-direction:column;gap:2px}
+  .kb-stat-l{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+  .kb-stat-v{font-size:17px;letter-spacing:-.01em}
+  .kb-stat-n{font-size:12px;color:var(--muted)}
+  .kb-schritte{margin:0;padding-left:20px;font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .kb-schritte b{color:var(--text)}
+  .kb-fluss{display:flex;gap:8px;margin:0 0 18px;padding:0;list-style:none;flex-wrap:wrap}
+  .kb-fluss li{flex:1 1 130px;border:1px solid var(--line);border-radius:11px;
+    padding:9px 11px;background:var(--card)}
+  .kb-fluss li.on{border-color:rgba(200,255,46,.4)}
+  .kb-fluss b{display:block;font-size:13.5px}
+  .kb-fluss span{font-size:12px;color:var(--muted)}
+  .kb-hinweis{margin:16px 0 0;font-size:13px;color:var(--muted);line-height:1.6;max-width:66ch}
+  .kb-fuss{margin-top:20px;display:flex;gap:9px;flex-wrap:wrap}
+  .kb-wunsch{background:linear-gradient(135deg,var(--lime),var(--cyan));color:#0d0d13;
+    border:0;font-size:13px;font-weight:700;padding:9px 15px;border-radius:10px;cursor:pointer}
+  .kb-fuss .kb-wunsch+.kb-wunsch{background:transparent;border:1px solid var(--line);
+    color:var(--text)}
+  /* Vorschau daneben — und in „Website & Änderungswünsche" gross. */
+  .kb-seite{flex:0 0 330px;min-width:0;display:flex;flex-direction:column;
+    border-left:1px solid var(--line);background:#100f17}
+  .kb-seite-kopf{flex:0 0 auto;padding:8px 13px;font-size:11.5px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    border-bottom:1px solid var(--line)}
+  .kb-seite .pv-stage{flex:1 1 auto;min-height:0}
+  .kb-vorschau-gross{height:min(62vh,560px);border:1px solid var(--line);
+    border-radius:12px;overflow:hidden}
+  @media (max-width:900px){
+    .kb-body{flex-direction:column}
+    .kb-leiste{flex:0 0 auto;border-right:0;border-bottom:1px solid var(--line);
+      display:flex;gap:6px;overflow-x:auto;padding:9px 10px;white-space:nowrap}
+    .kb-gruppe{display:none}
+    .kb-nav{width:auto;flex:0 0 auto}
+    .kb-work{padding:16px 14px 30px}
+    .kb-seite{flex:0 0 auto;border-left:0;border-top:1px solid var(--line);max-height:46vh}
+  }
   /* Ansicht nicht verfuegbar: inline, mittig, erklaert. */
   .ck-lock{display:flex;flex-direction:column;align-items:center;justify-content:center;
     text-align:center;height:100%;min-height:320px;gap:9px;color:var(--muted);padding:30px 20px}
@@ -1125,80 +1200,411 @@
     });
   }
 
-  /* Die Verwaltung — als Kundenansicht IM Kundenlink.
-     -----------------------------------------------------------------------
-     Das eigentliche Verwaltungsprodukt bringt einen eigenen Anmeldebereich und
-     eine eigene Kopfzeile mit; eingebettet stuenden zwei Navigationen
-     uebereinander, verlinkt waere es ein zweiter Ort. Beides verletzt den
-     einen Kundenlink.
+  /* ── Die Verwaltung: ein Kunden-Backend im Kundenlink ───────────────────
+     Vorlage ist die echte Verwaltung (Repo `verwaltung-djsamsparkling`): oben
+     der Stand, links die Bereichsleiste in Gruppen, in der Mitte die
+     Arbeitsflaeche, daneben die Vorschau. Uebernommen sind Aufbau, Hierarchie
+     und Arbeitsgefuehl — nicht die Inhalte jenes Projekts und ausdruecklich
+     nicht seine Rechte.
 
-     Also zeigt FlowerTech die Verwaltung selbst — im selben Bild wie alles
-     andere: welche Bereiche der Website spaeter gepflegt werden, und zu jedem
-     der direkte Weg, eine Aenderung zu wuenschen. Das ist keine Attrappe des
-     fremden Produkts: Es steht ausdruecklich da, dass die Bereiche noch nicht
-     mit den eigenen Inhalten verbunden sind. Und es ist keine Sackgasse — der
-     Wunsch geht denselben Weg wie an der Website, nur unter „Verwaltung".
+     Was diese Ansicht KANN: zeigen, was wo gepflegt wird, wie es um jeden
+     Bereich steht, und aus jedem Bereich heraus einen Aenderungswunsch
+     vorbereiten.
 
-     Die Bereiche kommen aus dem Leistungsumfang des Projekts. Gibt es keinen,
-     stehen die drei, die jede Verwaltung hat — erfunden wird nichts. */
-  var ADMIN_GRUND = ["Seiten und Texte", "Bilder", "Kontaktangaben"];
+     Was sie NICHT kann und nie koennen soll: veroeffentlichen, speichern,
+     importieren, exportieren, fremde Anfragen lesen, Zugaenge, Schluessel oder
+     Hooks zeigen. Es gibt hier kein Passwort, keine Datenbank und keine
+     Schreibrechte — es gibt nichts zu holen. Alles, was die Kundschaft
+     aendern moechte, geht denselben Weg wie an der Website: als Wunsch.
 
-  function adminBereiche(tile) {
+     Die Bereiche sind fest — sie beschreiben die Verwaltung, nicht die Daten.
+     Was projektbezogen ist (Vorhaben, Leistungsumfang, Stand), kommt aus dem
+     veroeffentlichten Datensatz; was nicht vorliegt, wird als fehlend benannt
+     statt gefuellt. */
+  var KB_GRUPPEN = [
+    { titel: "Übersicht", bereiche: ["stand", "wunsch"] },
+    { titel: "Website", bereiche: ["design", "seo", "seiten", "abschnitte", "sprachen", "recht"] },
+    { titel: "Inhalte", bereiche: ["zucht", "kitten", "referenzen", "galerie", "kontakt"] },
+    { titel: "Betrieb", bereiche: ["anfragen", "medien", "freigabe", "einstellungen", "module"] },
+  ];
+
+  /* `stand`: bereit · arbeit · geplant · modul. Jeder Bereich sagt etwas
+     anderes — eine Liste, in der ueberall derselbe Satz steht, ist keine
+     Verwaltung, sondern eine Tapete. */
+  var KB = {
+    stand: {
+      label: "Übersicht", stand: "bereit",
+      lead: "Der Stand Ihres Vorhabens auf einen Blick: was steht, was in Arbeit ist "
+        + "und was als Nächstes von Ihnen kommt.",
+      felder: [],
+    },
+    wunsch: {
+      label: "Website & Änderungswünsche", stand: "bereit",
+      lead: "Ihre Website, wie sie gerade aussieht — und der direkte Weg, etwas daran "
+        + "ändern zu lassen. Klicken Sie sich in der Vorschau durch die Seiten; "
+        + "im Wunschmodus halten Sie fest, was Ihnen auffällt.",
+      felder: [],
+    },
+    design: {
+      label: "Start & Design", stand: "arbeit",
+      lead: "Der erste Eindruck: Startbild, Titelzeile, Farben und Schrift. Hier wird "
+        + "eingestellt, womit Ihre Website beginnt.",
+      felder: [
+        ["Startbild", ""], ["Titelzeile", ""], ["Untertitel", ""],
+        ["Farbwelt", "wird mit dem ersten Entwurf festgelegt"],
+        ["Schrift", "wird mit dem ersten Entwurf festgelegt"],
+      ],
+    },
+    seo: {
+      label: "SEO & Teilen", stand: "arbeit",
+      lead: "Wie Ihre Website in der Suche und beim Teilen erscheint: Seitentitel, "
+        + "Kurzbeschreibung und das Vorschaubild für Nachrichten und soziale Netze.",
+      felder: [
+        ["Seitentitel", ""], ["Kurzbeschreibung", ""], ["Vorschaubild", ""],
+        ["Suchmaschinen", "wird mit der Veröffentlichung freigegeben"],
+      ],
+    },
+    seiten: {
+      label: "Seiten & Navigation", stand: "arbeit",
+      lead: "Welche Seiten es gibt, wie sie heissen und in welcher Reihenfolge sie im "
+        + "Menü stehen. Neue Seiten entstehen hier, bevor sie im Menü auftauchen.",
+      felder: [["Seiten", ""], ["Menü-Reihenfolge", ""], ["Startseite", ""]],
+    },
+    abschnitte: {
+      label: "Abschnitte / Inhalte", stand: "arbeit",
+      lead: "Eine Seite besteht aus Abschnitten. Hier wird bestimmt, welche Abschnitte "
+        + "auf welcher Seite stehen, in welcher Reihenfolge — und welche vorerst "
+        + "ausgeblendet bleiben.",
+      felder: [["Abschnitte je Seite", ""], ["Reihenfolge", ""], ["Sichtbarkeit", ""]],
+    },
+    sprachen: {
+      label: "Sprachen", stand: "geplant",
+      lead: "Ihre Website kann in weiteren Sprachen erscheinen. Übersetzungen werden "
+        + "vorgeschlagen und von Ihnen freigegeben — nichts geht ungeprüft online.",
+      felder: [
+        ["Hauptsprache", "Deutsch"],
+        ["Weitere Sprachen", "noch nicht beauftragt"],
+        ["Freigabe", "jede Übersetzung wird einzeln freigegeben"],
+      ],
+    },
+    recht: {
+      label: "Rechtliches", stand: "arbeit",
+      lead: "Impressum und Datenschutzerklärung gehören zu jeder Website. Die Angaben "
+        + "stammen von Ihnen; wir setzen sie und halten sie aktuell.",
+      felder: [
+        ["Impressum", ""], ["Datenschutzerklärung", ""],
+        ["Verantwortlich", ""], ["Kontaktadresse", ""],
+      ],
+    },
+    zucht: {
+      label: "Über uns / Zucht", stand: "arbeit",
+      lead: "Wer hinter der Website steht: Ihre Geschichte, Ihre Haltung, Ihre Tiere. "
+        + "Der Abschnitt, den Besucherinnen und Besucher am längsten lesen.",
+      felder: [["Vorstellungstext", ""], ["Bilder", ""], ["Zuchtangaben", ""]],
+    },
+    kitten: {
+      label: "Kitten & Termine", stand: "arbeit",
+      lead: "Aktuelle Würfe, erwartete Würfe und Termine. Jeder Eintrag hat ein Datum — "
+        + "abgelaufene Einträge wandern von selbst ins Archiv, statt veraltet stehen "
+        + "zu bleiben.",
+      felder: [
+        ["Aktueller Wurf", ""], ["Erwartete Würfe", ""],
+        ["Abgabetermine", ""], ["Archiv", "frühere Würfe bleiben nachlesbar"],
+      ],
+    },
+    referenzen: {
+      label: "Referenzen / Mitgliedschaften", stand: "arbeit",
+      lead: "Vereine, Verbände und Auszeichnungen, die für Ihre Arbeit sprechen — mit "
+        + "Logo und, wo sinnvoll, mit Verweis.",
+      felder: [["Mitgliedschaften", ""], ["Auszeichnungen", ""], ["Logos", ""]],
+    },
+    galerie: {
+      label: "Galerie", stand: "arbeit",
+      lead: "Ihre Bilder in Reihenfolge und Auswahl. Jedes Bild bekommt eine kurze "
+        + "Beschreibung — die brauchen Suchmaschinen und Vorleseprogramme.",
+      felder: [["Bilder", ""], ["Reihenfolge", ""], ["Bildbeschreibungen", ""]],
+    },
+    kontakt: {
+      label: "Kontakt", stand: "arbeit",
+      lead: "Wie man Sie erreicht und was im Kontaktformular abgefragt wird. Die "
+        + "Nachrichten landen unter „Anfragen“.",
+      felder: [["E-Mail", ""], ["Telefon", ""], ["Adresse", ""], ["Formularfelder", ""]],
+    },
+    anfragen: {
+      label: "Anfragen", stand: "geplant",
+      lead: "Nachrichten aus dem Kontaktformular sammeln sich hier: offen, beantwortet, "
+        + "erledigt. Termine daraus lassen sich in den Kalender übernehmen.",
+      felder: [
+        ["Eingang", "sobald die Website veröffentlicht ist"],
+        ["Bearbeitungsstand", "offen · beantwortet · erledigt"],
+        ["Kalender", "Termine aus einer Anfrage übernehmen"],
+      ],
+      hinweis: "In dieser Ansicht werden keine Nachrichten angezeigt. Sie enthalten "
+        + "personenbezogene Daten und stehen nur in der angemeldeten Verwaltung.",
+    },
+    medien: {
+      label: "Medien", stand: "arbeit",
+      lead: "Alle Bilder und Videos an einem Ort — mit dem Hinweis, wo jede Datei "
+        + "verwendet wird. Was nirgends eingebunden ist, fällt hier auf.",
+      felder: [
+        ["Bilder", ""], ["Videos", ""],
+        ["Verwendung", "zeigt zu jeder Datei, auf welcher Seite sie steht"],
+        ["Grösse", "Bilder werden beim Einbinden automatisch verkleinert"],
+      ],
+    },
+    freigabe: {
+      label: "Freigabe & Versionen", stand: "geplant",
+      lead: "Nichts geht ohne Ihr Ja online. Jede Fassung wird festgehalten und lässt "
+        + "sich vergleichen; veröffentlicht wird erst nach Ihrer Freigabe.",
+      felder: [],
+    },
+    einstellungen: {
+      label: "Einstellungen / Domain", stand: "geplant",
+      lead: "Ihre Internetadresse und die Grundangaben der Website. Technische "
+        + "Zugänge gehören nicht hierher — die liegen bei uns.",
+      felder: [
+        ["Internetadresse", ""], ["Weiterleitungen", ""],
+        ["E-Mail-Adressen", ""],
+        ["Technische Zugänge", "werden von FlowerTech verwaltet"],
+      ],
+    },
+    module: {
+      label: "Weitere Module", stand: "modul",
+      lead: "Was Ihre Website zusätzlich könnte. Diese Module sind für Ihr Vorhaben "
+        + "nicht beauftragt — sie stehen hier, damit Sie wissen, dass es sie gibt.",
+      felder: [
+        ["Online-Verkauf", "nicht beauftragt"],
+        ["Online-Terminbuchung", "nicht beauftragt"],
+        ["Newsletter", "nicht beauftragt"],
+        ["Mehrsprachige Suche", "nicht beauftragt"],
+      ],
+    },
+  };
+
+  var KB_STAND = {
+    bereit: "einsatzbereit", arbeit: "in Arbeit",
+    geplant: "vorbereitet", modul: "nicht beauftragt",
+  };
+  var kbBereich = "stand";
+  var kbVorschau = true;
+
+  function kbListe() {
+    var alle = [];
+    KB_GRUPPEN.forEach(function (g) { alle = alle.concat(g.bereiche); });
+    return alle;
+  }
+
+  /* Was der Datensatz ueber das Vorhaben hergibt — mehr wird nicht behauptet. */
+  function kbProjekt() {
     var tiles = (ckDaten && ckDaten.tiles) || {};
-    var quelle = (tiles.testService && tiles.testService.summary) ||
-      (tiles.offer && tiles.offer.summary) || "";
-    var teile = String(quelle).split(/,| und | sowie /);
-    var namen = [];
-    teile.forEach(function (roh) {
-      var name = String(roh).replace(/[.;]+$/, "").trim();
-      if (name.length > 1 && name.length < 60 && namen.length < 8) {
-        namen.push(name.charAt(0).toUpperCase() + name.slice(1));
-      }
-    });
-    if (!namen.length) namen = ADMIN_GRUND.slice(0);
-    if (tile && tile.label && namen.indexOf(String(tile.label)) < 0) return namen;
-    return namen;
+    var uebersicht = tiles.testService || tiles.offer || null;
+    return {
+      name: projektName(ckDaten) || (uebersicht && uebersicht.title) || "Ihr Vorhaben",
+      umfang: (uebersicht && uebersicht.summary) || "",
+      kosten: (uebersicht && uebersicht.costStatus) || "Kosten noch offen",
+      vorschau: safeUrl(tiles.preview && tiles.preview.url),
+      stufe: String((ckDaten && ckDaten.stage) || ""),
+      fassung: Number((ckDaten && ckDaten.generation) || 0),
+      stand: (ckDaten && ckDaten.updatedAt) || "",
+      agb: (tiles.terms && tiles.terms.version) || "",
+    };
+  }
+
+  function kbZeile(name, wert) {
+    return '<div class="kb-zeile"><span class="kb-name">' + esc(name) + "</span>" +
+      (wert
+        ? '<span class="kb-wert">' + esc(wert) + "</span>"
+        : '<span class="kb-wert leer">noch nicht hinterlegt</span>') + "</div>";
+  }
+
+  /* Die Uebersicht rechnet nichts nach — sie zeigt, was da ist. */
+  function kbUebersichtHtml() {
+    var p = kbProjekt();
+    var offen = kbListe().filter(function (id) { return KB[id].stand === "arbeit"; }).length;
+    return '<div class="kb-stats">' +
+        '<div class="kb-stat"><span class="kb-stat-l">Vorhaben</span>' +
+          '<b class="kb-stat-v">' + esc(p.name) + "</b></div>" +
+        '<div class="kb-stat"><span class="kb-stat-l">Website</span>' +
+          '<b class="kb-stat-v">' + (p.vorschau ? "Vorschau steht" : "in Arbeit") + "</b>" +
+          '<span class="kb-stat-n">' + (p.vorschau ? "jederzeit anzuschauen" : "sobald ein Stand bereit ist") +
+          "</span></div>" +
+        '<div class="kb-stat"><span class="kb-stat-l">Kosten</span>' +
+          '<b class="kb-stat-v">offen</b><span class="kb-stat-n">' + esc(p.kosten) + "</span></div>" +
+        '<div class="kb-stat"><span class="kb-stat-l">Bereiche in Arbeit</span>' +
+          '<b class="kb-stat-v">' + offen + "</b>" +
+          '<span class="kb-stat-n">von ' + kbListe().length + " insgesamt</span></div>" +
+      "</div>" +
+      (p.umfang ? '<h3 class="ck-h3">Leistungsumfang</h3><p>' + esc(p.umfang) + "</p>" : "") +
+      '<h3 class="ck-h3">Was als Nächstes ansteht</h3>' +
+      '<ol class="kb-schritte">' +
+        "<li><b>Inhalte sammeln</b> — Texte und Bilder, die auf die Website sollen.</li>" +
+        "<li><b>Entwurf anschauen</b> — unter „Website &amp; Änderungswünsche“.</li>" +
+        "<li><b>Wünsche festhalten</b> — jederzeit, aus jedem Bereich heraus.</li>" +
+        "<li><b>Freigeben</b> — erst danach geht etwas online.</li>" +
+      "</ol>";
+  }
+
+  /* Freigabe & Versionen: der Ablauf und die Staende — mehr Rechte gibt es
+     hier nicht. Der Knopf bereitet eine Anfrage vor; er veroeffentlicht nicht,
+     und er sendet auch nichts. */
+  function kbFreigabeHtml() {
+    var p = kbProjekt();
+    return '<ol class="kb-fluss">' +
+        '<li class="on"><b>Entwurf</b><span>wird gebaut</span></li>' +
+        '<li' + (p.vorschau ? ' class="on"' : "") + '><b>Prüfung</b><span>Sie schauen an</span></li>' +
+        "<li><b>Freigabe</b><span>Ihr Ja</span></li>" +
+        "<li><b>Veröffentlichung</b><span>durch FlowerTech</span></li>" +
+      "</ol>" +
+      '<h3 class="ck-h3">Fassungen</h3>' +
+      '<div class="kb-felder">' +
+        kbZeile("Aktuelle Fassung", p.fassung ? "Fassung " + p.fassung : "") +
+        kbZeile("Stand", p.stand ? datum(p.stand) : "") +
+        kbZeile("Frühere Fassungen", "werden aufbewahrt und lassen sich vergleichen") +
+      "</div>" +
+      '<p class="kb-hinweis">Veröffentlicht wird ausschliesslich durch FlowerTech und ' +
+        "erst nach Ihrer Freigabe. Diese Ansicht verändert nichts an Ihrer Website.</p>";
+  }
+
+  function kbBereichHtml(id) {
+    var b = KB[id] || KB.stand;
+    var kopf = '<div class="kb-kopf"><h2>' + esc(b.label) + "</h2>" +
+      '<span class="kb-stand" data-stand="' + esc(b.stand) + '">' +
+      esc(KB_STAND[b.stand] || "") + "</span></div>" +
+      '<p class="kb-lead">' + esc(b.lead) + "</p>";
+    var koerper = "";
+    if (id === "stand") koerper = kbUebersichtHtml();
+    else if (id === "freigabe") koerper = kbFreigabeHtml();
+    else if (id === "wunsch") koerper = kbWunschHtml();
+    else {
+      koerper = '<div class="kb-felder">' + b.felder.map(function (f) {
+        return kbZeile(f[0], f[1]);
+      }).join("") + "</div>";
+    }
+    var fuss = (b.hinweis ? '<p class="kb-hinweis">' + esc(b.hinweis) + "</p>" : "") +
+      '<div class="kb-fuss"><button type="button" class="kb-wunsch" id="kbWunsch">' +
+        "Änderung wünschen</button>" +
+      (id === "freigabe"
+        ? '<button type="button" class="kb-wunsch" id="kbFreigabe">Freigabe anfragen</button>'
+        : "") + "</div>";
+    return kopf + koerper + fuss;
+  }
+
+  /* Website & Aenderungswuensche: die Vorschau selbst, plus der Wunschmodus.
+     Was in einem fremden Rahmen angeklickt wird, kann diese Seite nicht lesen
+     (und soll es nicht) — der Wunschmodus behauptet das auch nicht. Er oeffnet
+     die Leiste und haelt fest, worum es geht. */
+  function kbWunschHtml() {
+    var p = kbProjekt();
+    if (!p.vorschau) {
+      return '<p class="kb-hinweis">Sobald ein Stand zum Anschauen bereit ist, ' +
+        "erscheint Ihre Website hier — direkt in dieser Ansicht.</p>";
+    }
+    return '<div class="kb-vorschau-gross"><div class="pv-stage" id="kbStage" data-view="desktop">' +
+      '<iframe class="pv-frame" id="kbFrame" title="Ihre Website" ' +
+        'referrerpolicy="no-referrer" ' +
+        'sandbox="allow-scripts allow-same-origin allow-forms allow-popups" ' +
+        'src="' + esc(einbettUrl(p.vorschau)) + '"></iframe></div></div>' +
+      '<p class="kb-hinweis">Klicken Sie sich durch Ihre Seiten wie im richtigen ' +
+        "Browser. Fällt Ihnen etwas auf, schalten Sie den Wunschmodus ein — dann " +
+        "notieren Sie es gleich hier, mit der Seite, auf der Sie gerade sind.</p>";
   }
 
   function renderAdmin(tile) {
     // Die Freigabe entscheidet weiterhin, OB es die Verwaltung gibt. Die
-    // Adresse selbst wird nicht mehr ausgegeben — sie ist ein technisches
-    // Ziel, kein Kundenweg.
+    // Adresse des fremden Verwaltungsprodukts wird nicht ausgegeben: Sie ist
+    // ein technisches Ziel, kein Kundenweg.
     if (!tile || !safeUrl(tile.url)) return hide("tileAdmin");
-    var bereiche = adminBereiche(tile);
+    var p = kbProjekt();
+
+    var leiste = KB_GRUPPEN.map(function (g) {
+      return '<span class="kb-gruppe">' + esc(g.titel) + "</span>" +
+        g.bereiche.map(function (id) {
+          var b = KB[id];
+          return '<button type="button" class="kb-nav" id="kbNav_' + esc(id) + '" ' +
+            'data-kb="' + esc(id) + '" data-stand="' + esc(b.stand) + '" ' +
+            'aria-selected="false">' + esc(b.label) + "</button>";
+        }).join("");
+    }).join("");
 
     el("tileAdmin").innerHTML =
-      '<div class="adm" id="adminNative">' +
-        '<div class="adm-kopf"><h2>Verwaltung</h2>' +
-          '<p class="sub">So pflegen Sie Ihre Inhalte. Diese Ansicht gehört zu Ihrem ' +
-          "Vorhaben und öffnet sich hier — Sie bleiben auf dieser Seite.</p></div>" +
-        '<div class="adm-raster" id="adminAreas">' +
-          bereiche.map(function (name, i) {
-            return '<section class="adm-feld">' +
-              "<h3>" + esc(name) + "</h3>" +
-              '<p class="adm-hint">Texte, Bilder und Reihenfolge dieses Bereichs ' +
-                "werden hier gepflegt.</p>" +
-              '<button type="button" class="adm-btn" id="admWish' + i + '" ' +
-                'data-bereich="' + esc(name) + '">Änderung wünschen</button>' +
-              "</section>";
-          }).join("") +
+      '<div class="kb" id="adminNative">' +
+        '<div class="kb-status" id="kbStatus">' +
+          '<div class="kb-status-l"><b>' + esc(p.name) + "</b>" +
+            "<span>Ihre Verwaltung · Ansicht und Rückmeldung</span></div>" +
+          '<div class="kb-status-r">' +
+            '<span class="kb-chip">' + (p.vorschau ? "Vorschau steht" : "in Arbeit") + "</span>" +
+            '<span class="kb-chip">' + esc(p.kosten) + "</span>" +
+            '<button type="button" id="kbToggle" aria-pressed="true">Vorschau</button>' +
+          "</div>" +
         "</div>" +
-        '<p class="meta" id="adminState">Diese Ansicht zeigt die Bereiche Ihrer ' +
-          "künftigen Verwaltung. Sie ist noch nicht mit Ihren eigenen Inhalten " +
-          "verbunden — bis dahin nehmen wir jeden Wunsch hier auf und setzen ihn um.</p>" +
+        '<div class="kb-body">' +
+          '<nav class="kb-leiste" id="kbNavList" aria-label="Verwaltungsbereiche">' + leiste + "</nav>" +
+          '<div class="kb-work" id="kbWork"></div>' +
+          '<aside class="kb-seite" id="kbSeite">' +
+            '<div class="kb-seite-kopf">Vorschau</div>' +
+            '<div class="pv-stage" id="kbMiniStage" data-view="desktop">' +
+              (p.vorschau
+                ? '<iframe class="pv-frame" id="kbMini" title="Vorschau Ihrer Website" ' +
+                  'referrerpolicy="no-referrer" ' +
+                  'sandbox="allow-scripts allow-same-origin allow-forms allow-popups" ' +
+                  'src="' + esc(einbettUrl(p.vorschau)) + '"></iframe>'
+                : '<p class="kb-hinweis">Die Vorschau erscheint, sobald ein Stand bereit ist.</p>') +
+            "</div>" +
+          "</aside>" +
+        "</div>" +
       "</div>";
     el("tileAdmin").hidden = false;
-    bereiche.forEach(function (name, i) {
-      var knopf = el("admWish" + i);
-      if (!knopf) return;
-      knopf.addEventListener("click", function () { adminWunsch(name); });
+
+    kbListe().forEach(function (id) {
+      var knopf = el("kbNav_" + id);
+      if (knopf) knopf.addEventListener("click", function () { kbZeige(id); });
     });
+    var um = el("kbToggle");
+    if (um) um.addEventListener("click", function () {
+      kbVorschau = um.getAttribute("aria-pressed") !== "true";
+      um.setAttribute("aria-pressed", String(kbVorschau));
+      kbSeiteSetzen();
+    });
+    kbZeige(kbBereich);
+    return true;
+  }
+
+  /* Die Vorschau daneben ist immer sichtbar — ausser man schaltet sie weg,
+     oder man steht ohnehin schon in der grossen Vorschau. */
+  function kbSeiteSetzen() {
+    var seite = el("kbSeite");
+    if (!seite) return;
+    seite.hidden = !kbVorschau || kbBereich === "wunsch";
+  }
+
+  function kbZeige(id) {
+    if (!KB[id]) return false;
+    kbBereich = id;
+    var work = el("kbWork");
+    if (work) work.innerHTML = kbBereichHtml(id);
+    kbListe().forEach(function (k) {
+      var knopf = el("kbNav_" + k);
+      if (knopf) knopf.setAttribute("aria-selected", String(k === id));
+    });
+    /* Die Knoepfe werden bei jedem Wechsel neu gezeichnet. Ihre Handler lesen
+       deshalb den AKTUELLEN Bereich, statt einen mitzuschleppen — sonst
+       schriebe ein Knopf den Namen des Bereichs, in dem er einmal entstanden
+       ist. */
+    var wunsch = el("kbWunsch");
+    if (wunsch) wunsch.addEventListener("click", function () {
+      adminWunsch((KB[kbBereich] || KB.stand).label);
+    });
+    var frei = el("kbFreigabe");
+    if (frei) frei.addEventListener("click", function () {
+      adminWunsch("Freigabe: " + kbProjekt().name);
+    });
+    kbSeiteSetzen();
     return true;
   }
 
   /* Aus der Verwaltung heraus einen Wunsch anlegen: dieselbe Leiste, dieselbe
-     Sendung — nur ist die Kategorie „Verwaltung" und der Bereich schon
-     benannt. Gesendet wird nichts von selbst. */
+     Sendung — nur ist die Kategorie „Verwaltung" und der betroffene Bereich
+     schon benannt. Gesendet wird nichts von selbst. */
   function adminWunsch(name) {
     ckZeige("verwaltung");
     var wahl = el("crArea");

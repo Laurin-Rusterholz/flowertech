@@ -402,7 +402,8 @@ const alleKnoten = (dom) => IDS.map((id) => {
      nicht mehr. Gezeigt wird die Verwaltung im Kundenlink selbst. */
   ok(!/admin\.lehner\.ch/.test(kachel.innerHTML), "die Verwaltungsadresse steht auf der Seite");
   ok(!/<a\s/.test(kachel.innerHTML), "die Verwaltung führt aus dem Kundenlink hinaus");
-  ok(/id="adminAreas"/.test(kachel.innerHTML), "die Verwaltung zeigt keine Bereiche");
+  ok(/id="kbNavList"/.test(kachel.innerHTML), "die Verwaltung zeigt keine Bereichsleiste");
+  ok(/id="kbWork"/.test(kachel.innerHTML), "der Verwaltung fehlt die Arbeitsfläche");
   /* Alle Stufen auf EINER Adresse — im Cockpit aber nacheinander, nicht
      uebereinander gestapelt: jede Ansicht ersetzt die zentrale Flaeche. */
   [["tileOffer", "offerte"], ["tilePreview", "website"], ["tileAdmin", "verwaltung"]].forEach(([id, key]) => {
