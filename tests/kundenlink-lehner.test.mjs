@@ -48,13 +48,15 @@ const IDS = [
   "form", "fields", "hp", "submit", "need", "status", "footer",
   "answered", "answeredTitle", "answeredText", "area",
   "tileTest", "tileOffer", "tilePreview", "tileContract", "tileAdmin", "tileTerms",
+  // Bereichsleiste und Fortschritt gehoeren seit dem Portal-Umbau dazu.
+  "pnav", "phead", "pstatus", "pbarFill", "pcount",
   "visionRoom", "vrLead", "visionRoomMount", "vrCarriers",
 ];
 
 async function seite(daten) {
   const dom = makeDom();
   IDS.forEach((id) => dom.ensure(id));
-  ["error", "content", "answered", "area", "tileTest", "tileOffer", "tilePreview",
+  ["error", "content", "answered", "area", "pnav", "phead", "tileTest", "tileOffer", "tilePreview",
     "tileContract", "tileAdmin", "tileTerms", "visionRoom"]
     .forEach((id) => { dom.node(id).hidden = true; });
   const posted = [];
@@ -196,7 +198,15 @@ const sichtbar = (dom) => IDS.map((id) => {
   // Eine Test-Übersicht ist keine Offerte: nie ein Betrag, nie eine Null.
   ok(!/CHF/.test(kachel.innerHTML), "auf der Test-Übersicht steht ein Betrag");
   ok(!/0\.00/.test(kachel.innerHTML), "auf der Test-Übersicht steht „0.00“");
-  ok(dom.node("tileOffer").hidden === true, "ohne versendete Offerte erscheint eine Offerten-Kachel");
+  /* Der Offerten-Bereich steht seit dem Portal-Umbau da — aber als erklaerter
+     Wartezustand, nicht als Offerte. Entscheidend bleibt: kein Betrag, keine
+     Nummer, nichts aus einem Entwurf. */
+  const offerNode = dom.node("tileOffer");
+  ok(offerNode.hidden === false, "der Offerten-Bereich fehlt ganz");
+  ok(/Wird vorbereitet/.test(String(offerNode.innerHTML || "")),
+    "ohne versendete Offerte erscheint eine Offerten-Kachel statt eines Wartezustands");
+  ok(!/CHF|0\.00|OF-/.test(String(offerNode.innerHTML || "")),
+    "der wartende Offerten-Bereich zeigt Zahlen oder eine Nummer");
 }
 
 /* ══ 3. Die zentrale Standard-AGB — immer da ═══════════════════════════════ */
@@ -269,11 +279,23 @@ const sichtbar = (dom) => IDS.map((id) => {
     stage: "intake",
     tiles: { testService: null, offer: null, preview: null, contract: null, admin: null, terms: null },
   }));
-  ["tileTest", "tileOffer", "tilePreview", "tileContract", "tileAdmin", "tileTerms"].forEach((id) => {
+  /* Ohne Freigabe gibt es keinen INHALT — aber sehr wohl den erklaerten
+     Bereich. Genau das war der Befund: Wer nicht sieht, dass es eine Vorschau
+     ueberhaupt geben wird, haelt Formular und Website fuer zwei Anwendungen. */
+  ["tileOffer", "tilePreview", "tileAdmin", "tileTerms"].forEach((id) => {
+    const node = dom.node(id);
+    ok(node.hidden === false, `der Bereich ${id} fehlt statt zu warten`);
+    ok(/Wird vorbereitet/.test(String(node.innerHTML || "")),
+      `der Bereich ${id} erklärt den Wartezustand nicht`);
+    ok(!/https?:\/\//.test(String(node.innerHTML || "")),
+      `der wartende Bereich ${id} zeigt eine Adresse`);
+  });
+  // Was gar kein eigener Bereich ist, bleibt weg.
+  ["tileTest", "tileContract"].forEach((id) => {
     ok(dom.node(id).hidden === true, `die Kachel ${id} steht ohne Freigabe da`);
     ok(String(dom.node(id).innerHTML || "") === "", `die Kachel ${id} ist ein leerer Platzhalter`);
   });
-  ok(dom.node("area").hidden === true, "der Bereich öffnet sich ohne eine einzige Kachel");
+  ok(dom.node("area").hidden === false, "die Bereiche fehlen ganz");
 
   // Eine unsichere Adresse wird nie verlinkt — auch nicht mit Freigabe.
   const unsicher = await seite(lehner({
@@ -283,7 +305,8 @@ const sichtbar = (dom) => IDS.map((id) => {
       contract: null, admin: null, terms: null,
     },
   }));
-  ok(unsicher.dom.node("tilePreview").hidden === true, "eine http-Adresse wird als Vorschau gezeigt");
+  ok(/Wird vorbereitet/.test(String(unsicher.dom.node("tilePreview").innerHTML || "")),
+    "eine http-Adresse wird als Vorschau gezeigt");
   ok(!/beispiel-lehner/.test(sichtbar(unsicher.dom)), "die unsichere Adresse steht trotzdem da");
 
   // Die Verwaltung erscheint nie allein.
@@ -293,14 +316,87 @@ const sichtbar = (dom) => IDS.map((id) => {
       admin: { label: "Verwaltung", url: "https://admin.lehner.ch/login" }, terms: null,
     },
   }));
-  ok(nurAdmin.dom.node("tileAdmin").hidden === true, "die Verwaltung erscheint ohne Vorschau");
+  ok(/Wird vorbereitet/.test(String(nurAdmin.dom.node("tileAdmin").innerHTML || "")),
+    "die Verwaltung erscheint ohne Vorschau");
+  ok(!/admin\.lehner\.ch/.test(sichtbar(nurAdmin.dom)),
+    "die Verwaltungsadresse steht da, obwohl die Vorschau fehlt");
+}
+
+/* ══ 6b. Das Portal: EINE Adresse, fuenf Bereiche ══════════════════════════ */
+{
+  /* Der gemeldete Befund: „Vorschau ansehen" oeffnete die separate
+     Netlify-Seite, Formular und Website wirkten wie zwei Anwendungen. Jetzt
+     bleibt die Kundschaft fuer alles auf dieser einen Adresse. */
+  const { dom } = await seite(lehner());
+  const nav = String(dom.node("pnav").innerHTML || "");
+  ["Fragebogen", "Offerte", "Website-Vorschau", "Verwaltung", "AGB &amp; Kunde"].forEach((label) => {
+    ok(nav.includes(label), `die Bereichsleiste nennt „${label}“ nicht`);
+  });
+  ok(dom.node("phead").hidden === false, "Statuszeile und Fortschritt fehlen");
+  ok(String(dom.node("pcount").textContent || "").includes("von 5"),
+    "der Fortschritt zaehlt nicht die fuenf Bereiche");
+  ok(String(dom.node("pstatus").textContent || "").length > 10, "die Statuszeile ist leer");
+
+  // Die Vorschau steht IM Portal, nicht als nackter Verweis daneben.
+  const kachel = String(dom.node("tilePreview").innerHTML || "");
+  ok(/id="pvFrame"/.test(kachel), "die Vorschau wird nicht im Portal angezeigt");
+  ok(kachel.includes('src="' + LEHNER_URL + '"'), "der Rahmen zeigt nicht die hinterlegte Adresse");
+  ok(/id="pvDesktop"/.test(kachel) && /id="pvMobil"/.test(kachel),
+    "die Desktop/Mobil-Umschaltung fehlt");
+  // Der Verweis nach draussen bleibt — aber als Rueckweg, nicht als Hauptweg.
+  ok(/In neuem Tab öffnen/.test(kachel), "der Rueckweg in einen eigenen Tab fehlt");
+  ok(!/>Vorschau ansehen</.test(kachel),
+    "der alte nackte Verweis „Vorschau ansehen“ steht wieder da");
+  // Aenderungswuensche bleiben direkt bei der Vorschau — kein dritter Link.
+  ok(dom.node("changeForm"), "die Änderungswünsche stehen nicht bei der Vorschau");
+  ok(!/kunde\.html/.test(sichtbar(dom)) && !/\?t=/.test(sichtbar(dom)),
+    "es entsteht ein zweiter Kundenlink");
+}
+
+/* ══ 6c. Verwaltung als eigener Bereich ════════════════════════════════════ */
+{
+  const { dom } = await seite(lehner({
+    tiles: {
+      testService: null, offer: null,
+      preview: VORSCHAU, contract: null,
+      admin: { label: "Verwaltung", url: "https://admin.lehner.ch/login" }, terms: null,
+    },
+  }));
+  const admin = String(dom.node("tileAdmin").innerHTML || "");
+  ok(/<h2>Verwaltung<\/h2>/.test(admin), "die Verwaltung ist kein eigener Bereich");
+  ok(/id="adminFrame"/.test(admin), "die Verwaltung wird nicht im Portal gezeigt");
+  ok(admin.includes('src="https://admin.lehner.ch/login"'), "der Rahmen zeigt die falsche Adresse");
+  ok(/id="adminFallback"/.test(admin), "der Rueckweg fuer die Verwaltung fehlt");
+  ok(/In neuem Tab öffnen/.test(admin), "der Rueckweg ist nicht benannt");
+}
+
+/* ══ 6d. Die AGB bleiben unveraenderlich ═══════════════════════════════════ */
+{
+  const { dom } = await seite(lehner());
+  const agb = String(dom.node("tileTerms").innerHTML || "");
+  ok(/0\.1-test/.test(agb), "der Versionsstand der AGB fehlt");
+  // Nichts Bearbeitbares: keine Eingaben, kein Absenden, kein contenteditable.
+  ok(!/<input|<textarea|contenteditable|<button/.test(agb),
+    "die AGB lassen sich auf der Kundenseite bearbeiten");
 }
 
 /* ══ 7. Statisch: was die Seite gar nicht erst können darf ═════════════════ */
 {
-  // Die Vorschau wird verlinkt, nie eingebettet — eine fremde Seite gehört
-  // nicht in den Rahmen dieser Seite.
-  ok(!/id="previewFrame"/.test(page), "die Vorschau wird eingebettet statt verlinkt");
+  /* Die Vorschau wird jetzt EINGEBETTET — ein nackter Verweis nach draussen
+     liess Formular und Website wie zwei Anwendungen wirken. Die
+     Sicherheitsabsicht der frueheren Regel bleibt, sie wandert nur von
+     "gar nicht einbetten" auf "nur streng eingesperrt einbetten": */
+  ok(/id="pvFrame"/.test(script), "die Vorschau wird nicht im Portal gezeigt");
+  // Eingesperrt: keine Formulare, keine Popups, keine Top-Navigation.
+  ok(/sandbox="allow-scripts allow-same-origin"/.test(script),
+    "der Vorschau-Rahmen ist nicht eingesperrt");
+  ok(!/allow-top-navigation|allow-forms|allow-popups|allow-modals/.test(script),
+    "der Vorschau-Rahmen darf zu viel");
+  // Kein Verweiser nach draussen.
+  ok(/referrerpolicy="no-referrer"/.test(script), "der Rahmen gibt den Token weiter");
+  // Und der sichtbare Rueckweg, falls die Einbettung blockiert ist.
+  ok(/id="pvFallback"/.test(script), "es fehlt der Rueckweg bei blockierter Einbettung");
+  ok(/In neuem Tab öffnen/.test(script), "der Rueckweg ist nicht benannt");
   ok(/safeUrl/.test(script), "die Seite prüft Adressen nicht");
   // Kein Weg an der Prüfung vorbei: Jede ausgegebene Adresse geht durch safeUrl.
   ok(!/href="'\s*\+\s*esc\(tile\.url\)/.test(script),
