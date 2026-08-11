@@ -397,9 +397,12 @@ const alleKnoten = (dom) => IDS.map((id) => {
   zeige(zusammen.dom, "verwaltung");
   const kachel = zusammen.dom.node("tileAdmin");
   ok(kachel.hidden === false, "die freigegebene Verwaltung fehlt");
-  ok(kachel.innerHTML.includes('href="https://admin.lehner.ch/login"'),
-    "die Verwaltung zeigt auf eine andere Adresse");
-  ok(/rel="noopener noreferrer"/.test(kachel.innerHTML), "der Verwaltungsverweis gibt den Token weiter");
+  /* Die Freigabe entscheidet weiterhin, OB es die Verwaltung gibt — die
+     Adresse selbst ist ein technisches Ziel und erreicht die Kundenseite
+     nicht mehr. Gezeigt wird die Verwaltung im Kundenlink selbst. */
+  ok(!/admin\.lehner\.ch/.test(kachel.innerHTML), "die Verwaltungsadresse steht auf der Seite");
+  ok(!/<a\s/.test(kachel.innerHTML), "die Verwaltung führt aus dem Kundenlink hinaus");
+  ok(/id="adminAreas"/.test(kachel.innerHTML), "die Verwaltung zeigt keine Bereiche");
   /* Alle Stufen auf EINER Adresse — im Cockpit aber nacheinander, nicht
      uebereinander gestapelt: jede Ansicht ersetzt die zentrale Flaeche. */
   [["tileOffer", "offerte"], ["tilePreview", "website"], ["tileAdmin", "verwaltung"]].forEach(([id, key]) => {

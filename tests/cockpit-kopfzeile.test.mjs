@@ -48,7 +48,8 @@ const IDS = [
   "answered", "answeredTitle", "answeredText", "area",
   "tileTest", "tileOffer", "tilePreview", "tileContract", "tileAdmin", "tileTerms",
   "ck", "ckTop", "ckViews", "ckProject", "ckMobil", "ckWish", "ckStage", "ckSide", "ckLock",
-  "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_agb", "ckView_fragebogen",
+  "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_vertrag",
+  "ckView_agb", "ckView_fragebogen",
   "ckWishes", "crArea", "crTitle", "pvStage", "adminStage",
   "visionRoom", "vrLead", "visionRoomMount", "vrCarriers",
 ];
@@ -291,7 +292,8 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
   // Mitte: fünf eindeutige Umschalter, jeder als FlowerTech-Element erkennbar.
   const nav = String(dom.node("ckViews").innerHTML || "");
   [["website", "Website"], ["verwaltung", "Verwaltung"], ["offerte", "Offerte"],
-    ["agb", "AGB &amp; Kunde"], ["fragebogen", "Fragebogen"]].forEach(([key, label]) => {
+    ["vertrag", "Vertrag"], ["agb", "AGB &amp; Kunde"], ["fragebogen", "Fragebogen"]]
+    .forEach(([key, label]) => {
     ok(nav.includes('id="ckView_' + key + '"'), `der Umschalter ${key} fehlt`);
     ok(nav.includes(label), `der Umschalter ${key} ist nicht mit „${label}“ beschriftet`);
     ok(dom.node("ckView_" + key).getAttribute("data-ft") === "view",
@@ -299,8 +301,13 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     ok(dom.node("ckView_" + key).getAttribute("data-ansicht") === key,
       `der Umschalter ${key} nennt seine Ansicht nicht`);
   });
-  ok((nav.match(/data-ft="view"/g) || []).length === 5,
-    "die Kopfzeile trägt nicht genau fünf Umschalter");
+  ok((nav.match(/data-ft="view"/g) || []).length === 6,
+    "die Kopfzeile trägt nicht genau sechs Umschalter");
+  /* Der Vertrag steht zwischen Offerte und AGB — die Reihenfolge ist die
+     Reihenfolge des Vorgangs, nicht die des Zufalls. */
+  ok(nav.indexOf('ckView_offerte') < nav.indexOf('ckView_vertrag')
+    && nav.indexOf('ckView_vertrag') < nav.indexOf('ckView_agb'),
+    "der Vertrag steht nicht zwischen Offerte und AGB & Kunde");
 
   // Rechts: Mobil und ein unmissverständlicher «Änderungswunsch».
   ok(dom.node("ckMobil").getAttribute("data-ft") === "mobil", "die Mobil-Umschaltung fehlt");
@@ -325,7 +332,7 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
   const { dom } = await seite(daten());
   const erwartet = {
     website: "tilePreview", verwaltung: "tileAdmin", offerte: "tileTest",
-    agb: "tileTerms", fragebogen: "answered",
+    vertrag: "tileContract", agb: "tileTerms", fragebogen: "answered",
   };
   Object.keys(erwartet).forEach((key) => {
     zeige(dom, key);
@@ -376,17 +383,143 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
   ok(/^(<div class="pv-stage")/.test(kachel.trim()),
     "vor dem Rahmen steht noch etwas anderes");
 
-  // Die Leistungsübersicht steht in der Offerte — dort und nur dort.
+  /* Der Leistungsumfang steht in der Offerte — dort und nur dort, und in der
+     Sprache der Kundschaft: „Offerte in Vorbereitung", Kosten offen, und
+     ausdrücklich keine Preiszusage. Kein „TEST", keine Testansicht. */
   zeige(dom, "offerte");
   ok(zentralSichtbar(dom).join() === "tileTest",
-    "die Leistungsübersicht steht nicht allein in der Offerte");
-  ok(/Leistungsübersicht/.test(sichtbarerText()), "die Leistungsübersicht fehlt in der Offerte");
-  ok(/Website-Neukonzept Lehner/.test(sichtbarerText()), "die Übersicht nennt das Vorhaben nicht");
+    "der Kostenstand steht nicht allein in der Offerte");
+  const offerte = sichtbarerText();
+  ok(/Offerte in Vorbereitung/.test(offerte), "die Offerte sagt nicht, woran sie ist");
+  ok(/Website-Neukonzept Lehner/.test(offerte), "die Offerte nennt das Vorhaben nicht");
+  ok(/Leistungsumfang/.test(offerte) && /Startseite/.test(offerte),
+    "der Leistungsumfang fehlt in der Offerte");
+  ok(/Kosten noch offen/.test(offerte), "der Kostenstand fehlt");
+  ok(/keine verbindliche Preiszusage/.test(offerte), "die Unverbindlichkeit steht nicht da");
+  ok(/entsteht keine Rechnung/.test(offerte), "es steht nicht da, dass keine Rechnung entsteht");
+  ok(/Standard-AGB/.test(offerte), "die Offerte verweist nicht auf die Standard-AGB");
+  ["TEST", "Testansicht", "Vorschlag ansehen", "Bestehende Website", "CHF"].forEach((wort) => {
+    ok(!offerte.includes(wort), `in der Offerte steht „${wort}“`);
+  });
+  ok(!/<a [^>]*href="https?:/.test(String(dom.node("tileTest").innerHTML || "")),
+    "die Offerte führt aus dem Kundenlink hinaus");
+}
+
+/* ══ 3c. Die Verwaltung liegt IM Kundenlink ════════════════════════════════ */
+{
+  /* Vorher stand hier „öffnet sich in einem eigenen Tab … lässt sich deshalb
+     nicht einbetten" samt Verweis nach draussen. Das war ein zweiter Ort — der
+     eine Kundenlink hörte dort auf. Jetzt zeigt FlowerTech die Verwaltung
+     selbst, im gleichen Bild, mit dem direkten Weg zum Änderungswunsch. */
+  const { dom } = await seite(daten());
+  zeige(dom, "verwaltung");
+  const admin = String(dom.node("tileAdmin").innerHTML || "");
+
+  ok(zentralSichtbar(dom).join() === "tileAdmin",
+    "in der Verwaltung steht zentral noch etwas anderes");
+  ok(!/<a\s/.test(admin), "die Verwaltung enthält einen Verweis");
+  ok(!/https?:\/\//.test(admin), "die Verwaltung zeigt eine Adresse");
+  ["Verwaltung öffnen", "in einem eigenen Tab", "nicht in diese Ansicht einbetten",
+    "Anmeldebereich", "admin.lehner.ch", "Login", "anmelden"].forEach((wort) => {
+    ok(!admin.includes(wort), `in der Verwaltung steht „${wort}“`);
+  });
+  ok(/Sie bleiben auf dieser Seite/.test(admin), "die Verwaltung sagt nicht, wo man ist");
+
+  // Die Bereiche kommen aus dem Leistungsumfang des Projekts.
+  ok(/id="adminAreas"/.test(admin), "die Verwaltung zeigt keine Bereiche");
+  ["Startseite", "Menü", "Kontakt"].forEach((name) => {
+    ok(admin.includes(name), `der Bereich „${name}“ fehlt in der Verwaltung`);
+  });
+  // Und sie behauptet nicht, schon mit den Inhalten verbunden zu sein.
+  ok(/noch nicht mit Ihren eigenen Inhalten/.test(admin),
+    "die Verwaltung behauptet, bereits mit den Inhalten verbunden zu sein");
+
+  /* Aus einem Bereich heraus einen Wunsch anlegen: dieselbe Leiste, Kategorie
+     „Verwaltung", Bereich schon im Feld — und nichts wird dabei gesendet. */
+  const { dom: d2, posted } = await seite(daten());
+  zeige(d2, "verwaltung");
+  const vorher = posted.length;
+  let fokus = false;
+  d2.node("crTitle").focus = () => { fokus = true; };
+  d2.node("admWish0").click();
+  ok(d2.node("ckSide").hidden === false, "der Wunsch aus der Verwaltung öffnet keine Leiste");
+  ok(d2.node("crArea").value === "Verwaltung", "der Wunsch landet nicht im Bereich Verwaltung");
+  ok(/^Startseite: /.test(String(d2.node("crTitle").value || "")),
+    `der Bereich steht nicht im Feld: ${d2.node("crTitle").value}`);
+  ok(fokus, "der Fokus landet nicht im Feld");
+  ok(posted.length === vorher, "aus der Verwaltung heraus wurde etwas gesendet");
+}
+
+/* ══ 3d. Der Vertrag — ein Entwurf, der sich als solcher zeigt ═════════════ */
+{
+  const { dom } = await seite(daten());
+  zeige(dom, "vertrag");
+  const vertrag = String(dom.node("tileContract").innerHTML || "");
+  ok(zentralSichtbar(dom).join() === "tileContract", "der Vertrag steht nicht allein");
+  ok(/Projektvertrag/.test(vertrag), "die Ansicht ist nicht als Projektvertrag benannt");
+  ok(/Entwurf – noch nicht freigegeben/.test(vertrag), "der Entwurfsstatus fehlt");
+  ok(/keine Vereinbarung/.test(vertrag) && /begründet keine Verpflichtung/.test(vertrag),
+    "der Entwurf grenzt sich nicht von einer Vereinbarung ab");
+  ok(/Lehner Gartenbau/.test(vertrag), "der Vertrag nennt das Projekt nicht");
+  ok(/Parteien/.test(vertrag) && /noch offen/.test(vertrag),
+    "die Parteien und die fehlenden Angaben stehen nicht da");
+  ok(/Leistungsumfang/.test(vertrag) && /Startseite/.test(vertrag),
+    "der Leistungsumfang fehlt im Vertrag");
+  ok(/Standard-AGB/.test(vertrag) && /0\.1-test/.test(vertrag),
+    "der Vertrag nennt die Fassung der Standard-AGB nicht");
+  // Keine vorgetäuschte Zustimmung: nichts zu unterschreiben, nichts zu bestätigen.
+  ["Unterschrift", "unterschreiben", "Zustimmung", "zustimmen", "akzeptieren",
+    "verbindlich vereinbart", "rechtsgültig"].forEach((wort) => {
+    ok(!vertrag.includes(wort), `im Vertragsentwurf steht „${wort}“`);
+  });
+  ok(!/<input|<textarea|type="checkbox"/.test(vertrag),
+    "der Vertragsentwurf lässt sich ausfüllen");
+}
+
+/* ══ 3e. Die Änderungsleiste steht nur, wo geändert wird ═══════════════════ */
+{
+  const { dom } = await seite(daten());
+  [["website", "Website"], ["verwaltung", "Verwaltung"]].forEach(([key, bereich]) => {
+    zeige(dom, key);
+    ok(dom.node("ckSide").hidden === false, `in «${key}» fehlt die Änderungsleiste`);
+    ok(dom.node("crArea").value === bereich,
+      `in «${key}» ist der Bereich „${dom.node("crArea").value}“ vorgewählt statt „${bereich}“`);
+  });
+  ["offerte", "vertrag", "agb", "fragebogen"].forEach((key) => {
+    zeige(dom, key);
+    ok(dom.node("ckSide").hidden === true, `in «${key}» steht die Änderungsleiste`);
+  });
+}
+
+/* ══ 3f. Die Website bleibt benutzbar ══════════════════════════════════════ */
+{
+  /* Eine Vorschau, in der sich nicht klicken lässt, ist ein Bildschirmfoto.
+     Der Rahmen muss Navigation, Knöpfe und Seitenwechsel zulassen — und
+     zugleich diese Seite hier nicht ersetzen können. */
+  ok(/sandbox="allow-scripts allow-same-origin allow-forms allow-popups"/.test(script),
+    "der Rahmen lässt die Website nicht benutzen");
+  // Geprüft werden die Schranken selbst, nicht der Fliesstext daneben.
+  const schranken = (script.match(/sandbox="[^"]*"/g) || []).join(" ");
+  ["allow-top-navigation", "allow-popups-to-escape-sandbox", "allow-modals"]
+    .forEach((flagge) => {
+      ok(!schranken.includes(flagge), `der Rahmen darf zu viel: ${flagge}`);
+    });
+  const { dom } = await seite(daten());
+  const kachel = String(dom.node("tilePreview").innerHTML || "");
+  ok(kachel.includes('src="https://beispiel-lehner.netlify.app/?embed=flowertech"'),
+    "die Website-Bühne zeigt nicht die vereinbarte Vorschau");
+  ok(!/vorschau/i.test(kachel.replace(/Vorschau/g, "")),
+    "die Bühne weicht auf einen Vorschau-Unterpfad aus");
+  // Nichts liegt über dem Rahmen, was Klicks abfangen könnte.
+  ok(!/position:absolute|position:fixed/.test(
+    (/\.pv-stage\{[^}]*\}/.exec(css) || [""])[0] + (/\.pv-frame\{[^}]*\}/.exec(css) || [""])[0]),
+    "über der Website liegt eine Schicht, die Klicks abfängt");
+  ok(!/pointer-events\s*:\s*none/.test(css), "eine Regel schaltet Klicks ab");
 }
 
 /* ══ 4. «Änderungswunsch» führt aus jeder Ansicht zum Ziel ═════════════════ */
 {
-  for (const start of ["verwaltung", "offerte", "agb", "fragebogen"]) {
+  for (const start of ["verwaltung", "offerte", "vertrag", "agb", "fragebogen"]) {
     const { dom } = await seite(daten());
     zeige(dom, start);
     let fokus = false;
