@@ -267,6 +267,14 @@
     border:0;font-size:13px;font-weight:700;padding:9px 15px;border-radius:10px;cursor:pointer}
   .kb-fuss .kb-wunsch+.kb-wunsch{background:transparent;border:1px solid var(--line);
     color:var(--text)}
+  /* Elementauswahl: Umschalter und Begleittext ueber der Vorschau. */
+  .pick-bar{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+  .pick-bar button{background:transparent;border:1px solid var(--line);color:var(--text);
+    font-size:13px;font-weight:650;padding:8px 14px;border-radius:10px;cursor:pointer}
+  .pick-bar button[aria-pressed="true"]{background:rgba(160,107,255,.3);border-color:transparent}
+  .pick-text{flex:1 1 240px;min-width:0;font-size:12.5px;color:var(--muted);line-height:1.55}
+  .pick-bar button[data-art="fehlt"]+.pick-text{color:var(--err)}
+  .pick-bar button[data-art="ok"]+.pick-text{color:var(--ok)}
   /* Vorschau daneben — und in „Website & Änderungswünsche" gross. */
   .kb-seite{flex:0 0 330px;min-width:0;display:flex;flex-direction:column;
     border-left:1px solid var(--line);background:#100f17}
@@ -627,7 +635,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "kopfzeile-2";
+  var CK_BUILD = "auswahlmodus-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -1489,24 +1497,171 @@
     return kopf + koerper + fuss;
   }
 
-  /* Website & Aenderungswuensche: die Vorschau selbst, plus der Wunschmodus.
-     Was in einem fremden Rahmen angeklickt wird, kann diese Seite nicht lesen
-     (und soll es nicht) — der Wunschmodus behauptet das auch nicht. Er oeffnet
-     die Leiste und haelt fest, worum es geht. */
+  /* Website & Aenderungswuensche: die Vorschau selbst, plus die Elementauswahl.
+     Gelesen wird der fremde Rahmen nicht — er MELDET sich. Die eingebettete
+     Website traegt dafuer eine Gegenstelle (projekt-lehner,
+     assets/js/wunsch.js), die auf Anforderung sagt, worauf getippt wurde.
+     Bleibt diese Meldung aus, sagt der Umschalter das offen. */
   function kbWunschHtml() {
     var p = kbProjekt();
     if (!p.vorschau) {
       return '<p class="kb-hinweis">Sobald ein Stand zum Anschauen bereit ist, ' +
         "erscheint Ihre Website hier — direkt in dieser Ansicht.</p>";
     }
-    return '<div class="kb-vorschau-gross"><div class="pv-stage" id="kbStage" data-view="desktop">' +
+    return '<div class="pick-bar">' +
+        '<button type="button" id="pickToggle" aria-pressed="false">Element auswählen</button>' +
+        '<span class="pick-text" id="pickText">Ausgeschaltet können Sie sich normal ' +
+          "durch Ihre Seiten klicken. Eingeschaltet meldet ein Klick die Stelle, " +
+          "statt weiterzuspringen.</span>" +
+      "</div>" +
+      '<div class="kb-vorschau-gross"><div class="pv-stage" id="kbStage" data-view="desktop">' +
       '<iframe class="pv-frame" id="kbFrame" title="Ihre Website" ' +
         'referrerpolicy="no-referrer" ' +
         'sandbox="allow-scripts allow-same-origin allow-forms allow-popups" ' +
         'src="' + esc(einbettUrl(p.vorschau)) + '"></iframe></div></div>' +
-      '<p class="kb-hinweis">Klicken Sie sich durch Ihre Seiten wie im richtigen ' +
-        "Browser. Fällt Ihnen etwas auf, schalten Sie den Wunschmodus ein — dann " +
-        "notieren Sie es gleich hier, mit der Seite, auf der Sie gerade sind.</p>";
+      '<p class="kb-hinweis" id="pickHint">Klicken Sie sich durch Ihre Seiten wie im ' +
+        "richtigen Browser. Fällt Ihnen etwas auf: „Element auswählen“ einschalten und " +
+        "die Stelle antippen — Seite und Abschnitt stehen danach im Wunsch.</p>";
+  }
+
+  /* ── Elementauswahl in der Vorschau ─────────────────────────────────────
+     Die eingebettete Website meldet auf Anforderung, worauf getippt wurde.
+     Gegenstelle ist dort `assets/js/wunsch.js` (Repo projekt-lehner); das
+     Protokoll ist dasselbe wie zwischen der bestehenden Verwaltung und ihrer
+     Website (verwaltung-djsamsparkling ⇄ s-mi):
+
+         hierher   ready  ·  pick
+         hinaus    arm  ·  disarm  ·  clear
+
+     Angenommen wird eine Nachricht nur, wenn ALLES stimmt: der Namensraum,
+     der Absender (genau dieser Rahmen), die Herkunft (genau die Herkunft der
+     Vorschau-Adresse) und die Form. Uebernommen werden ausschliesslich kurze
+     Textangaben — niemals Markup.
+
+     Meldet sich die Vorschau nicht binnen weniger Sekunden bereit, sagt die
+     Seite das offen, statt einen Modus zu behaupten, den es nicht gibt. */
+  var PICK_NS = "flowertech-wunsch";
+  var pickAn = false;
+  var pickVerbunden = false;
+  var pickWartet = null;
+
+  function pickFrame() { return el("kbFrame"); }
+
+  function pickHerkunft() {
+    var url = kbProjekt().vorschau;
+    if (!url) return "";
+    var treffer = /^(https:\/\/[^/?#]+)/.exec(url);
+    return treffer ? treffer[1] : "";
+  }
+
+  function pickSenden(typ) {
+    var frame = pickFrame();
+    var ziel = pickHerkunft();
+    if (!frame || !frame.contentWindow || !ziel) return false;
+    try {
+      frame.contentWindow.postMessage({ ns: PICK_NS, type: typ }, ziel);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function pickText(text, art) {
+    var feld = el("pickText");
+    if (feld) feld.textContent = text;
+    var knopf = el("pickToggle");
+    if (knopf) knopf.setAttribute("data-art", art || "");
+  }
+
+  function pickSetzen(an) {
+    pickAn = !!an;
+    var knopf = el("pickToggle");
+    if (knopf) {
+      knopf.setAttribute("aria-pressed", String(pickAn));
+      knopf.textContent = pickAn ? "Auswahlmodus aktiv" : "Element auswählen";
+    }
+    pickSenden(pickAn ? "arm" : "disarm");
+    if (!pickAn) {
+      pickText("Ausgeschaltet können Sie sich normal durch Ihre Seiten klicken. " +
+        "Eingeschaltet meldet ein Klick die Stelle, statt weiterzuspringen.", "");
+      return true;
+    }
+    pickText("Auswahlmodus ist an: Tippen Sie in der Vorschau auf die Stelle, die " +
+      "anders werden soll.", "an");
+    /* Ehrlich bleiben: Meldet sich die Vorschau nicht, gibt es hier keine
+       Auswahl — und das steht dann auch da. */
+    if (!pickVerbunden) {
+      if (pickWartet) clearTimeout(pickWartet);
+      pickWartet = window.setTimeout(function () {
+        if (pickAn && !pickVerbunden) {
+          pickText("Elementauswahl für diese Vorschau noch nicht verbunden. " +
+            "Beschreiben Sie die Stelle bitte in Worten — der Wunsch kommt trotzdem an.",
+            "fehlt");
+        }
+      }, 4000);
+    }
+    return true;
+  }
+
+  /* Aus der Auswahl wird ein vorbereiteter Wunsch — gesendet wird nichts. */
+  function pickUebernehmen(d) {
+    var stelle = String(d.sectionTitle || d.section || "").trim();
+    var beschriftung = String(d.label || "").trim();
+    var seite = safeUrl(d.url) || "";
+    ckZeige("verwaltung");
+    var wahl = el("crArea");
+    if (wahl) wahl.value = "Website";
+    var titel = el("crTitle");
+    if (titel) {
+      titel.value = ("Website – " + (stelle || beschriftung || "Stelle")).slice(0, 160);
+      if (titel.focus) titel.focus();
+    }
+    var detail = el("crDetail");
+    if (detail) {
+      var zeilen = [];
+      if (stelle) zeilen.push("Abschnitt: " + stelle + (d.section ? " (#" + d.section + ")" : ""));
+      if (beschriftung && beschriftung !== stelle) zeilen.push("Angetippt: " + beschriftung);
+      if (seite) zeilen.push("Seite: " + seite);
+      zeilen.push("");
+      detail.value = zeilen.join("\n");
+    }
+    pickSenden("clear");
+    pickText("Stelle übernommen: " + (stelle || beschriftung || "Website") +
+      ". Schreiben Sie jetzt rechts, was dort anders werden soll.", "ok");
+    return true;
+  }
+
+  /* Nur was wirklich aus DIESEM Rahmen und von DIESER Herkunft kommt. */
+  function pickNachricht(e) {
+    var d = e && e.data;
+    if (!d || typeof d !== "object" || d.ns !== PICK_NS) return false;
+    var frame = pickFrame();
+    if (!frame || !frame.contentWindow || e.source !== frame.contentWindow) return false;
+    var ziel = pickHerkunft();
+    if (!ziel || e.origin !== ziel) return false;
+    if (d.type === "ready") {
+      pickVerbunden = true;
+      if (pickAn) pickSenden("arm");
+      return true;
+    }
+    if (d.type === "pick") {
+      pickVerbunden = true;
+      return pickUebernehmen(d);
+    }
+    return false;
+  }
+  /* Ohne Ereignisse gibt es keine Auswahl — die Seite bleibt trotzdem ganz. */
+  if (window.addEventListener) window.addEventListener("message", pickNachricht);
+
+  function pickVerdrahten() {
+    var knopf = el("pickToggle");
+    if (!knopf) return false;
+    pickVerbunden = false;
+    pickAn = false;
+    knopf.addEventListener("click", function () {
+      pickSetzen(knopf.getAttribute("aria-pressed") !== "true");
+    });
+    return true;
   }
 
   function renderAdmin(tile) {
@@ -1590,6 +1745,7 @@
        deshalb den AKTUELLEN Bereich, statt einen mitzuschleppen — sonst
        schriebe ein Knopf den Namen des Bereichs, in dem er einmal entstanden
        ist. */
+    if (id === "wunsch") pickVerdrahten();
     var wunsch = el("kbWunsch");
     if (wunsch) wunsch.addEventListener("click", function () {
       adminWunsch((KB[kbBereich] || KB.stand).label);
@@ -1716,14 +1872,19 @@
         ckListe();
         el("crTitle").value = "";
         el("crDetail").value = "";
+        /* Behauptet wird nur, was der Eingang bestaetigt hat. „Als Aufgabe in
+           FlowerTech angelegt" steht deshalb erst da, wenn die Annahme
+           zurueckgemeldet ist — nicht schon beim Abschicken. */
         status.className = "status show ok";
         status.textContent = data.duplicate
-          ? "Dieser Wunsch ist bereits bei uns."
-          : "Danke — Ihr Wunsch ist angekommen. Wir melden uns, bevor etwas umgesetzt wird.";
+          ? "Dieser Wunsch ist bereits bei uns — es entsteht keine zweite Aufgabe."
+          : "Angekommen: als Aufgabe in FlowerTech angelegt. Wir melden uns, bevor "
+            + "etwas umgesetzt wird.";
       })
       .catch(function (e) {
         status.className = "status show err";
-        status.textContent = e.message + " Bitte später erneut versuchen.";
+        status.textContent = e.message + " Es wurde keine Aufgabe angelegt — bitte "
+          + "in ein paar Minuten erneut senden.";
       })
       .then(function () { btn.disabled = false; });
   }

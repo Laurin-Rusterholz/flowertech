@@ -364,8 +364,12 @@ const alleKnoten = (dom) => IDS.map((id) => {
   ok(body.payload.requestedBy === "Rita Lehner", "die Absenderin fehlt");
   ok(/^ft_/.test(body.idempotencyKey), "der Wunsch ist nicht gegen Doppelklicks abgesichert");
   ok(!JSON.stringify(body).includes("projectId"), "im Versand steht eine Projekt-ID");
-  ok(/angekommen/.test(dom.node("crStatus").textContent),
+  /* Behauptet wird nur, was der Eingang bestätigt hat: die angelegte Aufgabe
+     erst nach der Annahme, nicht schon beim Abschicken. */
+  ok(/Angekommen/.test(dom.node("crStatus").textContent),
     `die Bestätigung fehlt: ${dom.node("crStatus").textContent}`);
+  ok(/als Aufgabe in FlowerTech angelegt/.test(dom.node("crStatus").textContent),
+    "es wird nicht bestätigt, dass eine Aufgabe entstanden ist");
   ok(dom.node("crTitle").value === "", "das Formular bleibt nach dem Senden gefüllt");
 
   // Derselbe Link, keine zweite Adresse: gelesen wurde genau einmal.
