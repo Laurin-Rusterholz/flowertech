@@ -658,7 +658,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "auswahl-kopfzeile-1";
+  var CK_BUILD = "auswahl-bleibt-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -1731,6 +1731,8 @@
     if (!ziel || e.origin !== ziel) return false;
     if (d.type === "ready") {
       pickVerbunden = true;
+      // Die Vorschau meldet sich nach jedem Seitenwechsel neu. Wer den Modus
+      // eingeschaltet hat, will ihn auch auf der naechsten Seite haben.
       if (pickAn) pickSenden("arm");
       return true;
     }
@@ -1943,30 +1945,26 @@
     if (!seite) return;
     if (!feedback) {
       seite.innerHTML = "<h3>Änderungswünsche</h3>" +
-        '<p class="sub">Wir nehmen sie gerne auf — antworten Sie einfach auf unsere ' +
-        "letzte Nachricht, dann tragen wir sie an Ihrem Vorhaben nach.</p>";
+        '<p class="sub">Antworten Sie einfach auf unsere letzte Nachricht.</p>';
       return;
     }
     seite.innerHTML = "<h3>Änderungswünsche</h3>" +
-      '<p class="sub" id="changeIntro">Etwas soll anders sein? Schreiben Sie es hier auf — ' +
-        "der Wunsch landet bei uns an Ihrem Vorhaben.</p>" +
+      '<p class="sub" id="changeIntro">Was soll anders sein?</p>' +
       '<ul class="ck-wishes" id="ckWishes"></ul>' +
       '<form id="changeForm" novalidate>' +
         '<label for="crArea"><span class="lbl">Bereich</span>' +
           '<select id="crArea"><option value="Website">Website</option>' +
           '<option value="Verwaltung">Verwaltung</option></select></label>' +
-        '<label for="crTitle"><span class="lbl">Was soll geändert werden? ' +
+        '<label for="crTitle"><span class="lbl">Änderung ' +
           '<span class="req">· Pflichtfeld</span></span>' +
           '<input id="crTitle" maxlength="160" required aria-required="true"></label>' +
-        '<label for="crDetail"><span class="lbl">Details ' +
-          '<span class="sub" style="font-weight:400">· freiwillig</span></span>' +
-          '<textarea id="crDetail" maxlength="1500"></textarea></label>' +
-        '<label for="crBy"><span class="lbl">Ihr Name ' +
-          '<span class="sub" style="font-weight:400">· freiwillig</span></span>' +
+        '<label for="crDetail"><span class="lbl">Details</span>' +
+          '<textarea id="crDetail" maxlength="1500" rows="3"></textarea></label>' +
+        '<label for="crBy"><span class="lbl">Ihr Name</span>' +
           '<input id="crBy" maxlength="120"></label>' +
         '<label class="hp" aria-hidden="true">Bitte leer lassen' +
           '<input id="crHp" tabindex="-1" autocomplete="off"></label>' +
-        '<button type="submit" id="crSubmit">Änderungswunsch senden</button>' +
+        '<button type="submit" id="crSubmit">Senden</button>' +
         '<div class="status" id="crStatus" role="status" aria-live="polite"></div>' +
       "</form>";
     var form = el("changeForm");
@@ -2037,9 +2035,8 @@
            zurueckgemeldet ist — nicht schon beim Abschicken. */
         status.className = "status show ok";
         status.textContent = data.duplicate
-          ? "Dieser Wunsch ist bereits bei uns — es entsteht keine zweite Aufgabe."
-          : "Angekommen: als Aufgabe in FlowerTech angelegt. Wir melden uns, bevor "
-            + "etwas umgesetzt wird.";
+          ? "Bereits bei uns — keine zweite Aufgabe."
+          : "Angekommen: als Aufgabe in FlowerTech angelegt.";
       })
       .catch(function (e) {
         status.className = "status show err";
