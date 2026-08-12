@@ -77,11 +77,13 @@ ok(/X-Robots-Tag = "noindex/.test(block), "der noindex-Header fehlt");
 // ── 4. Responsive, im FlowerTech-Design, bedienbar ────────────────────────
 ok(/name="viewport"[^>]*width=device-width/.test(page), "die Seite ist nicht responsive");
 ok(/--lime|--cyan|--violet/.test(page), "die Seite nutzt nicht die FlowerTech-Farben");
-/* Warm und hell: ein Familienbetrieb, kein Konzern. */
-ok(/--bg:#faf6f0/.test(page), "die Seite ist nicht warm und hell");
+/* Der Rahmen ist FlowerTech — dunkel, in jedem Kundenprojekt gleich. Warm
+   ist die Kundenwebsite, und die lebt in ihrem eigenen Projekt. */
+ok(/--bg:#07070a/.test(page), "der Rahmen traegt nicht das FlowerTech-Bild");
+ok(/--lime:#c8ff2e/.test(page), "die FlowerTech-Farben fehlen");
 /* Das FlowerTech-Bild bleibt dunkel; hell wird die Bühne, auf der die Website
    der Kundschaft steht — sonst sitzt eine helle Website im Schwarzen. */
-ok(/--buehne:#f4ede3/.test(page), "die Bühne der Website ist nicht hell");
+ok(/--buehne:#f2f0f6/.test(page), "die Bühne der Website ist nicht hell");
 ok(/\.pv-stage\{[^}]*background:var\(--buehne\)/.test(page.replace(/\s*\n\s*/g, "")),
   "die Website steht nicht auf der hellen Bühne");
 ok(/id="hp"/.test(page), "der Honeypot fehlt");
