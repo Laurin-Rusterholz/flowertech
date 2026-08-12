@@ -201,8 +201,8 @@ const sichtbar = (dom) => IDS.map((id) => {
   ok(dom.node("changeIntro"), "der Einstieg für Änderungswünsche ist nicht benannt");
   /* Die Aenderungswuensche stehen jetzt in der festen Seitenleiste neben der
      Vorschau — nicht mehr unter ihr in derselben Kachel. */
-  ok(/geändert werden/.test(String(dom.node("ckSide").innerHTML || "")),
-    "das Pflichtfeld ist nicht beschriftet");
+  ok(/Pflichtfeld/.test(String(dom.node("ckSide").innerHTML || "")),
+    "das Pflichtfeld ist nicht als solches gekennzeichnet");
   ok(dom.node("ckSide").hidden === false, "die Änderungsleiste steht nicht neben der Vorschau");
   ok(/id="crArea"/.test(String(dom.node("ckSide").innerHTML || "")),
     "die Kategorie Website/Verwaltung fehlt");
