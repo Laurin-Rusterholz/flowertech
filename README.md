@@ -115,18 +115,53 @@ Einzeln geht auch:
 ```bash
 node tests/fragebogen.test.mjs         # der Fragebogen selbst
 node tests/kundenbereich.test.mjs      # die Stufen hinter demselben Link
-node tests/kundenlink-lehner.test.mjs  # der Live-Befund: Vorschau, TEST, AGB
+node tests/kundenlink-lehner.test.mjs  # der Live-Befund: Vorschau, Offerte, AGB
+node tests/cockpit-kopfzeile.test.mjs  # Kopfzeile, Ansichten, Kunden-Backend
+node tests/auswahlmodus.test.mjs       # Elementauswahl in der Vorschau
 node tests/kunde-page.test.mjs         # das Kundenportal
 node tests/visionroom.test.mjs         # der gemeinsame Vision Room
 ```
 
-`tests/dom-double.mjs` ist das gemeinsame DOM-Doppel dieser Tests — kein Test.
+`tests/dom-double.mjs` (DOM-Doppel) und `tests/css-sichtbarkeit.mjs`
+(CSS-Kaskade) sind gemeinsame Hilfen dieser Tests — keine Tests.
 
 Alle führen die Seitenlogik wirklich aus (Skriptblock gegen ein DOM-Doppel) und
 prüfen zusätzlich statisch, was NICHT passieren darf: keine Zugangsdaten im
 Browser, kein Mail-Entwurf statt echtem Versand, keine Indexierung von
 Fragebogen und Kundenportal, keine Vorschau ausserhalb des sandboxed iframe,
 keine Kachel ohne Freigabe und kein Entwurf nach aussen.
+
+## Standard-Abnahme
+
+Nach jedem Deploy dieselben Schritte, in dieser Reihenfolge. Sie sind bewusst
+kurz — was hier durchfällt, fällt sonst der Kundschaft auf.
+
+1. **Testlauf** — `node tests/run-all.mjs` muss vollständig grün sein.
+   Dasselbe läuft in der CI; ein roter Lauf ist ein Abbruch, keine Notiz.
+2. **Frischer Kundenlink** — `https://flowertech.ch/fragebogen.html?e=<Token>`
+   neu öffnen, dann einmal hart neu laden (⌘/Strg + Shift + R). Ohne das sieht
+   man die vorige Fassung und prüft eine Seite, die es nicht mehr gibt.
+   Zur Kontrolle in der Konsole:
+   `document.documentElement.dataset.ftCockpit` — steht dort nicht die Fassung
+   dieser Auslieferung, ist der Deploy noch nicht durch.
+3. **Alle Ansichten** — Website · Verwaltung · Offerte · Vertrag · AGB & Kunde ·
+   Fragebogen einmal durchschalten. Jede ersetzt die Mitte vollständig; nie
+   stehen zwei gleichzeitig da.
+4. **Desktop und Mobil** — dieselbe Runde im schmalen Fenster (unter 900 px).
+   Kopfzeile, Bereichsleiste und Änderungsleiste müssen lesbar bleiben.
+5. **Vorschau bedienbar** — mit *ausgeschaltetem* Auswahlmodus durch die
+   eingebettete Website klicken: Menü, Links, Seitenwechsel funktionieren.
+6. **Elementauswahl** — „Element auswählen“ einschalten, in der Vorschau auf
+   eine Stelle tippen. Erwartet: kein Seitenwechsel, die Änderungsleiste öffnet
+   sich, Bereich *Website*, Titel und Details tragen Abschnitt und Seite.
+   Meldet sich die Vorschau nicht, steht dort „noch nicht verbunden“ — das ist
+   eine ehrliche Auskunft, kein stiller Ausfall.
+7. **Nichts wird dabei gesendet** — erst der Knopf „Änderungswunsch senden“
+   schickt etwas. Für die Abnahme wird kein echter Kundenwunsch abgeschickt.
+8. **Browser-Konsole** — keine Fehler, keine Warnungen aus dieser Seite.
+
+Was nie behauptet werden darf: ein Auswahlmodus, der nicht verbunden ist, oder
+eine angelegte Aufgabe, die der Eingang nicht bestätigt hat.
 
 ## Qualität
 
