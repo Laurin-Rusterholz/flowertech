@@ -43,7 +43,7 @@ const IDS = [
   "answered", "answeredTitle", "answeredText", "area",
   "tileTest", "tileOffer", "tilePreview", "tileContract", "tileAdmin", "tileTerms",
   "ck", "ckTop", "ckViews", "ckProject", "ckMobil", "ckDesktop", "ckReload", "ckWish",
-  "ckStage", "ckSide", "ckLock", "ckPick", "pvFrame",
+  "ckStage", "ckSide", "ckLock", "ckPick", "pvFrame", "pickDlg", "changeForm", "changeIntro",
   "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_vertrag",
   "ckView_agb", "ckView_fragebogen",
   "ckWishes", "crArea", "crTitle", "crDetail", "crBy", "crHp", "crSubmit", "crStatus",
@@ -55,7 +55,7 @@ async function seite() {
   const dom = makeDom();
   IDS.forEach((id) => dom.ensure(id));
   ["error", "content", "answered", "area", "ck", "ckSide", "ckLock", "tileTest", "tileOffer",
-    "tilePreview", "tileContract", "tileAdmin", "tileTerms", "visionRoom"]
+    "tilePreview", "tileContract", "tileAdmin", "tileTerms", "visionRoom", "pickDlg"]
     .forEach((id) => { dom.node(id).hidden = true; });
 
   /* Der Rahmen antwortet wie die echte Vorschau: Er merkt sich, was er
@@ -166,26 +166,83 @@ const AUSWAHL = {
   ok(aus.ziel === HERKUNFT, "auch das Ausschalten geht nicht an die Herkunft");
 }
 
-/* ══ 3. Eine Auswahl füllt den Wunsch vor — und sendet nichts ══════════════ */
+/* ══ 3. Eine Auswahl öffnet den Dialog — und sendet nichts ═════════════════ */
 {
+  /* Wie in der Präsentationsfassung: Der Wunsch wird in einem Dialog
+     geschrieben, nicht in der Seitenleiste vorbereitet. Die Leiste zeigt im
+     Auswahlmodus nur, was schon registriert ist. */
   const { dom, melden, posted } = await seite();
   const vorher = posted.length;
   dom.node("pickToggle").click();
   melden(AUSWAHL);
 
-  ok(dom.node("ckSide").hidden === false, "die Änderungsleiste bleibt zu");
-  ok(dom.node("crArea").value === "Website",
-    `der Bereich ist „${dom.node("crArea").value}“ statt „Website“`);
-  ok(dom.node("crTitle").value === "Website – Über uns",
-    `der Titel ist nicht vorbereitet: ${dom.node("crTitle").value}`);
-  const detail = String(dom.node("crDetail").value || "");
-  ok(/Abschnitt: Über uns \(#ueber-uns\)/.test(detail), `der Abschnitt fehlt: ${detail}`);
-  ok(/Angetippt: Familie Lehner/.test(detail), "das angetippte Element fehlt");
-  ok(/Seite: https:\/\/beispiel-lehner\.netlify\.app\/ueber-uns\.html/.test(detail),
-    "die Seite fehlt in den Details");
+  const dlg = dom.node("pickDlg");
+  ok(dlg.hidden === false, "die Auswahl öffnet keinen Dialog");
+  const inhalt = String(dlg.innerHTML || "");
+  ok(/Über uns/.test(inhalt), `die Stelle steht nicht im Dialog: ${inhalt.slice(0, 120)}`);
+  ok(/Familie Lehner/.test(inhalt), "das angetippte Element fehlt im Dialog");
+  ok(/id="pickDlgText"/.test(inhalt), "im Dialog lässt sich nichts schreiben");
   ok(posted.length === vorher, "die Auswahl allein hat schon etwas gesendet");
-  ok(/Stelle übernommen/.test(String(dom.node("pickText").textContent || "")),
-    "die Übernahme wird nicht bestätigt");
+
+  // Die Leiste zeigt im Auswahlmodus nur die registrierten Wünsche.
+  ok(dom.node("changeForm").hidden === true,
+    "im Auswahlmodus steht das Formular in der Seitenleiste");
+  ok(/Registrierte Wünsche/.test(String(dom.node("changeIntro").textContent || "")),
+    "die Seitenleiste sagt nicht, dass dort die registrierten Wünsche stehen");
+
+  // Erst der Knopf im Dialog sendet — und dann genau einmal.
+  dom.node("pickDlgText").value = "Bitte ein anderes Bild.";
+  dom.node("pickDlgSenden").click();
+  await new Promise((r) => setTimeout(r, 0));
+  ok(posted.length === vorher + 1,
+    `es wurden ${posted.length - vorher} Sendungen ausgelöst statt genau einer`);
+  const body = JSON.parse(posted[posted.length - 1].init.body);
+  ok(body.kind === "change", "die falsche Art wurde gesendet");
+  ok(body.payload.area === "Website", `der Bereich stimmt nicht: ${body.payload.area}`);
+  ok(body.payload.title === "Website – Über uns", `der Titel stimmt nicht: ${body.payload.title}`);
+  ok(/Bitte ein anderes Bild\./.test(body.payload.detail), "der Wortlaut fehlt");
+  ok(/Abschnitt: Über uns \(#ueber-uns\)/.test(body.payload.detail), "der Abschnitt fehlt");
+  ok(/Seite: https:\/\/beispiel-lehner\.netlify\.app\/ueber-uns\.html/.test(body.payload.detail),
+    "die Seite fehlt");
+  ok(/^ft_/.test(body.idempotencyKey), "der Wunsch ist nicht gegen Doppelklicks abgesichert");
+  ok(dom.node("pickDlg").hidden === true, "der Dialog bleibt nach dem Senden offen");
+
+  // Zu kurz: nichts geht raus.
+  const zweit = await seite();
+  zweit.dom.node("pickToggle").click();
+  zweit.melden(AUSWAHL);
+  const davor = zweit.posted.length;
+  zweit.dom.node("pickDlgText").value = "x";
+  zweit.dom.node("pickDlgSenden").click();
+  await new Promise((r) => setTimeout(r, 0));
+  ok(zweit.posted.length === davor, "ein leerer Wunsch wird gesendet");
+  ok(/kurz beschreiben/.test(String(zweit.dom.node("pickDlgStatus").textContent || "")),
+    "es wird nicht erklärt, was fehlt");
+
+  // Abbrechen schliesst und sendet nichts.
+  zweit.dom.node("pickDlgAbbruch").click();
+  ok(zweit.dom.node("pickDlg").hidden === true, "Abbrechen schliesst den Dialog nicht");
+  ok(zweit.posted.length === davor, "Abbrechen hat etwas gesendet");
+}
+
+/* ══ 3b. Verweise und Knöpfe: Hinweis statt Sprung ═════════════════════════ */
+{
+  /* Im Auswahlmodus springt nichts — auch kein Menüpunkt. Damit das nicht wie
+     ein Defekt aussieht, sagt der Dialog, wie man die Stelle wirklich öffnet. */
+  const { dom, melden } = await seite();
+  dom.node("pickToggle").click();
+  melden(Object.assign({}, AUSWAHL, { label: "Kontakt", tag: "a", oeffnet: true }));
+  const inhalt = String(dom.node("pickDlg").innerHTML || "");
+  ok(/id="pickDlgOeffnen"/.test(inhalt), "bei einem Verweis fehlt der Hinweis");
+  ok(/Auswahlmodus verlassen/.test(inhalt),
+    "es steht nicht da, wie man die Stelle wirklich öffnet");
+
+  // Eine gewöhnliche Stelle bekommt den Hinweis nicht.
+  const zweit = await seite();
+  zweit.dom.node("pickToggle").click();
+  zweit.melden(AUSWAHL);
+  ok(!/id="pickDlgOeffnen"/.test(String(zweit.dom.node("pickDlg").innerHTML || "")),
+    "auch ohne Verweis steht der Hinweis da");
 }
 
 /* ══ 4. Was nicht stimmt, wird verworfen ═══════════════════════════════════ */
@@ -203,15 +260,15 @@ const AUSWAHL = {
     dom.node("pickToggle").click();
     leerTitel(dom);
     melden(data, extra);
-    ok(String(dom.node("crTitle").value || "") === "",
+    ok(dom.node("pickDlg").hidden === true,
       `eine Nachricht mit ${name} wurde angenommen`);
   }
   // Und eine Auswahl ohne Angaben führt zu keinem leeren Titel.
   const { dom, melden } = await seite();
   dom.node("pickToggle").click();
   melden({ ns: "flowertech-wunsch", type: "pick" });
-  ok(/^Website – /.test(String(dom.node("crTitle").value || "")),
-    "eine Auswahl ohne Angaben ergibt keinen brauchbaren Titel");
+  ok(dom.node("pickDlg").hidden === false,
+    "eine Auswahl ohne Angaben öffnet keinen Dialog");
 }
 
 /* ══ 5. Ohne Gegenstelle wird nichts behauptet ═════════════════════════════ */

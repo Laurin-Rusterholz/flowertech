@@ -315,6 +315,28 @@
     .kb-work{padding:16px 14px 30px}
     .kb-seite{flex:0 0 auto;border-left:0;border-top:1px solid var(--line);max-height:46vh}
   }
+  /* Der Wunsch-Dialog. Er liegt ueber allem, mittig, und nimmt genau eine
+     Sache auf: was an der angetippten Stelle anders werden soll. */
+  .dlg{position:fixed;inset:0;z-index:60;display:flex;align-items:center;
+    justify-content:center;padding:18px;background:rgba(5,5,9,.6)}
+  .dlg[hidden]{display:none}
+  .dlg-box{width:min(460px,100%);max-height:88vh;overflow:auto;background:var(--card);
+    border:1px solid var(--line);border-radius:14px;padding:16px 17px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .dlg-kopf{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .dlg-kopf b{flex:1 1 auto;font-size:15px}
+  .dlg-kopf button{background:none;border:0;color:var(--muted);font-size:22px;
+    line-height:1;cursor:pointer;padding:0 4px}
+  .dlg-stelle{margin:0 0 10px;font-size:13.5px;color:var(--text)}
+  .dlg-stelle span{color:var(--muted)}
+  .dlg-warn{margin:0 0 12px;font-size:12.5px;line-height:1.5;color:var(--err);
+    background:rgba(255,129,129,.1);border:1px solid rgba(255,129,129,.3);
+    border-radius:9px;padding:8px 11px}
+  .dlg-fuss{display:flex;gap:9px;justify-content:flex-end;margin-top:12px}
+  .dlg-fuss button{font-size:13px;font-weight:700;padding:9px 15px;border-radius:10px;
+    border:0;cursor:pointer;background:linear-gradient(135deg,var(--lime),var(--cyan));
+    color:#0d0d13}
+  .dlg-fuss button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
   /* Ansicht nicht verfuegbar: inline, mittig, erklaert. */
   .ck-lock{display:flex;flex-direction:column;align-items:center;justify-content:center;
     text-align:center;height:100%;min-height:320px;gap:9px;color:var(--muted);padding:30px 20px}
@@ -472,6 +494,8 @@
       <!-- Aenderungsleiste: fest sichtbar neben der Vorschau. -->
       <aside class="ck-side" id="ckSide" hidden aria-label="Änderungswünsche"></aside>
     </div>
+    <!-- Der Wunsch wird im Dialog geschrieben, nicht in der Leiste. -->
+    <div class="dlg" id="pickDlg" hidden></div>
   </div>
 
   <footer class="page-foot" id="footer">FlowerTech</footer>
@@ -658,7 +682,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "auswahl-bleibt-1";
+  var CK_BUILD = "wunsch-dialog-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -1664,6 +1688,14 @@
 
   function pickSetzen(an) {
     pickAn = !!an;
+    /* Im Auswahlmodus steht in der Leiste nur, was schon registriert ist —
+       geschrieben wird im Dialog. */
+    var form = el("changeForm");
+    if (form) form.hidden = pickAn;
+    var intro = el("changeIntro");
+    if (intro) intro.textContent = pickAn
+      ? "Registrierte Wünsche dieser Sitzung."
+      : "Was soll anders sein?";
     ["pickToggle", "ckPick"].forEach(function (id) {
       var knopf = el(id);
       if (!knopf) return;
@@ -1693,32 +1725,106 @@
     return true;
   }
 
-  /* Aus der Auswahl wird ein vorbereiteter Wunsch — gesendet wird nichts. */
+  /* Aus der Auswahl wird ein Dialog — genau wie in der Praesentationsfassung.
+     Der Wunsch wird dort geschrieben und abgeschickt; die Seitenleiste zeigt
+     danach nur noch, was wirklich registriert ist. */
+  var pickStelle = null;
+
   function pickUebernehmen(d) {
-    var stelle = String(d.sectionTitle || d.section || "").trim();
-    var beschriftung = String(d.label || "").trim();
-    var seite = safeUrl(d.url) || "";
-    ckZeige("verwaltung");
-    var wahl = el("crArea");
-    if (wahl) wahl.value = "Website";
-    var titel = el("crTitle");
-    if (titel) {
-      titel.value = ("Website – " + (stelle || beschriftung || "Stelle")).slice(0, 160);
-      if (titel.focus) titel.focus();
-    }
-    var detail = el("crDetail");
-    if (detail) {
-      var zeilen = [];
-      if (stelle) zeilen.push("Abschnitt: " + stelle + (d.section ? " (#" + d.section + ")" : ""));
-      if (beschriftung && beschriftung !== stelle) zeilen.push("Angetippt: " + beschriftung);
-      if (seite) zeilen.push("Seite: " + seite);
-      zeilen.push("");
-      detail.value = zeilen.join("\n");
-    }
+    pickStelle = {
+      stelle: String(d.sectionTitle || d.section || "").trim(),
+      abschnitt: String(d.section || "").trim(),
+      label: String(d.label || "").trim(),
+      seite: safeUrl(d.url) || "",
+      oeffnet: d.oeffnet === true,
+    };
     pickSenden("clear");
-    pickText("Stelle übernommen: " + (stelle || beschriftung || "Website") +
-      ". Schreiben Sie jetzt rechts, was dort anders werden soll.", "ok");
+    pickDialog();
     return true;
+  }
+
+  function pickDialogSchliessen() {
+    var d = el("pickDlg");
+    if (d) d.hidden = true;
+    pickStelle = null;
+  }
+
+  function pickDialog() {
+    var host = el("pickDlg");
+    if (!host || !pickStelle) return false;
+    var p = pickStelle;
+    var name = p.stelle || p.label || "Website";
+    host.innerHTML = '<div class="dlg-box" role="dialog" aria-modal="true" aria-label="Änderungswunsch">' +
+      '<div class="dlg-kopf"><b>Änderungswunsch</b>' +
+        '<button type="button" id="pickDlgZu" aria-label="Schliessen">×</button></div>' +
+      '<p class="dlg-stelle">' + esc(name) +
+        (p.label && p.label !== p.stelle ? ' <span>· ' + esc(p.label) + "</span>" : "") + "</p>" +
+      (p.oeffnet
+        ? '<p class="dlg-warn" id="pickDlgOeffnen">Das ist ein Verweis oder Knopf. Zum Öffnen ' +
+          "den Auswahlmodus verlassen.</p>"
+        : "") +
+      '<label for="pickDlgText"><span class="lbl">Was soll hier anders sein? ' +
+        '<span class="req">· Pflichtfeld</span></span>' +
+        '<textarea id="pickDlgText" rows="4" maxlength="1500"></textarea></label>' +
+      '<div class="dlg-fuss">' +
+        '<button type="button" class="ghost" id="pickDlgAbbruch">Abbrechen</button>' +
+        '<button type="button" id="pickDlgSenden">Senden</button>' +
+      "</div>" +
+      '<div class="status" id="pickDlgStatus" role="status" aria-live="polite"></div></div>';
+    host.hidden = false;
+    ["pickDlgZu", "pickDlgAbbruch"].forEach(function (id) {
+      var b = el(id);
+      if (b) b.addEventListener("click", pickDialogSchliessen);
+    });
+    var senden = el("pickDlgSenden");
+    if (senden) senden.addEventListener("click", pickSenden2);
+    var feld = el("pickDlgText");
+    if (feld && feld.focus) feld.focus();
+    return true;
+  }
+
+  /* Abschicken aus dem Dialog: derselbe Eingang, dieselbe Idempotenz. */
+  function pickSenden2() {
+    var p = pickStelle;
+    var feld = el("pickDlgText");
+    var status = el("pickDlgStatus");
+    var knopf = el("pickDlgSenden");
+    if (!p || !feld) return false;
+    var text = String(feld.value || "").trim();
+    if (text.length < 3) {
+      if (status) {
+        status.className = "status show err";
+        status.textContent = "Bitte kurz beschreiben, was anders werden soll.";
+      }
+      if (feld.focus) feld.focus();
+      return false;
+    }
+    var name = p.stelle || p.label || "Website";
+    var zeilen = [text, ""];
+    if (p.stelle) zeilen.push("Abschnitt: " + p.stelle + (p.abschnitt ? " (#" + p.abschnitt + ")" : ""));
+    if (p.label && p.label !== p.stelle) zeilen.push("Angetippt: " + p.label);
+    if (p.seite) zeilen.push("Seite: " + p.seite);
+    if (knopf) knopf.disabled = true;
+    if (status) { status.className = "status show"; status.textContent = "Wird gesendet …"; }
+    var titel = ("Website – " + name).slice(0, 160);
+    return post({
+      kind: "change",
+      token: token,
+      payload: { title: titel, detail: zeilen.join("\n"), area: "Website" },
+      idempotencyKey: idemKey([token, "pick", titel, text]),
+    }).then(function (data) {
+      ckWuensche.unshift({ title: titel, area: "Website" });
+      ckListe();
+      pickDialogSchliessen();
+      return !!data;
+    }).catch(function (e) {
+      if (knopf) knopf.disabled = false;
+      if (status) {
+        status.className = "status show err";
+        status.textContent = e.message + " Bitte erneut versuchen.";
+      }
+      return false;
+    });
   }
 
   /* Nur was wirklich aus DIESEM Rahmen und von DIESER Herkunft kommt. */
