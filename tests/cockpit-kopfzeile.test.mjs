@@ -474,12 +474,21 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     ok(/class="kb-stand"/.test(arbeit), `${id} zeigt keinen Status`);
     ok(/id="kbWunsch"/.test(arbeit), `${id} hat keinen Weg zum Änderungswunsch`);
     const lead = (/<p class="kb-lead">([\s\S]*?)<\/p>/.exec(arbeit) || [])[1] || "";
-    ok(lead.length > 60, `${id} erklärt sich nicht`);
+    // Kurz, aber vorhanden: ein Satz genügt, eine Wand nicht.
+    ok(lead.length > 25 && lead.length < 200, `${id} erklärt sich nicht knapp: ${lead.length}`);
     ok(!leads.includes(lead), `${id} wiederholt die Einleitung eines anderen Bereichs`);
     leads.push(lead);
     // Entweder Felder, ein Ablauf, Kennzahlen oder die Vorschau — nie nur Text.
     ok(/kb-felder|kb-stats|kb-fluss|kb-vorschau-gross/.test(arbeit),
       `${id} zeigt keinen Arbeitsbereich`);
+    /* Und wo Felder stehen, lassen sie sich auch ausfüllen: Eine Verwaltung,
+       in der man nichts eintippen kann, ist ein Prospekt. */
+    if (/kb-felder/.test(arbeit) && ["stand", "wunsch", "freigabe"].indexOf(id) < 0) {
+      ok(/class="kb-feld"/.test(arbeit), `${id} lässt nichts eingeben`);
+      ok(/id="kbSpeichern"/.test(arbeit), `${id} lässt sich nicht zum Testen veröffentlichen`);
+      ok(/ändert sich dadurch nicht von selbst/.test(arbeit),
+        `${id} behauptet, die Website zu verändern`);
+    }
   });
 
   // Nicht beauftragte Funktionen verschwinden nicht — sie stehen als Modul da.

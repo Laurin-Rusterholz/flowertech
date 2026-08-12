@@ -78,6 +78,11 @@ ok(/X-Robots-Tag = "noindex/.test(block), "der noindex-Header fehlt");
 ok(/name="viewport"[^>]*width=device-width/.test(page), "die Seite ist nicht responsive");
 ok(/--lime|--cyan|--violet/.test(page), "die Seite nutzt nicht die FlowerTech-Farben");
 ok(/prefers-color-scheme/.test(page), "die Seite kennt kein helles Schema");
+/* Das FlowerTech-Bild bleibt dunkel; hell wird die Bühne, auf der die Website
+   der Kundschaft steht — sonst sitzt eine helle Website im Schwarzen. */
+ok(/--buehne:#f2f0f6/.test(page), "die Bühne der Website ist nicht hell");
+ok(/\.pv-stage\{[^}]*background:var\(--buehne\)/.test(page.replace(/\s*\n\s*/g, "")),
+  "die Website steht nicht auf der hellen Bühne");
 ok(/id="hp"/.test(page), "der Honeypot fehlt");
 ok(/kind: "intake"/.test(page), "die Antworten werden mit der falschen Art gesendet");
 ok(/idempotencyKey/.test(page), "Doppeleinreichungen sind nicht abgesichert");

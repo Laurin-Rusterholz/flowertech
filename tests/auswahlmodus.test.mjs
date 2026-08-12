@@ -235,6 +235,27 @@ const AUSWAHL = {
   ok(arm.nachricht.type === "arm", "die verbundene Vorschau wird nicht scharfgeschaltet");
 }
 
+/* ══ 5b. Die Vorschau bekommt Platz ═══════════════════════════════════════ */
+{
+  /* Der Befund aus der Abnahme: ein kleines Fenster inmitten schwarzer Fläche.
+     Die Vorschau hatte einen festen Deckel (560 px) und stand in einer
+     gepolsterten Karte, die nur so hoch war wie ihr Inhalt. */
+  const { dom } = await seite();
+  ok(dom.node("kbWork").getAttribute("data-voll") === "1",
+    "die Vorschau-Ansicht füllt die Arbeitsfläche nicht");
+  dom.node("kbNav_seo").click();
+  ok(!dom.node("kbWork").getAttribute("data-voll"),
+    "eine gelesene Ansicht wird auf volle Höhe gezwungen");
+
+  const css = /<style>([\s\S]*?)<\/style>/.exec(page)[1];
+  ok(!/\.kb-vorschau-gross\{[^}]*height:min\(/.test(css.replace(/\s*\n\s*/g, "")),
+    "die Vorschau hat wieder einen festen Deckel");
+  ok(/\.kb-vorschau-gross\{[^}]*flex:1 1 auto/.test(css.replace(/\s*\n\s*/g, "")),
+    "die Vorschau füllt die verbleibende Höhe nicht");
+  ok(/#tileAdmin\{[^}]*height:100%/.test(css.replace(/\s*\n\s*/g, "")),
+    "das Kunden-Backend füllt die Bühne nicht");
+}
+
 /* ══ 6. Statisch: die Vorschau bleibt bedienbar ════════════════════════════ */
 {
   ok(/sandbox="allow-scripts allow-same-origin allow-forms allow-popups"/.test(script),
