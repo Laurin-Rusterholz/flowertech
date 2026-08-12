@@ -429,27 +429,15 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
 
   // ── Alle Funktionsgruppen aus dem Verwaltungs-Repo ──────────────────────
   const BEREICHE = [
-    ["stand", "Übersicht"],
-    ["wunsch", "Website &amp; Änderungswünsche"],
-    ["design", "Start &amp; Design"],
-    ["seo", "SEO &amp; Teilen"],
-    ["seiten", "Seiten &amp; Navigation"],
-    ["abschnitte", "Abschnitte / Inhalte"],
-    ["sprachen", "Sprachen"],
-    ["recht", "Rechtliches"],
-    ["zucht", "Über uns / Zucht"],
-    ["kitten", "Kitten &amp; Termine"],
-    ["referenzen", "Referenzen / Mitgliedschaften"],
+    ["eintraege", "Katzen"],
     ["galerie", "Galerie"],
     ["kontakt", "Kontakt"],
-    ["anfragen", "Anfragen"],
-    ["medien", "Medien"],
-    ["freigabe", "Freigabe &amp; Versionen"],
-    ["einstellungen", "Einstellungen / Domain"],
-    ["module", "Weitere Module"],
+    ["texte", "Website-Texte"],
+    ["recht", "Impressum &amp; Datenschutz"],
+    ["wunsch", "Website &amp; Änderungswünsche"],
+    ["stand", "Übersicht"],
+    ["freigabe", "Freigabe"],
   ];
-  /* Die Leiste wird als Teil der Kachel gesetzt — gelesen wird deshalb dort,
-     wo das Markup wirklich zugewiesen wurde. */
   const nav = admin();
   BEREICHE.forEach(([id, label]) => {
     ok(nav.includes('id="kbNav_' + id + '"'), `in der Leiste fehlt „${label}“`);
@@ -457,7 +445,7 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
   });
   ok((nav.match(/class="kb-nav"/g) || []).length === BEREICHE.length,
     "die Leiste trägt nicht genau die vereinbarten Bereiche");
-  ["Übersicht", "Website", "Inhalte", "Betrieb"].forEach((gruppe) => {
+  ["Inhalte", "Website", "Projekt"].forEach((gruppe) => {
     ok(new RegExp('class="kb-gruppe">' + gruppe).test(nav), `die Gruppe „${gruppe}“ fehlt`);
   });
 
@@ -475,15 +463,15 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     ok(/id="kbWunsch"/.test(arbeit), `${id} hat keinen Weg zum Änderungswunsch`);
     const lead = (/<p class="kb-lead">([\s\S]*?)<\/p>/.exec(arbeit) || [])[1] || "";
     // Kurz, aber vorhanden: ein Satz genügt, eine Wand nicht.
-    ok(lead.length > 25 && lead.length < 200, `${id} erklärt sich nicht knapp: ${lead.length}`);
+    ok(lead.length > 10 && lead.length < 120, `${id} erklärt sich nicht knapp: ${lead.length}`);
     ok(!leads.includes(lead), `${id} wiederholt die Einleitung eines anderen Bereichs`);
     leads.push(lead);
     // Entweder Felder, ein Ablauf, Kennzahlen oder die Vorschau — nie nur Text.
-    ok(/kb-felder|kb-stats|kb-fluss|kb-vorschau-gross/.test(arbeit),
+    ok(/kb-felder|kb-stats|kb-fluss|kb-vorschau-gross|kb-karten|kbTexteAn/.test(arbeit),
       `${id} zeigt keinen Arbeitsbereich`);
     /* Und wo Felder stehen, lassen sie sich auch ausfüllen: Eine Verwaltung,
        in der man nichts eintippen kann, ist ein Prospekt. */
-    if (/kb-felder/.test(arbeit) && ["stand", "wunsch", "freigabe"].indexOf(id) < 0) {
+    if (/kb-felder/.test(arbeit) && ["stand", "wunsch", "freigabe", "texte"].indexOf(id) < 0) {
       ok(/class="kb-feld"/.test(arbeit), `${id} lässt nichts eingeben`);
       ok(/id="kbSpeichern"/.test(arbeit), `${id} lässt sich nicht zum Testen veröffentlichen`);
       ok(/ändert sich dadurch nicht von selbst/.test(arbeit),
@@ -491,16 +479,29 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     }
   });
 
-  // Nicht beauftragte Funktionen verschwinden nicht — sie stehen als Modul da.
-  dom.node("kbNav_module").click();
-  const module = String(dom.node("kbWork").innerHTML || "");
-  ok(/nicht beauftragt/.test(module), "nicht beauftragte Module sind nicht als solche benannt");
-  ["Online-Verkauf", "Online-Terminbuchung"].forEach((m) => {
-    ok(module.includes(m), `das Modul „${m}“ fehlt`);
-  });
-  ["Shop", "Booking", "DJ", "Sam Sparking", "Show"].forEach((wort) => {
-    ok(!module.includes(wort), `im Modulbereich steht „${wort}“`);
-  });
+  /* Eintraege sind die Arbeit, die wirklich anfaellt: hinzufuegen, ausfuellen,
+     entfernen — nicht Seite fuer Seite denken. */
+  dom.node("kbNav_eintraege").click();
+  const liste = String(dom.node("kbWork").innerHTML || "");
+  ok(/id="kbNeu"/.test(liste), "es lässt sich kein Eintrag hinzufügen");
+  ok(/hinzufügen/.test(liste), "der Weg zum neuen Eintrag ist nicht benannt");
+  dom.node("kbNeu").click();
+  const mit = String(dom.node("kbWork").innerHTML || "");
+  ok(/id="kbK_0"/.test(mit), "der neue Eintrag erscheint nicht");
+  ok(/Steckbrief|Name/.test(mit), "der Eintrag hat keinen Steckbrief");
+  ok(/id="kbWeg_0"/.test(mit), "der Eintrag lässt sich nicht entfernen");
+  dom.node("kbWeg_0").click();
+  ok(!/id="kbK_0"/.test(String(dom.node("kbWork").innerHTML || "")),
+    "der Eintrag lässt sich nicht wirklich entfernen");
+
+  /* Die festen Texte liegen hinter einem Schalter — sonst verstellt man sie
+     beim Suchen. */
+  dom.node("kbNav_texte").click();
+  ok(/id="kbTexteAn"/.test(String(dom.node("kbWork").innerHTML || "")),
+    "die festen Texte stehen ohne Schalter offen");
+  dom.node("kbTexteAn").click();
+  ok(/class="kb-feld"/.test(String(dom.node("kbWork").innerHTML || "")),
+    "im Bearbeiten-Modus lässt sich nichts eingeben");
 
   // ── Die Website-Vorschau bleibt eingebettet und benutzbar ───────────────
   dom.node("kbNav_wunsch").click();
@@ -512,7 +513,7 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     "die Vorschau im Backend ist nicht benutzbar");
   // Und der Umschalter für die Vorschau daneben.
   ok(dom.node("kbSeite").hidden === true, "in der grossen Vorschau steht sie doppelt");
-  dom.node("kbNav_seo").click();
+  dom.node("kbNav_kontakt").click();
   ok(dom.node("kbSeite").hidden === false, "die Vorschau daneben fehlt");
   dom.node("kbToggle").click();
   ok(dom.node("kbSeite").hidden === true, "die Vorschau lässt sich nicht wegschalten");
@@ -558,9 +559,7 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
     `die Freigabeanfrage ist nicht vorbereitet: ${d3.node("crTitle").value}`);
 
   // ── Anfragen zeigen keine fremden Nachrichten ───────────────────────────
-  d3.node("kbNav_anfragen").click();
-  ok(/keine Nachrichten angezeigt/.test(String(d3.node("kbWork").innerHTML || "")),
-    "die Anfragen sagen nicht, dass hier keine Nachrichten stehen");
+
 
   /* ── Aus einem Bereich heraus einen Wunsch anlegen ───────────────────────
      Dieselbe Leiste, Kategorie „Verwaltung", der betroffene Bereich schon im

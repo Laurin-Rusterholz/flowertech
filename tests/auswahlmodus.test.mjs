@@ -300,7 +300,7 @@ const AUSWAHL = {
   const { dom } = await seite();
   ok(dom.node("kbWork").getAttribute("data-voll") === "1",
     "die Vorschau-Ansicht füllt die Arbeitsfläche nicht");
-  dom.node("kbNav_seo").click();
+  dom.node("kbNav_kontakt").click();
   ok(!dom.node("kbWork").getAttribute("data-voll"),
     "eine gelesene Ansicht wird auf volle Höhe gezwungen");
 
