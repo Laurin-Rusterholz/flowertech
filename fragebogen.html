@@ -409,6 +409,7 @@
           <button type="button" id="ckDesktop" data-ft="desktop" aria-pressed="true">Desktop</button>
           <button type="button" id="ckMobil" data-ft="mobil" aria-pressed="false">Mobil</button>
         </span>
+        <button type="button" id="ckPick" data-ft="pick" aria-pressed="false">Element auswählen</button>
         <button type="button" id="ckReload" data-ft="reload" title="Ansicht neu laden">Neu laden</button>
         <button type="button" id="ckWish" data-ft="wish" class="primary">Änderungswunsch</button>
       </div>
@@ -657,7 +658,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "verwaltung-eingabe-1";
+  var CK_BUILD = "auswahl-kopfzeile-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -791,6 +792,11 @@
     var neu = el("ckReload");
     if (neu) neu.addEventListener("click", ckNeuLaden);
 
+    var waehlen = el("ckPick");
+    if (waehlen) waehlen.addEventListener("click", function () {
+      pickSetzen(waehlen.getAttribute("aria-pressed") !== "true");
+    });
+
     // Sobald eine Vorschau freigegeben ist, ist „Website" die Startansicht.
     ckZeige(hatVorschau ? "website" : "fragebogen");
   }
@@ -887,10 +893,14 @@
     }
     // Breite und Neuladen gehoeren zur eingebetteten Website, nicht zum Backend.
     var amRahmen = key === "website" && etwasSichtbar;
-    ["ckDesktop", "ckMobil", "ckReload"].forEach(function (id) {
+    ["ckDesktop", "ckMobil", "ckReload", "ckPick"].forEach(function (id) {
       var btn = el(id);
       if (btn) btn.hidden = !amRahmen;
     });
+    // Beim Ansichtswechsel gilt die Auswahl nicht weiter — sonst faenge ein
+    // unsichtbarer Rahmen Klicks ab.
+    if (!amRahmen && pickAn) pickSetzen(false);
+    if (amRahmen) { pickVerbunden = false; pickSenden(pickAn ? "arm" : "disarm"); }
   }
 
   /* Bogen, Notiz und Fehlerkasten entscheiden sich ERST nach dem Bereichsaufbau
@@ -1617,7 +1627,14 @@
   var pickVerbunden = false;
   var pickWartet = null;
 
-  function pickFrame() { return el("kbFrame"); }
+  /* Der Rahmen ist der, der gerade zu sehen ist: im Tab „Website" die grosse
+     Vorschau, in der Verwaltung die des Bereichs „Website & Aenderungswuensche".
+     Vorher hing die Auswahl allein an der Verwaltung — im Tab Website, wo man
+     zuerst hinschaut, gab es gar keinen Schalter. */
+  function pickFrame() {
+    if (ckAnsicht === "website") return el("pvFrame");
+    return el("kbFrame") || el("pvFrame");
+  }
 
   function pickHerkunft() {
     var url = kbProjekt().vorschau;
@@ -1647,11 +1664,12 @@
 
   function pickSetzen(an) {
     pickAn = !!an;
-    var knopf = el("pickToggle");
-    if (knopf) {
+    ["pickToggle", "ckPick"].forEach(function (id) {
+      var knopf = el(id);
+      if (!knopf) return;
       knopf.setAttribute("aria-pressed", String(pickAn));
       knopf.textContent = pickAn ? "Auswahlmodus aktiv" : "Element auswählen";
-    }
+    });
     pickSenden(pickAn ? "arm" : "disarm");
     if (!pickAn) {
       pickText("Ausgeschaltet können Sie sich normal durch Ihre Seiten klicken. " +
