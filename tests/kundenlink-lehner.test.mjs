@@ -468,8 +468,8 @@ const sichtbar = (dom) => IDS.map((id) => {
   // Die Arbeitsflaeche wird gesondert gefuellt — dort steht der Weg zum Wunsch.
   ok(/Änderung wünschen/.test(String(dom.node("kbWork").innerHTML || "")),
     "aus der Verwaltung führt kein Weg zum Wunsch");
-  ok(/Freigabe &amp; Versionen/.test(admin) && /Weitere Module/.test(admin),
-    "die Verwaltung zeigt nicht die ganze Funktionsstruktur");
+  ok(/Katzen/.test(admin) && /Website-Texte/.test(admin) && /Freigabe/.test(admin),
+    "die Verwaltung zeigt nicht Inhalte, Texte und Freigabe");
 }
 
 /* ══ 6d. Die AGB bleiben unveraenderlich ═══════════════════════════════════ */
