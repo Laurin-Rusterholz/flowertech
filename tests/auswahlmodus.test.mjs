@@ -43,7 +43,7 @@ const IDS = [
   "answered", "answeredTitle", "answeredText", "area",
   "tileTest", "tileOffer", "tilePreview", "tileContract", "tileAdmin", "tileTerms",
   "ck", "ckTop", "ckViews", "ckProject", "ckMobil", "ckDesktop", "ckReload", "ckWish",
-  "ckStage", "ckSide", "ckLock", "ckPick", "pvFrame", "pickDlg", "changeForm", "changeIntro",
+  "ckStage", "ckSide", "ckLock", "pvFrame", "pickDlg", "changeForm", "changeIntro",
   "ckView_website", "ckView_verwaltung", "ckView_offerte", "ckView_vertrag",
   "ckView_agb", "ckView_fragebogen",
   "ckWishes", "crArea", "crTitle", "crDetail", "crBy", "crHp", "crSubmit", "crStatus",
@@ -313,18 +313,20 @@ const AUSWAHL = {
     "das Kunden-Backend füllt die Bühne nicht");
 }
 
-/* ══ 5c. Auch im Tab „Website" — dort schaut man zuerst hin ═══════════════ */
+/* ══ 5c. EIN Knopf: «Änderungswunsch» IST die Elementauswahl ══════════════ */
 {
-  /* Der Befund: „ich kann noch immer keine Elemente auswählen". Der Schalter
-     lag ausschliesslich in der Verwaltung; im Tab Website, wo die Vorschau
-     zuerst steht, gab es gar keinen. Jetzt trägt ihn die Kopfzeile. */
+  /* Die Vorgabe: «element auswählen und änderungswunsch gleicher button».
+     Der Knopf «Änderungswunsch» in der Kopfzeile schaltet die Auswahl an;
+     ein zweiter Klick beendet sie. Einen getrennten «Element auswählen»-
+     Schalter daneben gibt es nicht mehr. */
+  ok(!/id="ckPick"/.test(page), "der alte getrennte Schalter ckPick steht noch da");
+
   const { dom, gesendet } = await seite();
   dom.node("ckView_website").click();
-  const knopf = dom.node("ckPick");
-  ok(!!knopf, "in der Kopfzeile fehlt der Schalter für die Elementauswahl");
-  ok(knopf.hidden === false, "der Schalter fehlt im Tab Website");
-  ok(/id="ckPick"[^>]*>Element auswählen</.test(page),
-    "der Schalter in der Kopfzeile ist nicht beschriftet");
+  const knopf = dom.node("ckWish");
+  ok(!!knopf, "in der Kopfzeile fehlt der Knopf «Änderungswunsch»");
+  ok(/id="ckWish"[^>]*>Änderungswunsch</.test(page),
+    "der Knopf in der Kopfzeile ist nicht beschriftet");
 
   // Er spricht mit der grossen Vorschau des Website-Tabs.
   const rahmen = dom.node("pvFrame");
@@ -332,18 +334,34 @@ const AUSWAHL = {
   if (rahmen) rahmen.contentWindow = fenster;
   const vorher = gesendet.length;
   knopf.click();
-  ok(knopf.getAttribute("aria-pressed") === "true", "der Schalter merkt sich nichts");
-  ok(knopf.textContent === "Auswahlmodus aktiv",
+  ok(knopf.getAttribute("aria-pressed") === "true", "der Knopf merkt sich nichts");
+  ok(knopf.textContent === "Auswahl beenden",
     `die Beschriftung wechselt nicht: ${knopf.textContent}`);
   const arm = gesendet[gesendet.length - 1];
   ok(gesendet.length > vorher && arm.nachricht.type === "arm",
     "im Tab Website wird die Vorschau nicht scharfgeschaltet");
   ok(arm.ziel === HERKUNFT, `das Ziel ist ${arm.ziel} statt der Herkunft der Vorschau`);
 
-  // In einer Ansicht ohne Vorschau verschwindet er — und schaltet sich ab.
+  // Zweiter Klick: Auswahl beenden, Beschriftung zurück.
+  knopf.click();
+  ok(knopf.getAttribute("aria-pressed") === "false", "der zweite Klick beendet die Auswahl nicht");
+  ok(knopf.textContent === "Änderungswunsch",
+    `die Beschriftung kehrt nicht zurück: ${knopf.textContent}`);
+  const disarm = gesendet[gesendet.length - 1];
+  ok(disarm && disarm.nachricht.type === "disarm", "es wird kein «disarm» geschickt");
+
+  // Aus einer Ansicht ohne Vorschau führt er zur Website — und schaltet an.
   dom.node("ckView_agb").click();
-  ok(dom.node("ckPick").hidden === true, "der Schalter steht auch ohne Vorschau da");
-  ok(dom.node("ckPick").getAttribute("aria-pressed") === "false",
+  ok(dom.node("ckWish").hidden === false,
+    "der Knopf fehlt in einer Ansicht ohne Vorschau — er soll aus jeder Ansicht führen");
+  dom.node("ckWish").click();
+  ok(dom.node("ckView_website").getAttribute("aria-selected") === "true",
+    "der Knopf führt nicht zur Website");
+  ok(dom.node("ckWish").getAttribute("aria-pressed") === "true",
+    "nach dem Wechsel zur Website ist die Auswahl nicht an");
+  // Ansicht ohne Vorschau: die Auswahl schaltet sich ab.
+  dom.node("ckView_agb").click();
+  ok(dom.node("ckWish").getAttribute("aria-pressed") === "false",
     "der Auswahlmodus bleibt in einer Ansicht ohne Vorschau aktiv");
 }
 
