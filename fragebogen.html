@@ -340,6 +340,9 @@
     color:var(--text);font:inherit;font-size:13px;font-weight:650;padding:10px 15px;
     border-radius:10px;cursor:pointer}
   .kb-leer{margin:0;color:var(--muted);font-size:13px}
+  .kb-neu{background:transparent;border:1px solid currentColor;color:inherit;font:inherit;
+    font-size:12px;font-weight:650;padding:3px 9px;border-radius:8px;cursor:pointer;
+    margin-left:4px;white-space:nowrap}
   /* Der Wunsch-Dialog. Er liegt ueber allem, mittig, und nimmt genau eine
      Sache auf: was an der angetippten Stelle anders werden soll. */
   .dlg{position:fixed;inset:0;z-index:60;display:flex;align-items:center;
@@ -705,7 +708,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "ft-inhalt-1";
+  var CK_BUILD = "ft-inhalt-2";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -1446,6 +1449,7 @@
   var kbSeedStand = "";
   var kbSeedFehlt = false;
   var kbSeedLaeuft = false;
+  var kbSeedGrund = "";
 
   function kbText(v, max) {
     return String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, max || 400);
@@ -1496,27 +1500,65 @@
     return etwas ? fertig : null;
   }
 
-  function kbInhaltLaden() {
-    if (kbSeed || kbSeedLaeuft || kbSeedFehlt) return false;
+  /* Wo die Abschrift liegen kann: an der Wurzel der Website — und, falls die
+     Vorschau in einem Unterverzeichnis wohnt, auch dort. Beides wird der Reihe
+     nach versucht, bevor aufgegeben wird. */
+  function kbInhaltAdressen() {
     var basis = pickHerkunft();
-    if (!basis || typeof window.fetch !== "function") { kbSeedFehlt = true; return false; }
+    if (!basis) return [];
+    var adressen = [basis + "/inhalt.json"];
+    var vorschau = kbProjekt().vorschau;
+    try {
+      var u = new URL(vorschau);
+      var pfad = u.pathname.replace(/[^/]*$/, "");
+      if (pfad && pfad !== "/") adressen.push(basis + pfad + "inhalt.json");
+    } catch (e) { /* dann nur die Wurzel */ }
+    return adressen;
+  }
+
+  function kbInhaltLaden(erneut) {
+    if (erneut) { kbSeedFehlt = false; kbSeedGrund = ""; }
+    if (kbSeed || kbSeedLaeuft || kbSeedFehlt) return false;
+    var adressen = kbInhaltAdressen();
+    if (!adressen.length || typeof window.fetch !== "function") {
+      kbSeedFehlt = true;
+      kbSeedGrund = "für dieses Projekt ist noch keine Website-Adresse freigegeben";
+      return false;
+    }
     kbSeedLaeuft = true;
+    var basis = pickHerkunft();
     var fertig = function () {
       kbSeedLaeuft = false;
       if (el("kbWork")) kbZeige(kbBereich);
     };
-    window.fetch(basis + "/inhalt.json", { credentials: "omit", cache: "no-store" })
-      .then(function (r) {
-        if (!r.ok) throw new Error("nicht erreichbar");
-        return r.json();
-      })
-      .then(function (d) {
-        kbSeed = kbSeedPruefen(d, basis);
-        kbSeedStand = kbText(d && d.stand, 40);
-        if (!kbSeed) kbSeedFehlt = true;
-        fertig();
-      })
-      .catch(function () { kbSeedFehlt = true; fertig(); });
+    /* Der Grund wird mitgeschrieben. „Geht nicht" ohne Grund kostet nur Zeit:
+       404 heisst, die Website hat die Abschrift noch nicht gebaut; ein
+       Netzwerkfehler heisst in aller Regel, dass der Browser die Freigabe
+       (CORS) vermisst. */
+    var versuche = function (i) {
+      if (i >= adressen.length) { kbSeedFehlt = true; fertig(); return; }
+      window.fetch(adressen[i], { credentials: "omit", cache: "no-store", mode: "cors" })
+        .then(function (r) {
+          if (!r.ok) throw new Error("Antwort " + r.status);
+          return r.json();
+        })
+        .then(function (d) {
+          kbSeed = kbSeedPruefen(d, basis);
+          kbSeedStand = kbText(d && d.stand, 40);
+          if (!kbSeed) {
+            kbSeedFehlt = true;
+            kbSeedGrund = "die Abschrift der Website ist leer";
+          }
+          fertig();
+        })
+        .catch(function (e) {
+          kbSeedGrund = /Antwort 404/.test(String(e && e.message))
+            ? "die Website hat noch keine Abschrift veröffentlicht (404)"
+            : "der Browser hat die Abfrage abgewiesen — vermutlich fehlt die Freigabe";
+          versuche(i + 1);
+        });
+    };
+    versuche(0);
     return true;
   }
 
@@ -1554,7 +1596,10 @@
         "werden geladen …</p>";
     }
     return '<p class="kb-quelle" data-fehlt="1" id="kbQuelle">Die heutigen Inhalte Ihrer ' +
-      "Website liessen sich nicht laden. Sie können hier trotzdem eintragen, was gelten soll.</p>";
+      "Website liessen sich nicht laden" +
+      (kbSeedGrund ? " — " + esc(kbSeedGrund) : "") + ". " +
+      'Sie können hier trotzdem eintragen, was gelten soll. ' +
+      '<button type="button" class="kb-neu" id="kbInhaltNeu">Erneut versuchen</button></p>';
   }
 
   function kbFeldId(bereich, i) { return "kbF_" + bereich + "_" + i; }
@@ -1653,7 +1698,11 @@
      eingereicht. */
   function kbEintraege(id) {
     var w = kbWerte(id);
-    if (Array.isArray(w.liste)) return w.liste;
+    /* Eine LEERE gespeicherte Liste ist kein Bearbeitungsstand, sondern ein
+       Rest aus der Zeit, als hier nichts stand — sie darf die Inhalte der
+       Website nicht auf Dauer verdecken. Wer wirklich alles entfernt hat,
+       hinterlaesst dafuer die Marke `leer`. */
+    if (Array.isArray(w.liste) && (w.liste.length > 0 || w.leer === true)) return w.liste;
     // Noch nichts bearbeitet: dann steht hier, was heute auf der Website ist.
     var seed = kbSeedListe(id);
     return seed ? seed.map(function (e) {
@@ -1663,7 +1712,11 @@
     }) : [];
   }
 
-  function kbEintraegeSchreiben(id, liste) { return kbSchreiben(id, { liste: liste }); }
+  /* `leer` haelt fest, dass die Leere gewollt ist — sonst kaeme die Abschrift
+     der Website beim naechsten Blick zurueck. */
+  function kbEintraegeSchreiben(id, liste) {
+    return kbSchreiben(id, { liste: liste, leer: liste.length === 0 });
+  }
 
   function kbSteckbrief(b) { return b.felderListe || KB_STECKBRIEF; }
 
@@ -2136,6 +2189,8 @@
     }
     var an = el("kbTexteAn");
     if (an) an.addEventListener("click", function () { kbTexteAn = true; kbZeige(bereich); });
+    var nochmal = el("kbInhaltNeu");
+    if (nochmal) nochmal.addEventListener("click", function () { kbInhaltLaden(true); });
     return true;
   }
 

@@ -214,6 +214,36 @@ const bereich = (dom, id) => {
     "die Abschrift überschreibt die eigene Eingabe");
 }
 
+/* ══ 4b. Eine leere Restliste darf die Website nicht verdecken ════════════
+   Der Befund aus dem echten Betrieb: Wer in der alten Fassung einmal
+   „Speichern & testen" gedrückt hatte, trug seither `{liste:[]}` im Browser —
+   und sah danach für immer „Noch nichts erfasst", obwohl die Website voll ist.
+   Eine leere Liste ist deshalb KEIN Bearbeitungsstand. */
+{
+  const { dom, gespeichert } = await seite();
+  gespeichert["ft-verwaltung-" + TOKEN + "-eintraege"] = JSON.stringify({ liste: [] });
+  const html = bereich(dom, "eintraege");
+  ok(/Dayanara Brumag/.test(html),
+    "eine leere Restliste verdeckt weiterhin die Inhalte der Website");
+  ok(!/Noch nichts erfasst/.test(html), "die Verwaltung steht wegen eines Restes leer da");
+
+  // Gewollte Leere bleibt aber leer: Wer alles entfernt, hinterlässt die Marke.
+  const gewollt = await seite();
+  gewollt.gespeichert["ft-verwaltung-" + TOKEN + "-eintraege"] =
+    JSON.stringify({ liste: [], leer: true });
+  const leerHtml = bereich(gewollt.dom, "eintraege");
+  ok(/Noch nichts erfasst/.test(leerHtml), "die gewollte Leere wird wieder aufgefüllt");
+  ok(!/Dayanara/.test(leerHtml), "entfernte Einträge kommen zurück");
+
+  // Und beim Entfernen des letzten Eintrags wird genau diese Marke gesetzt.
+  const weg = await seite();
+  bereich(weg.dom, "eintraege");
+  weg.dom.node("kbWeg_1").click();
+  weg.dom.node("kbWeg_0").click();
+  const stand = JSON.parse(weg.gespeichert["ft-verwaltung-" + TOKEN + "-eintraege"]);
+  ok(stand.leer === true, "das Entfernen des letzten Eintrags wird nicht festgehalten");
+}
+
 /* ══ 5. Ohne Abschrift: ehrlich, nicht erfunden ═══════════════════════════ */
 {
   const fehler = await seite({ inhaltAntwort: () => ({ ok: false, json: () => Promise.resolve({}) }) });
@@ -225,12 +255,33 @@ const bereich = (dom, id) => {
   ok(/Noch nichts erfasst/.test(html), "ohne Abschrift wird etwas erfunden");
   ok(!/Dayanara/.test(html), "es steht ein Inhalt da, den niemand geliefert hat");
 
+  // Der Grund steht dabei — „geht nicht" ohne Grund kostet nur Zeit.
+  ok(/veröffentlicht|abgewiesen|Freigabe|leer/.test(html),
+    "es steht kein Grund dabei, warum die Inhalte fehlen");
+  ok(/id="kbInhaltNeu"/.test(html), "es gibt keinen Weg, es noch einmal zu versuchen");
+
   // Eine leere Abschrift zählt genauso wenig wie gar keine.
   const leer = await seite({
     inhaltAntwort: () => ({ ok: true, json: () => Promise.resolve({ eintraege: [], galerie: [], kontakt: [], recht: [], texte: [] }) }),
   });
   ok(/liessen sich nicht laden/.test(bereich(leer.dom, "eintraege")),
     "eine leere Abschrift wird als Stand der Website ausgegeben");
+
+  /* Und der zweite Versuch holt wirklich noch einmal — sonst waere der Knopf
+     eine Attrappe. Diesmal antwortet die Website. */
+  let antwortet = false;
+  const spaeter = await seite({
+    inhaltAntwort: () => (antwortet
+      ? { ok: true, json: () => Promise.resolve(INHALT) }
+      : { ok: false, status: 404, json: () => Promise.resolve({}) }),
+  });
+  bereich(spaeter.dom, "eintraege");
+  antwortet = true;
+  spaeter.dom.node("kbInhaltNeu").click();
+  for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 0));
+  const nachher = String(spaeter.dom.node("kbWork").innerHTML || "");
+  ok(/Dayanara Brumag/.test(nachher),
+    "der zweite Versuch holt die Inhalte nicht — der Knopf ist eine Attrappe");
 }
 
 /* ══ 6. Fremde Daten werden zugeschnitten ═════════════════════════════════ */
