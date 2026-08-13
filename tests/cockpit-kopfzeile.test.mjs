@@ -648,17 +648,21 @@ const zeige = (dom, key) => dom.node("ckView_" + key).click();
 
 /* ══ 4. «Änderungswunsch» führt aus jeder Ansicht zum Ziel ═════════════════ */
 {
+  /* Und zwar als EIN Knopf: Er wechselt zur Website und schaltet dort direkt
+     die Elementauswahl ein — geschrieben wird im Dialog nach dem Antippen.
+     Ein getrennter «Element auswählen»-Schalter existiert nicht mehr. */
   for (const start of ["verwaltung", "offerte", "vertrag", "agb", "fragebogen"]) {
     const { dom } = await seite(daten());
     zeige(dom, start);
-    let fokus = false;
-    dom.node("crTitle").focus = () => { fokus = true; };
     dom.node("ckWish").click();
     ok(dom.node("ckView_website").getAttribute("aria-selected") === "true",
       `aus «${start}» führt der Änderungswunsch nicht zur Website`);
     ok(dom.node("ckSide").hidden === false,
       `aus «${start}» bleibt die Änderungsleiste zu`);
-    ok(fokus, `aus «${start}» landet der Fokus nicht im Feld`);
+    ok(dom.node("ckWish").getAttribute("aria-pressed") === "true",
+      `aus «${start}» schaltet der Knopf die Elementauswahl nicht ein`);
+    ok(dom.node("changeForm").hidden === true,
+      `aus «${start}» zeigt die Leiste das Formular statt der registrierten Wünsche`);
     ok(zentralSichtbar(dom).join() === "tilePreview",
       `aus «${start}» steht zentral nicht die Vorschau`);
   }

@@ -450,9 +450,8 @@
           <button type="button" id="ckDesktop" data-ft="desktop" aria-pressed="true">Desktop</button>
           <button type="button" id="ckMobil" data-ft="mobil" aria-pressed="false">Mobil</button>
         </span>
-        <button type="button" id="ckPick" data-ft="pick" aria-pressed="false">Element auswählen</button>
         <button type="button" id="ckReload" data-ft="reload" title="Ansicht neu laden">Neu laden</button>
-        <button type="button" id="ckWish" data-ft="wish" class="primary">Änderungswunsch</button>
+        <button type="button" id="ckWish" data-ft="wish" class="primary" aria-pressed="false">Änderungswunsch</button>
       </div>
     </header>
     <div class="ck-body">
@@ -701,7 +700,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "ft-stil-1";
+  var CK_BUILD = "ft-knopf-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -818,13 +817,15 @@
       });
     }
 
+    /* EIN Knopf für den Wunsch: «Änderungswunsch» führt zur Website und
+       schaltet dort direkt die Elementauswahl ein — antippen, Dialog, fertig.
+       Ein zweiter Klick beendet die Auswahl. Ein getrennter Schalter
+       «Element auswählen» daneben war derselbe Weg mit zwei Namen. */
     var wish = el("ckWish");
     if (wish) wish.addEventListener("click", function () {
-      ckZeige("website");
-      var seite = el("ckSide");
-      if (seite) seite.hidden = false;
-      var feld = el("crTitle");
-      if (feld && feld.focus) feld.focus();
+      if (pickAn) { pickSetzen(false); return; }
+      if (ckAnsicht !== "website") ckZeige("website");
+      pickSetzen(true);
     });
 
     var mobil = el("ckMobil");
@@ -834,11 +835,6 @@
 
     var neu = el("ckReload");
     if (neu) neu.addEventListener("click", ckNeuLaden);
-
-    var waehlen = el("ckPick");
-    if (waehlen) waehlen.addEventListener("click", function () {
-      pickSetzen(waehlen.getAttribute("aria-pressed") !== "true");
-    });
 
     // Sobald eine Vorschau freigegeben ist, ist „Website" die Startansicht.
     ckZeige(hatVorschau ? "website" : "fragebogen");
@@ -936,7 +932,7 @@
     }
     // Breite und Neuladen gehoeren zur eingebetteten Website, nicht zum Backend.
     var amRahmen = key === "website" && etwasSichtbar;
-    ["ckDesktop", "ckMobil", "ckReload", "ckPick"].forEach(function (id) {
+    ["ckDesktop", "ckMobil", "ckReload"].forEach(function (id) {
       var btn = el(id);
       if (btn) btn.hidden = !amRahmen;
     });
@@ -1692,12 +1688,18 @@
     if (intro) intro.textContent = pickAn
       ? "Registrierte Wünsche dieser Sitzung."
       : "Was soll anders sein?";
-    ["pickToggle", "ckPick"].forEach(function (id) {
-      var knopf = el(id);
-      if (!knopf) return;
-      knopf.setAttribute("aria-pressed", String(pickAn));
-      knopf.textContent = pickAn ? "Auswahlmodus aktiv" : "Element auswählen";
-    });
+    var schalter = el("pickToggle");
+    if (schalter) {
+      schalter.setAttribute("aria-pressed", String(pickAn));
+      schalter.textContent = pickAn ? "Auswahlmodus aktiv" : "Element auswählen";
+    }
+    // Der Kopfzeilen-Knopf ist derselbe Weg: Er zeigt an, dass die Auswahl
+    // laeuft, und beendet sie beim naechsten Klick.
+    var wunsch = el("ckWish");
+    if (wunsch) {
+      wunsch.setAttribute("aria-pressed", String(pickAn));
+      wunsch.textContent = pickAn ? "Auswahl beenden" : "Änderungswunsch";
+    }
     pickSenden(pickAn ? "arm" : "disarm");
     if (!pickAn) {
       pickText("Ausgeschaltet können Sie sich normal durch Ihre Seiten klicken. " +
