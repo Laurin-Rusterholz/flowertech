@@ -57,9 +57,13 @@ const ok = (condition, message) => { assert.ok(condition, message); checks++; };
   ok(!/\.mnode\s*\{|\.mm-core\s*\{/.test(html), `${name} trägt eine zweite Gestalt der Mindmap`);
 });
 
-// Der Fragebogen bleibt derselbe eine Versandweg.
-ok((fragebogen.match(/fetch\(/g) || []).length === 2,
-  "der Fragebogen hat nicht mehr genau zwei fetch-Aufrufe (laden, senden)");
+/* Der Fragebogen bleibt derselbe eine Versandweg. Gesendet wird weiterhin nur
+   an EINE Adresse; der dritte Aufruf ist ein reines Lesen der veroeffentlichten
+   Inhalte der Kundenwebsite (Vorbelegung der Verwaltung). */
+ok((fragebogen.match(/fetch\(/g) || []).length === 3,
+  "der Fragebogen hat nicht genau drei fetch-Aufrufe (laden, senden, Inhalte lesen)");
+ok((fragebogen.match(/method:\s*"POST"/g) || []).length === 1,
+  "der Fragebogen sendet an mehr als einer Stelle");
 ok(!/fetch\(/.test(source.split("if (!intake) {")[0]),
   "der Baustein sendet ausserhalb des Anfrage-Modus");
 

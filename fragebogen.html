@@ -252,6 +252,11 @@
   .kb-stand[data-stand="bereit"]{color:var(--ok);border-color:rgba(123,216,143,.4)}
   .kb-stand[data-stand="arbeit"]{color:var(--lime);border-color:rgba(200,255,46,.35)}
   .kb-lead{margin:7px 0 18px;color:var(--muted);font-size:14px;line-height:1.65;max-width:66ch}
+  /* Woher die Vorbelegung stammt — und, wenn sie fehlt, dass sie fehlt. */
+  .kb-quelle{margin:-8px 0 16px;font-size:13px;line-height:1.6;max-width:66ch;
+    color:var(--lime);display:flex;gap:8px;align-items:baseline}
+  .kb-quelle::before{content:"●";font-size:9px;line-height:1.9;opacity:.85}
+  .kb-quelle[data-fehlt="1"]{color:var(--err)}
   .kb-felder{border:1px solid var(--line);border-radius:12px;overflow:hidden;
     background:var(--card);max-width:660px}
   .kb-zeile{display:flex;gap:14px;padding:10px 13px;border-bottom:1px solid var(--line);
@@ -700,7 +705,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "ft-knopf-1";
+  var CK_BUILD = "ft-inhalt-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -1427,6 +1432,131 @@
     return true;
   }
 
+  /* ── Was heute wirklich auf der Website steht ───────────────────────────
+     Eine leere Verwaltung ist keine Verwaltung: Wer hier hereinkommt, will
+     die bestehenden Inhalte sehen und ÄNDERN, nicht alles neu abtippen.
+     Die Website legt dafür beim Bauen eine Abschrift ihrer veroeffentlichten
+     Inhalte ab (`inhalt.json`, Repo projekt-lehner) — dieselben Felder, die
+     hier angeboten werden.
+
+     Gelesen wird nur diese eine Datei, nur von der Herkunft der Vorschau, nur
+     oeffentliche Angaben. Bleibt sie aus, sagt die Verwaltung das offen und
+     erfindet nichts. Was die Kundschaft hier tippt, gilt vor der Abschrift. */
+  var kbSeed = null;
+  var kbSeedStand = "";
+  var kbSeedFehlt = false;
+  var kbSeedLaeuft = false;
+
+  function kbText(v, max) {
+    return String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, max || 400);
+  }
+
+  function kbBildUrl(pfad, basis) {
+    var p = kbText(pfad, 500);
+    if (!p) return "";
+    if (/^https:\/\//i.test(p)) return p;
+    if (/^(javascript|data|vbscript):/i.test(p)) return "";
+    return basis.replace(/\/+$/, "") + "/" + p.replace(/^\/+/, "");
+  }
+
+  /* Fremde Daten werden nicht geglaubt, sondern zugeschnitten: nur die
+     erwarteten Felder, nur Text, begrenzte Menge. */
+  function kbSeedPruefen(d, basis) {
+    if (!d || typeof d !== "object") return null;
+    var liste = function (roh, felder, max) {
+      if (!Array.isArray(roh)) return [];
+      return roh.slice(0, max).map(function (e) {
+        var neu = {};
+        if (!e || typeof e !== "object") return neu;
+        felder.forEach(function (f) {
+          neu[f] = f === "bild" ? kbBildUrl(e[f], basis) : kbText(e[f], 1500);
+        });
+        return neu;
+      });
+    };
+    var paare = function (roh, max) {
+      if (!Array.isArray(roh)) return [];
+      return roh.slice(0, max)
+        .map(function (f) {
+          return f && typeof f === "object" ? [kbText(f.label, 120), kbText(f.wert, 1500)] : null;
+        })
+        .filter(function (f) { return f && f[0]; });
+    };
+    var fertig = {
+      eintraege: liste(d.eintraege, ["name", "kurz", "geboren", "merkmale", "bild", "text"], 60),
+      galerie: liste(d.galerie, ["bild", "name"], 60),
+      kontakt: paare(d.kontakt, 20),
+      recht: paare(d.recht, 20),
+      texte: paare(d.texte, 120),
+    };
+    /* Eine Abschrift ohne Inhalt ist keine. Dann lieber sagen, dass nichts
+       geladen werden konnte, als „so steht es heute auf Ihrer Website" ueber
+       vier leere Felder zu schreiben. */
+    var etwas = Object.keys(fertig).some(function (k) { return fertig[k].length > 0; });
+    return etwas ? fertig : null;
+  }
+
+  function kbInhaltLaden() {
+    if (kbSeed || kbSeedLaeuft || kbSeedFehlt) return false;
+    var basis = pickHerkunft();
+    if (!basis || typeof window.fetch !== "function") { kbSeedFehlt = true; return false; }
+    kbSeedLaeuft = true;
+    var fertig = function () {
+      kbSeedLaeuft = false;
+      if (el("kbWork")) kbZeige(kbBereich);
+    };
+    window.fetch(basis + "/inhalt.json", { credentials: "omit", cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("nicht erreichbar");
+        return r.json();
+      })
+      .then(function (d) {
+        kbSeed = kbSeedPruefen(d, basis);
+        kbSeedStand = kbText(d && d.stand, 40);
+        if (!kbSeed) kbSeedFehlt = true;
+        fertig();
+      })
+      .catch(function () { kbSeedFehlt = true; fertig(); });
+    return true;
+  }
+
+  function kbSeedListe(bereich) {
+    if (!kbSeed) return null;
+    var q = bereich === "eintraege" ? kbSeed.eintraege
+      : bereich === "galerie" ? kbSeed.galerie : null;
+    return q && q.length ? q : null;
+  }
+
+  var KB_TEXTE_STANDARD = [["Titel der Startseite", ""], ["Untertitel", ""],
+    ["Über uns", ""], ["Fusszeile", ""]];
+
+  /* Welche Felder ein Bereich hat — aus der Abschrift, sonst aus dem Aufbau.
+     EINE Quelle, damit Anzeige und Einreichung nie auseinanderlaufen. */
+  function kbFelder(id, b) {
+    if (kbSeed && Array.isArray(kbSeed[id]) && kbSeed[id].length) return kbSeed[id];
+    if (b && b.art === "texte") return KB_TEXTE_STANDARD;
+    return (b && b.felder) || [];
+  }
+
+  /* Woher die Vorbelegung kommt — oder dass sie fehlt. Nie behaupten, es sei
+     der Stand der Website, wenn er nicht geladen werden konnte. */
+  function kbHerkunftHtml(id) {
+    var betroffen = id === "eintraege" || id === "galerie" || id === "kontakt" ||
+      id === "recht" || id === "texte";
+    if (!betroffen) return "";
+    if (kbSeed) {
+      return '<p class="kb-quelle" id="kbQuelle">So steht es heute auf Ihrer Website' +
+        (kbSeedStand ? " — Stand " + esc(datum(kbSeedStand)) : "") +
+        ". Ändern Sie, was anders sein soll.</p>";
+    }
+    if (kbSeedLaeuft) {
+      return '<p class="kb-quelle" id="kbQuelle">Die heutigen Inhalte Ihrer Website ' +
+        "werden geladen …</p>";
+    }
+    return '<p class="kb-quelle" data-fehlt="1" id="kbQuelle">Die heutigen Inhalte Ihrer ' +
+      "Website liessen sich nicht laden. Sie können hier trotzdem eintragen, was gelten soll.</p>";
+  }
+
   function kbFeldId(bereich, i) { return "kbF_" + bereich + "_" + i; }
 
   /* Bild oder Text: „Bild", „Bilder", „Logos", „Startbild" wollen eine Adresse,
@@ -1440,10 +1570,14 @@
   function kbEingabe(bereich, i, name, vorgabe, werte) {
     var id = kbFeldId(bereich, i);
     var art = kbFeldArt(name);
-    var wert = werte[String(i)] == null ? "" : String(werte[String(i)]);
+    /* Was die Kundschaft getippt hat, gilt. Sonst steht der heutige Stand der
+       Website im Feld — zum Überschreiben, nicht als blasser Platzhalter. */
+    var wert = werte[String(i)] == null
+      ? String(vorgabe == null ? "" : vorgabe)
+      : String(werte[String(i)]);
     var platzhalter = art === "bild"
       ? "https://… oder kurz beschreiben, welches Bild"
-      : (vorgabe || "noch nicht hinterlegt");
+      : "noch nicht hinterlegt";
     return '<div class="kb-zeile"><label class="kb-name" for="' + id + '">' +
       esc(name) + "</label>" +
       (art === "lang"
@@ -1519,7 +1653,14 @@
      eingereicht. */
   function kbEintraege(id) {
     var w = kbWerte(id);
-    return Array.isArray(w.liste) ? w.liste : [];
+    if (Array.isArray(w.liste)) return w.liste;
+    // Noch nichts bearbeitet: dann steht hier, was heute auf der Website ist.
+    var seed = kbSeedListe(id);
+    return seed ? seed.map(function (e) {
+      var kopie = {};
+      Object.keys(e).forEach(function (k) { kopie[k] = e[k]; });
+      return kopie;
+    }) : [];
   }
 
   function kbEintraegeSchreiben(id, liste) { return kbSchreiben(id, { liste: liste }); }
@@ -1556,13 +1697,14 @@
   var kbTexteAn = false;
 
   function kbTexteHtml(id, b) {
+    var feste = kbFelder(id, b);
     if (!kbTexteAn) {
-      return '<p class="kb-hinweis">Diese Texte ändern sich selten.</p>' +
+      return '<p class="kb-hinweis">Diese Texte ändern sich selten' +
+        (kbSeed && feste.length ? " — " + feste.length + " Stellen Ihrer Website" : "") +
+        ".</p>" +
         '<button type="button" class="kb-plus" id="kbTexteAn">Texte bearbeiten</button>';
     }
     var werte = kbWerte(id);
-    var feste = [["Titel der Startseite", ""], ["Untertitel", ""], ["Über uns", ""],
-      ["Fusszeile", ""]];
     return '<div class="kb-felder">' + feste.map(function (f, i) {
       return kbEingabe(id, i, f[0], f[1], werte);
     }).join("") + "</div>" + kbPubHtml();
@@ -1573,7 +1715,7 @@
     var kopf = '<div class="kb-kopf"><h2>' + esc(b.label) + "</h2>" +
       '<span class="kb-stand" data-stand="' + esc(b.stand) + '">' +
       esc(KB_STAND[b.stand] || "") + "</span></div>" +
-      '<p class="kb-lead">' + esc(b.lead) + "</p>";
+      '<p class="kb-lead">' + esc(b.lead) + "</p>" + kbHerkunftHtml(id);
     var koerper = "";
     if (id === "stand") koerper = kbUebersichtHtml();
     else if (id === "freigabe") koerper = kbFreigabeHtml();
@@ -1582,7 +1724,7 @@
     else if (b.art === "texte") koerper = kbTexteHtml(id, b);
     else {
       var werte = kbWerte(id);
-      koerper = '<div class="kb-felder">' + b.felder.map(function (f, i) {
+      koerper = '<div class="kb-felder">' + kbFelder(id, b).map(function (f, i) {
         return kbEingabe(id, i, f[0], f[1], werte);
       }).join("") + "</div>" + kbPubHtml();
     }
@@ -1932,6 +2074,9 @@
   function kbZeige(id) {
     if (!KB[id]) return false;
     kbBereich = id;
+    // Beim ersten Blick in die Verwaltung holen, was heute auf der Website
+    // steht. Der Aufruf schuetzt sich selbst gegen Wiederholung.
+    kbInhaltLaden();
     var work = el("kbWork");
     if (work) {
       work.innerHTML = kbBereichHtml(id);
@@ -2018,9 +2163,9 @@
       });
     } else {
       var werte = {};
-      var feste = b.art === "texte"
-        ? [["Titel der Startseite"], ["Untertitel"], ["Über uns"], ["Fusszeile"]]
-        : b.felder;
+      // Dieselbe Feldliste wie die Anzeige — sonst passten Beschriftung und
+      // eingereichter Wert nicht zusammen.
+      var feste = kbFelder(bereich, b);
       feste.forEach(function (f, i) {
         var feld = el(kbFeldId(bereich, i));
         var wert = feld ? String(feld.value || "").trim() : "";

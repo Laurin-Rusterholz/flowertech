@@ -55,7 +55,15 @@ ok(!/apiKey|serviceAccount|private_key|FIREBASE_[A-Z_]+|Bearer\s+[A-Za-z0-9]/i.t
   "die Seite enthält Zugangsdaten");
 ok(!/\.set\(|\.update\(|\.remove\(/.test(page), "die Seite schreibt direkt in die Datenbank");
 const fetches = page.match(/fetch\(/g) || [];
-ok(fetches.length === 2, `es gibt ${fetches.length} fetch-Aufrufe statt zwei (Fragebogen lesen, Antworten senden)`);
+ok(fetches.length === 3,
+  `es gibt ${fetches.length} fetch-Aufrufe statt drei (Fragebogen lesen, Antworten senden, ` +
+  "Inhalte der Website lesen)");
+/* Der dritte Aufruf holt die Abschrift der veroeffentlichten Inhalte — von der
+   Herkunft der Vorschau, ohne Zugangsdaten. Er darf nirgends sonst hingehen. */
+ok(/window\.fetch\(basis \+ "\/inhalt\.json", \{ credentials: "omit"/.test(page),
+  "die Inhalte werden nicht ohne Zugangsdaten von der Vorschau-Herkunft geholt");
+ok(/var basis = pickHerkunft\(\);\s*\n\s*if \(!basis/.test(page),
+  "die Herkunft der Inhalte wird nicht aus der freigegebenen Vorschau abgeleitet");
 ok(/encodeURIComponent\(token\)/.test(page), "der Token wird nicht kodiert eingesetzt");
 
 // ── 2. Ohne gültige Einladung passiert nichts ─────────────────────────────
