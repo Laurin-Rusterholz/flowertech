@@ -60,10 +60,12 @@ ok(fetches.length === 3,
   "Inhalte der Website lesen)");
 /* Der dritte Aufruf holt die Abschrift der veroeffentlichten Inhalte — von der
    Herkunft der Vorschau, ohne Zugangsdaten. Er darf nirgends sonst hingehen. */
-ok(/window\.fetch\(basis \+ "\/inhalt\.json", \{ credentials: "omit"/.test(page),
-  "die Inhalte werden nicht ohne Zugangsdaten von der Vorschau-Herkunft geholt");
-ok(/var basis = pickHerkunft\(\);\s*\n\s*if \(!basis/.test(page),
+ok(/window\.fetch\(adressen\[i\], \{ credentials: "omit"/.test(page),
+  "die Inhalte werden nicht ohne Zugangsdaten geholt");
+ok(/var basis = pickHerkunft\(\);\s*\n\s*if \(!basis\) return \[\];/.test(page),
   "die Herkunft der Inhalte wird nicht aus der freigegebenen Vorschau abgeleitet");
+ok(/adressen = \[basis \+ "\/inhalt\.json"\]/.test(page),
+  "die Abschrift wird nicht an der Wurzel der freigegebenen Website gesucht");
 ok(/encodeURIComponent\(token\)/.test(page), "der Token wird nicht kodiert eingesetzt");
 
 // ── 2. Ohne gültige Einladung passiert nichts ─────────────────────────────
