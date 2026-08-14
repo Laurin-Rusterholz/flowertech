@@ -78,7 +78,12 @@ ok(/X-Robots-Tag = "noindex/.test(toml), "der noindex-Header fehlt");
 ok(/Cache-Control = "no-store"/.test(toml), "die Kundenseite darf nicht zwischengespeichert werden");
 
 // ── 5. CSP erlaubt genau das Noetige ───────────────────────────────────────
-const csp = /connect-src([^;]*);/.exec(toml);
+/* Gelesen wird die WIRKLICHE Kopfzeile, nicht irgendeine Stelle der Datei:
+   Ein Kommentar, in dem das Wort vorkommt, darf diese Pruefung nicht
+   uebernehmen — genau das ist einmal passiert. */
+const cspZeile = /Content-Security-Policy\s*=\s*"([^"]+)"/.exec(toml);
+ok(!!cspZeile, "die Seite setzt keine CSP");
+const csp = /connect-src([^;]*)/.exec(cspZeile[1]);
 ok(!!csp, "die CSP kennt keine connect-src-Regel");
 ok(/firebasedatabase\.app/.test(csp[1]), "die CSP verbietet das Laden des Snapshots");
 ok(/management-xo2-pro/.test(csp[1]), "die CSP verbietet das Senden von Änderungswünschen");
