@@ -421,18 +421,161 @@
   /* Die beiden Vision-Fragen bleiben die Wertträger des Bogens — bedient
      werden sie vom Zentrum der Mindmap, nicht mehr von Hand. */
   #vrCarriers{display:none}
+
+  /* ══ Der Bogen ═══════════════════════════════════════════════════════════
+     Der Fragebogen ist keine Kachel im Cockpit, sondern eine eigene Drucksache
+     — und sie sieht mit Absicht nach Papier aus, nicht nach Oberflaeche:
+
+       · Der Rahmen tritt ab. Kopfzeile, Buehne und Leiste des Cockpits sind
+         auf diesem Blatt weg; die Seite gehoert dem Bogen allein.
+       · Gesetzt, nicht gebaut. Kein Kasten, kein Schatten, kein Verlauf, kein
+         gerundetes Feld — nur Papier, Linien, Type und EIN Signalton.
+       · Eine Strecke statt einer Liste. Drei Fragen je Blatt, gross gesetzt,
+         mit einer Ziffer am Rand. Man beantwortet, was man sieht.
+       · Die Beschriftungen laufen in Schreibmaschinenschrift: klein,
+         gesperrt, sachlich. Die Fragen dagegen stehen gross im Satz.
+
+     Der Umschalter ist `data-bogen` am <body>; gesetzt wird er von der
+     Ansichtssteuerung, damit die uebrigen Ansichten den Rahmen behalten. */
+  body[data-bogen="1"]{
+    --pa:#efece3; --pa2:#e6e2d5; --ti:#151310; --ti2:#6a6355; --sig:#cf3a1e;
+    --ru:rgba(21,19,16,.17); --ru2:rgba(21,19,16,.07);
+    --mo:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    background:var(--pa);color:var(--ti);
+  }
+  /* Der Rahmen tritt ab — vollstaendig, nicht nur optisch abgeschwaecht. */
+  body[data-bogen="1"] .ck-top,
+  body[data-bogen="1"] .ck-side{display:none}
+  body[data-bogen="1"] .ck{height:auto;min-height:100dvh;background:var(--pa)}
+  body[data-bogen="1"] .ck-body{display:block}
+  body[data-bogen="1"] .ck-stage{overflow:visible;padding:0;background:var(--pa)}
+  body[data-bogen="1"] .wrap{max-width:none;padding:0}
+  /* Die Fusszeile kommt zurueck — als Kolophon, nicht als Rahmenrest.
+     (Kommt nach `body.ck-on .page-foot{display:none}`; gleiche Staerke,
+     spaetere Regel gewinnt.) */
+  body[data-bogen="1"] .page-foot{display:block;font-family:var(--mo);font-size:10.5px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ti2);text-align:left;
+    margin:0;padding:22px clamp(20px,7vw,90px) 40px;border-top:1px solid var(--ru2)}
+
+  body[data-bogen="1"] #content{max-width:1180px;margin:0 auto;
+    padding:clamp(26px,6vw,70px) clamp(20px,7vw,90px) 0}
+
+  /* Der Kopf: eine Zeile Kleingedrucktes, ein grosser Titel, ein Vorspann.
+     Kein Logo, kein Emoji — der Name traegt sich selbst. */
+  .bg-kopf{border-bottom:2px solid var(--ti);padding-bottom:clamp(18px,3vw,30px);
+    margin-bottom:clamp(24px,4vw,48px)}
+  .bg-zeile{margin:0 0 clamp(14px,3vw,26px);font-family:var(--mo);font-size:11px;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--ti2);
+    display:flex;align-items:center;gap:12px}
+  .bg-zeile i{display:block;width:clamp(24px,6vw,90px);height:1px;background:var(--ti2);
+    flex:0 0 auto}
+  body[data-bogen="1"] #title{font-size:clamp(38px,8.5vw,88px);line-height:.94;
+    letter-spacing:-.045em;font-weight:800;margin:0;max-width:14ch;text-wrap:balance}
+  .bg-lead{margin:clamp(14px,2vw,20px) 0 0;font-size:clamp(15px,1.5vw,18px);line-height:1.55;
+    color:var(--ti2);max-width:52ch}
+
+  /* Ein Blatt: die Ziffer steht am Rand, die Fragen laufen in einer Spalte.
+     Auf schmalen Geraeten legt sich die Ziffer ueber den Satzspiegel. */
+  .bg-blatt{display:grid;grid-template-columns:1fr;gap:clamp(22px,3vw,34px);
+    padding-bottom:clamp(28px,5vw,56px)}
+  @media(min-width:900px){
+    .bg-blatt{grid-template-columns:clamp(90px,12vw,160px) minmax(0,1fr);
+      gap:0 clamp(28px,4vw,60px)}
+    .bg-nr{grid-row:1 / span 99}
+  }
+  .bg-nr{margin:0;font-family:var(--mo);font-size:clamp(13px,1.4vw,15px);letter-spacing:.14em;
+    color:var(--sig);font-weight:600;position:sticky;top:24px;align-self:start}
+  .bg-nr::after{content:"";display:block;width:34px;height:2px;background:var(--sig);margin-top:10px}
+
+  /* Fragen: keine Kaesten. Eine Beschriftung in Schreibmaschine, darunter die
+     blanke Linie, auf der geschrieben wird. */
+  body[data-bogen="1"] label{display:block;margin:0 0 clamp(26px,3.4vw,40px);max-width:60ch}
+  body[data-bogen="1"] .lbl{font-family:var(--mo);font-size:11.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ti2);font-weight:600;margin-bottom:10px;
+    display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+  body[data-bogen="1"] .req{color:var(--sig);font-weight:600;letter-spacing:.14em}
+  body[data-bogen="1"] .lbl .sub{color:var(--ti2);opacity:.75}
+  body[data-bogen="1"] input,
+  body[data-bogen="1"] textarea,
+  body[data-bogen="1"] select{
+    width:100%;padding:2px 0 9px;border:0;border-bottom:1.5px solid var(--ru);border-radius:0;
+    background:transparent;color:var(--ti);font:inherit;font-size:clamp(17px,1.9vw,20px);
+    line-height:1.35;transition:border-color .15s}
+  body[data-bogen="1"] textarea{min-height:120px;resize:vertical;
+    border:1.5px solid var(--ru);padding:12px 14px;background:var(--pa2)}
+  body[data-bogen="1"] select{appearance:none;padding-right:24px;cursor:pointer}
+  body[data-bogen="1"] input:hover,
+  body[data-bogen="1"] textarea:hover,
+  body[data-bogen="1"] select:hover{border-color:var(--ti2)}
+  body[data-bogen="1"] input:focus,
+  body[data-bogen="1"] textarea:focus,
+  body[data-bogen="1"] select:focus{outline:0;border-color:var(--sig);border-bottom-width:2px}
+  body[data-bogen="1"] [aria-invalid="true"]{border-color:var(--ru)}
+  body[data-bogen="1"] .hint{font-family:var(--mo);font-size:11.5px;line-height:1.6;
+    letter-spacing:.02em;color:var(--ti2);margin-top:9px;max-width:52ch}
+
+  /* Der Fuss der Strecke. Er klebt unten, damit der Weg weiter immer da ist. */
+  .bg-steuer{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;
+    gap:clamp(12px,2vw,20px);flex-wrap:wrap;
+    padding:16px 0;margin-top:clamp(8px,2vw,18px);
+    border-top:2px solid var(--ti);background:var(--pa)}
+  .bg-stand{margin:0;flex:1 1 auto;font-family:var(--mo);font-size:11.5px;letter-spacing:.2em;
+    color:var(--ti2)}
+  body[data-bogen="1"] .bg-steuer button{border-radius:0;padding:14px 28px;font-family:var(--mo);
+    font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;
+    background:var(--ti);color:var(--pa);border:2px solid var(--ti);background-image:none}
+  body[data-bogen="1"] .bg-steuer button:hover{background:var(--sig);border-color:var(--sig)}
+  body[data-bogen="1"] .bg-still{background:transparent;color:var(--ti)}
+  body[data-bogen="1"] .bg-still:hover{background:var(--ti);color:var(--pa);border-color:var(--ti)}
+  body[data-bogen="1"] #submit{background:var(--sig);border-color:var(--sig);color:#fff}
+  body[data-bogen="1"] #submit:hover{background:var(--ti);border-color:var(--ti)}
+  body[data-bogen="1"] button[aria-disabled="true"]{background:transparent;color:var(--ti2);
+    border-color:var(--ru);cursor:not-allowed}
+  body[data-bogen="1"] button[aria-disabled="true"]:hover{background:transparent;color:var(--ti2);
+    border-color:var(--ru)}
+  body[data-bogen="1"] .need{font-family:var(--mo);font-size:11.5px;letter-spacing:.06em;
+    line-height:1.7;color:var(--ti2);font-weight:500;margin-top:14px;text-transform:none}
+  body[data-bogen="1"] .need::before{content:"↳ ";color:var(--sig)}
+  body[data-bogen="1"] .need.done::before{content:"✓ ";color:var(--ti)}
+  .bg-klein{margin:16px 0 clamp(30px,6vw,70px);font-family:var(--mo);font-size:11px;
+    line-height:1.7;letter-spacing:.04em;color:var(--ti2);max-width:56ch}
+  body[data-bogen="1"] .status{border-radius:0;font-family:var(--mo);font-size:11.5px;
+    letter-spacing:.06em;padding:14px 16px;margin-top:14px}
+  body[data-bogen="1"] .status.ok{background:transparent;border:2px solid var(--ti);color:var(--ti)}
+  body[data-bogen="1"] .status.err{background:transparent;border:2px solid var(--sig);color:var(--sig)}
+
+  /* Der Vision Room ist das letzte Blatt. Er behaelt seinen eigenen Baustein,
+     bekommt hier aber denselben Satz wie der uebrige Bogen. */
+  body[data-bogen="1"] .vr{background:transparent;border:0;border-top:1px solid var(--ru);
+    border-radius:0;padding:clamp(22px,3vw,34px) 0 0;margin:0}
+  body[data-bogen="1"] .vr h3{font-family:var(--mo);font-size:11.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--sig);margin:0 0 12px}
+  body[data-bogen="1"] .vr .vr-lead{color:var(--ti2);font-size:14px;max-width:56ch}
+  /* Die Mindmap bleibt dunkel — sie IST der Baustein von flowertech.ch und
+     wird hier nicht nachgebaut. Auf Papier wird sie deshalb wie eine
+     eingelegte Tafel behandelt: harte Kante statt runder Ecken, kein
+     schwebender Schatten. Eingelegt, nicht aufgeklebt. */
+  body[data-bogen="1"] .mm{border-radius:0;border:2px solid var(--ti);box-shadow:none}
+  /* Die Notiz und der Fehlerkasten liegen auf demselben Papier. */
+  body[data-bogen="1"] #answered,
+  body[data-bogen="1"] #error,
+  body[data-bogen="1"] #loading{background:transparent;border:0;border-left:3px solid var(--sig);
+    border-radius:0;color:var(--ti);max-width:1180px;
+    margin:clamp(26px,6vw,70px) auto;padding:4px 0 4px clamp(16px,2vw,24px)}
+  body[data-bogen="1"] #answered h2,
+  body[data-bogen="1"] #error h2{font-size:clamp(22px,3vw,32px);letter-spacing:-.03em;
+    margin-bottom:8px}
+  body[data-bogen="1"] #answered .sub,
+  body[data-bogen="1"] #error .sub{color:var(--ti2);font-size:15px}
+
+  @media(prefers-reduced-motion:reduce){
+    body[data-bogen="1"] input,body[data-bogen="1"] textarea,
+    body[data-bogen="1"] select{transition:none}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="page-head">
-    <div class="mark" aria-hidden="true">🌸</div>
-    <div>
-      <h1 id="title">Ihre Angaben</h1>
-      <p class="sub" id="subtitle">FlowerTech</p>
-    </div>
-  </header>
-
   <div id="loading" class="card">Fragebogen wird geladen …</div>
 
   <div id="error" class="card" hidden>
@@ -465,17 +608,30 @@
     <div class="ck-body">
       <div class="ck-stage" id="ckStage">
 
+  <!-- ── Der Bogen ────────────────────────────────────────────────────
+       Keine Karte im Rahmen, sondern eine eigene Drucksache: Kopf, dann eine
+       Strecke aus Blättern. Der Rahmen des Cockpits tritt dafür ganz ab
+       (siehe `body[data-bogen]`). -->
   <section id="content" hidden>
-    <section class="card">
-      <p class="sub" id="intro"></p>
-    </section>
+    <header class="bg-kopf">
+      <p class="bg-zeile"><span id="subtitle">FlowerTech</span><i aria-hidden="true"></i>Erfassung</p>
+      <h1 id="title">Ihre Angaben</h1>
+      <p class="bg-lead" id="intro"></p>
+    </header>
 
-    <form id="form" class="card" novalidate>
+    <form id="form" novalidate>
       <div id="fields"></div>
 
       <!-- Vision Room — dieselbe Einladung, dieselbe Absendung. Er erzeugt
            bewusst keinen eigenen Vorgang: Idee und Funktionen sind zwei
-           Antworten dieses Fragebogens. -->
+           Antworten dieses Fragebogens.
+
+           Er ist das letzte Blatt der Strecke. Das Blatt drumherum wird
+           umgeblättert; ob es den Vision Room ueberhaupt gibt, entscheidet
+           weiterhin er selbst (`#visionRoom[hidden]`). -->
+      <section class="bg-blatt" id="blatt_vr" data-blatt="vr" hidden>
+      <p class="bg-nr" id="bogenNrVr" aria-hidden="true">04</p>
+      <div class="bg-satz">
       <section class="vr" id="visionRoom" hidden aria-labelledby="vrHeading">
         <h3 id="vrHeading">Vision Room</h3>
         <p class="vr-lead" id="vrLead">Bauen Sie Ihre Idee zusammen — genau wie auf flowertech.ch.
@@ -484,12 +640,22 @@
         <div id="visionRoomMount"></div>
         <div id="vrCarriers"></div>
       </section>
+      </div>
+      </section>
 
       <label class="hp" aria-hidden="true">Bitte leer lassen<input id="hp" tabindex="-1" autocomplete="off"></label>
-      <button type="submit" id="submit" aria-disabled="true" aria-describedby="need">Antworten senden</button>
+
+      <!-- Der Fuss der Strecke: wo man steht, und der einzige Weg weiter.
+           Gesendet wird erst auf dem letzten Blatt — dort tritt „Weiter“ ab. -->
+      <div class="bg-steuer">
+        <button type="button" id="bogenZurueck" class="bg-still" hidden>Zurück</button>
+        <p class="bg-stand" id="bogenStand" aria-live="polite"></p>
+        <button type="button" id="bogenWeiter" class="bg-weiter" hidden>Weiter</button>
+        <button type="submit" id="submit" aria-disabled="true" aria-describedby="need">Antworten senden</button>
+      </div>
       <p class="need" id="need" role="status" aria-live="polite"></p>
       <div class="status" id="status" role="status" aria-live="polite"></div>
-      <p class="sub" style="margin-top:12px">Ihre Angaben gehen direkt zu FlowerTech. Unverbindlich —
+      <p class="bg-klein">Ihre Angaben gehen direkt zu FlowerTech. Unverbindlich —
         Sie erhalten eine Rückmeldung, keine Rechnung.</p>
     </form>
   </section>
@@ -708,7 +874,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "ft-inhalt-3";
+  var CK_BUILD = "ft-bogen-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -938,6 +1104,11 @@
       if (rahmen) buehne.setAttribute("data-rahmen", "1");
       else buehne.removeAttribute("data-rahmen");
     }
+    /* Auf dem Fragebogen tritt der Rahmen ab: Er ist eine eigene Drucksache,
+       kein Inhalt in FlowerTechs Huelle. In jeder anderen Ansicht bleibt der
+       Rahmen genau so, wie er in jedes Kundenprojekt kopiert wird. */
+    bogenModus(key === "fragebogen" && etwasSichtbar);
+
     // Breite und Neuladen gehoeren zur eingebetteten Website, nicht zum Backend.
     var amRahmen = key === "website" && etwasSichtbar;
     ["ckDesktop", "ckMobil", "ckReload"].forEach(function (id) {
@@ -2395,6 +2566,141 @@
       .then(function () { btn.disabled = false; });
   }
 
+  /* ── Die Strecke ────────────────────────────────────────────────────────
+     Ein Bogen mit zwanzig Feldern untereinander ist eine Zumutung; drei
+     Fragen auf einem Blatt sind eine Frage nach der anderen. Die Felder
+     bleiben dabei ALLE im Dokument — verborgene Blaetter behalten ihre
+     Eingaben, und gesendet wird am Ende der ganze Bogen. */
+  var BLATT_GROESSE = 3;
+  var bogenBlaetter = [];
+  var bogenSchritt = 0;
+
+  function zwei(n) { return (n < 10 ? "0" : "") + n; }
+
+  /* Der Bogen bekommt die ganze Seite. `data-bogen` am <body> nimmt dem
+     Cockpit auf diesem Blatt Kopfzeile, Buehne und Leiste — die uebrigen
+     Ansichten behalten den Rahmen unveraendert. */
+  function bogenModus(an) {
+    var koerper = document.body;
+    if (!koerper) return false;
+    if (koerper.dataset) {
+      if (an) koerper.dataset.bogen = "1";
+      else delete koerper.dataset.bogen;
+    }
+    if (koerper.setAttribute) {
+      if (an) koerper.setAttribute("data-bogen", "1");
+      else if (koerper.removeAttribute) koerper.removeAttribute("data-bogen");
+    }
+    return true;
+  }
+
+  function blaetterHtml(qs) {
+    var teile = [];
+    for (var i = 0; i < qs.length; i += BLATT_GROESSE) {
+      var nr = teile.length + 1;
+      var gruppe = qs.slice(i, i + BLATT_GROESSE);
+      var von = i;
+      teile.push('<section class="bg-blatt" id="blatt_' + (nr - 1) + '" data-blatt="' + nr + '">' +
+        '<p class="bg-nr" aria-hidden="true">' + zwei(nr) + "</p>" +
+        '<div class="bg-satz">' +
+        gruppe.map(function (q, j) { return fieldHtml(q, von + j); }).join("") +
+        "</div></section>");
+    }
+    return teile.join("");
+  }
+
+  /* Welche Blaetter es gibt — inklusive des Vision Rooms, sofern dieser Bogen
+     ihn traegt. Er ist das letzte Blatt und behaelt seinen eigenen Baustein. */
+  function bogenAufbau() {
+    bogenBlaetter = [];
+    for (var n = 0; el("blatt_" + n); n++) bogenBlaetter.push("blatt_" + n);
+    /* Ob es das Vision-Room-Blatt gibt, entscheidet der Baustein selbst: Er
+       bleibt verborgen, wenn dieser Bogen die beiden Fragen nicht traegt. Das
+       Blatt drumherum wird nur umgeblaettert — es setzt ihn nie zurueck. */
+    var vr = el("visionRoom");
+    if (vr && vr.hidden === false && el("blatt_vr")) {
+      bogenBlaetter.push("blatt_vr");
+      // Die Ziffer am Rand zaehlt weiter — auch ueber das letzte Blatt.
+      var nr = el("bogenNrVr");
+      if (nr) nr.textContent = zwei(bogenBlaetter.length);
+    }
+    bogenZeigen(0);
+    return bogenBlaetter.length;
+  }
+
+  function bogenZeigen(n) {
+    if (!bogenBlaetter.length) return false;
+    bogenSchritt = Math.max(0, Math.min(n, bogenBlaetter.length - 1));
+    bogenBlaetter.forEach(function (id, i) {
+      var node = el(id);
+      if (node) node.hidden = i !== bogenSchritt;
+    });
+    var letztes = bogenSchritt === bogenBlaetter.length - 1;
+    var zurueck = el("bogenZurueck");
+    if (zurueck) zurueck.hidden = bogenSchritt === 0;
+    var weiter = el("bogenWeiter");
+    if (weiter) weiter.hidden = letztes;
+    /* Gesendet wird erst am Ende der Strecke — vorher gibt es den Knopf nicht.
+       Ein Absenden-Knopf auf Blatt eins wuerde einen halben Bogen einladen. */
+    var senden = el("submit");
+    if (senden) senden.hidden = !letztes;
+    var stand = el("bogenStand");
+    if (stand) {
+      stand.textContent = "Blatt " + zwei(bogenSchritt + 1) + " von " +
+        zwei(bogenBlaetter.length);
+    }
+    return true;
+  }
+
+  /* Zu dem Blatt springen, auf dem eine bestimmte Frage steht. Wer eine
+     Pflichtangabe vergisst, soll sie sehen und nicht suchen. */
+  function bogenZuFrage(i) {
+    if (!bogenBlaetter.length) return false;
+    if (isVisionCarrier(i)) {
+      var vr = bogenBlaetter.indexOf("blatt_vr");
+      return bogenZeigen(vr >= 0 ? vr : bogenBlaetter.length - 1);
+    }
+    return bogenZeigen(Math.floor(i / BLATT_GROESSE));
+  }
+
+  // Was auf dem aktuellen Blatt noch offen ist — nur Sichtbares zaehlt.
+  function blattOffen() {
+    var von = bogenSchritt * BLATT_GROESSE;
+    var offen = [];
+    for (var i = von; i < von + BLATT_GROESSE && i < questions.length; i++) {
+      var q = questions[i];
+      if (!q || !q.required || !sichtbar(q) || isVisionCarrier(i)) continue;
+      if (!value(i)) offen.push({ index: i, label: q.label });
+    }
+    return offen;
+  }
+
+  function bogenVerdrahten() {
+    var weiter = el("bogenWeiter");
+    if (weiter) weiter.addEventListener("click", function () {
+      var offen = blattOffen();
+      if (offen.length) {
+        // Nicht weiter, ohne es zu sagen — und die Stelle gleich zeigen.
+        el("need").className = "need";
+        el("need").textContent = offen.length === 1
+          ? "Auf diesem Blatt fehlt noch: " + offen[0].label + "."
+          : "Auf diesem Blatt fehlen noch: " +
+            offen.map(function (o) { return o.label; }).join(", ") + ".";
+        var node = el("q_" + offen[0].index);
+        if (node && node.focus) node.focus();
+        return;
+      }
+      bogenZeigen(bogenSchritt + 1);
+      sync();
+    });
+    var zurueck = el("bogenZurueck");
+    if (zurueck) zurueck.addEventListener("click", function () {
+      bogenZeigen(bogenSchritt - 1);
+      sync();
+    });
+    return true;
+  }
+
   function fieldHtml(q, i) {
     var id = "q_" + i;
     var required = q.required
@@ -2510,13 +2816,13 @@
   function render(data) {
     questions = data.questions;
     el("loading").hidden = true;
-    if (!ckFragebogen(true, false)) el("content").hidden = false;
+    if (!ckFragebogen(true, false)) { el("content").hidden = false; bogenModus(true); }
     el("title").textContent = data.title || "Ihre Angaben";
     document.title = (data.title || "Ihre Angaben") + " — FlowerTech";
     el("subtitle").textContent = (data.company && data.company.name) || "FlowerTech";
     el("intro").textContent = data.intro || "";
     el("footer").textContent = (data.company && data.company.name) || "FlowerTech";
-    el("fields").innerHTML = questions.map(fieldHtml).join("");
+    el("fields").innerHTML = blaetterHtml(questions);
     questions.forEach(function (q, i) {
       var node = el("q_" + i);
       if (node) node.addEventListener("input", sync);
@@ -2526,6 +2832,10 @@
     });
     setupVisionRoom();
     bedingteFelder();
+    // Erst jetzt steht fest, wie viele Blaetter es gibt — der Vision Room
+    // entscheidet sich in setupVisionRoom.
+    bogenAufbau();
+    bogenVerdrahten();
     sync();
   }
 
@@ -2580,6 +2890,20 @@
     var offen = missing();
     var ready = offen.length === 0;
     el("submit").setAttribute("aria-disabled", ready ? "false" : "true");
+
+    /* Mitten in der Strecke zaehlt das Blatt, das vor der Kundschaft liegt.
+       Der ganze Rueckstand des Bogens auf Blatt eins ist eine Wand aus Text
+       ueber Fragen, die noch gar nicht gestellt wurden. */
+    var unterwegs = bogenBlaetter.length > 1 && bogenSchritt < bogenBlaetter.length - 1;
+    if (unterwegs) {
+      var hier = blattOffen().map(function (o) { return o.label; });
+      el("need").className = hier.length ? "need" : "need done";
+      el("need").textContent = hier.length
+        ? "Noch offen auf diesem Blatt: " + hier.join(", ") + "."
+        : "Dieses Blatt ist vollständig. Weiter zum nächsten.";
+      return ready;
+    }
+
     el("need").className = ready ? "need done" : "need";
     el("need").textContent = ready
       ? "Danke — das genügt uns. Sie können jetzt senden."
@@ -2619,6 +2943,9 @@
       status.className = "status show err";
       status.textContent = "Bitte noch ergänzen: " + missing().join(", ") + ".";
       var first = questions.findIndex(function (q, i) { return q.required && !value(i); });
+      // Erst das Blatt aufschlagen, auf dem die Stelle steht — sonst zeigte
+      // der Fokus auf ein Feld, das gerade gar nicht vor der Kundschaft liegt.
+      if (first >= 0) bogenZuFrage(first);
       // Die Wertträger des Vision Rooms sind ausgeblendet — angesprungen wird
       // das Feld, das die Kundschaft wirklich vor sich hat.
       var ziel = first >= 0 && isVisionCarrier(first) ? el("vrIdea") : (first >= 0 ? el("q_" + first) : null);
