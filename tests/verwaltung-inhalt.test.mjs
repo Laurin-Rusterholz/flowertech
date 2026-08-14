@@ -154,6 +154,27 @@ const bereich = (dom, id) => {
   return String(dom.node("kbWork").innerHTML || "");
 };
 
+/* ══ 0. Der Browser muss die Abfrage überhaupt zulassen ═══════════════════
+   Der teuerste Fehler dieser Runde: Die Website gab `inhalt.json` sauber frei,
+   aber die CSP von flowertech.ch führte die Kundenwebsite nicht in
+   `connect-src` — der Browser wies die Abfrage ab, und die Verwaltung stand
+   leer da. Eine Freigabe auf der einen Seite nützt nichts ohne die Erlaubnis
+   auf der anderen. */
+{
+  const toml = fs.readFileSync(path.join(root, "netlify.toml"), "utf8");
+  // Gelesen wird die WIRKLICHE Kopfzeile, nicht irgendeine Stelle der Datei —
+  // ein Kommentar darf eine Sicherheitsprüfung nicht beeinflussen.
+  const zeile = /Content-Security-Policy\s*=\s*"([^"]+)"/.exec(toml);
+  ok(!!zeile, "die Seite setzt keine CSP");
+  const verbindungen = /connect-src([^;]*)/.exec(zeile[1]);
+  ok(!!verbindungen, "die CSP sagt nicht, mit wem die Seite reden darf");
+  ok(verbindungen[1].includes(HERKUNFT),
+    `die CSP lässt die Kundenwebsite ${HERKUNFT} nicht zu — die Verwaltung bliebe leer`);
+  // Und sie bleibt eine Aufzählung: kein pauschales "https:".
+  ok(!/\shttps:(\s|$)/.test(verbindungen[1]),
+    "die CSP erlaubt Verbindungen zu beliebigen Adressen");
+}
+
 /* ══ 1. Gelesen wird nur von der Herkunft der freigegebenen Vorschau ═══════ */
 {
   const { dom, geholt } = await seite();
