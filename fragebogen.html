@@ -422,24 +422,28 @@
      werden sie vom Zentrum der Mindmap, nicht mehr von Hand. */
   #vrCarriers{display:none}
 
-  /* ══ Der Bogen ═══════════════════════════════════════════════════════════
-     Der Fragebogen ist keine Kachel im Cockpit, sondern eine eigene Drucksache
-     — und sie sieht mit Absicht nach Papier aus, nicht nach Oberflaeche:
+  /* ══ Das Werkblatt ═══════════════════════════════════════════════════════
+     Der Fragebogen ist ein Erfassungsblatt — also sieht er aus wie eines:
+     technische Zeichnung, nicht Landingpage.
 
-       · Der Rahmen tritt ab. Kopfzeile, Buehne und Leiste des Cockpits sind
-         auf diesem Blatt weg; die Seite gehoert dem Bogen allein.
-       · Gesetzt, nicht gebaut. Kein Kasten, kein Schatten, kein Verlauf, kein
-         gerundetes Feld — nur Papier, Linien, Type und EIN Signalton.
-       · Eine Strecke statt einer Liste. Drei Fragen je Blatt, gross gesetzt,
-         mit einer Ziffer am Rand. Man beantwortet, was man sieht.
-       · Die Beschriftungen laufen in Schreibmaschinenschrift: klein,
-         gesperrt, sachlich. Die Fragen dagegen stehen gross im Satz.
+     Der Vorbefund war eindeutig: helles Cremepapier, viel Luft, ein warmer
+     Rostton, grosse luftige Headline — das ist Zug um Zug die Palette, mit
+     der derzeit jede zweite erzeugte Seite daherkommt. Also weg damit, und
+     zwar an der Wurzel:
 
-     Der Umschalter ist `data-bogen` am <body>; gesetzt wird er von der
-     Ansichtssteuerung, damit die uebrigen Ansichten den Rahmen behalten. */
+       · Kalter Grauton statt warmem Creme, hartes Blau statt Terrakotta.
+       · Raster statt Luft. Jede Zeile steht in einem Feld mit Haarlinie;
+         das Blatt hat Rand, Spalten und ein Schriftfeld wie eine Zeichnung.
+       · Der Titel steht im schwarzen Balken, nicht frei schwebend.
+       · Dicht statt weiträumig: die Angaben stehen als Zeilen nebeneinander,
+         Beschriftung links, Eintrag rechts — wie auf einem ausgefuellten
+         Formular.
+       · Laufende Nummern am Rand, ein Schriftfeld unten mit Blatt, Stand und
+         Weg. Nichts ist rund, nichts wirft Schatten, nichts verlaeuft. */
   body[data-bogen="1"]{
-    --pa:#efece3; --pa2:#e6e2d5; --ti:#151310; --ti2:#6a6355; --sig:#cf3a1e;
-    --ru:rgba(21,19,16,.17); --ru2:rgba(21,19,16,.07);
+    --pa:#dcdedb; --pa2:#d2d5d1; --pa3:#e7e9e6; --ein:#f7f9f6;
+    --ti:#0b0c0b; --ti2:#5b5f5b; --sig:#1826ff;
+    --li:rgba(11,12,11,.34); --li2:rgba(11,12,11,.16);
     --mo:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
     background:var(--pa);color:var(--ti);
   }
@@ -450,127 +454,174 @@
   body[data-bogen="1"] .ck-body{display:block}
   body[data-bogen="1"] .ck-stage{overflow:visible;padding:0;background:var(--pa)}
   body[data-bogen="1"] .wrap{max-width:none;padding:0}
-  /* Die Fusszeile kommt zurueck — als Kolophon, nicht als Rahmenrest.
-     (Kommt nach `body.ck-on .page-foot{display:none}`; gleiche Staerke,
-     spaetere Regel gewinnt.) */
-  body[data-bogen="1"] .page-foot{display:block;font-family:var(--mo);font-size:10.5px;
-    letter-spacing:.16em;text-transform:uppercase;color:var(--ti2);text-align:left;
-    margin:0;padding:22px clamp(20px,7vw,90px) 40px;border-top:1px solid var(--ru2)}
 
-  body[data-bogen="1"] #content{max-width:1180px;margin:0 auto;
-    padding:clamp(26px,6vw,70px) clamp(20px,7vw,90px) 0}
+  /* Das Blatt: begrenzte Flaeche mit Rand, nicht endloser Fluss. */
+  body[data-bogen="1"] #content{max-width:1240px;margin:0 auto;padding:0;
+    border-left:1px solid var(--li);border-right:1px solid var(--li);
+    background:var(--pa3);min-height:100dvh}
 
-  /* Der Kopf: eine Zeile Kleingedrucktes, ein grosser Titel, ein Vorspann.
-     Kein Logo, kein Emoji — der Name traegt sich selbst. */
-  .bg-kopf{border-bottom:2px solid var(--ti);padding-bottom:clamp(18px,3vw,30px);
-    margin-bottom:clamp(24px,4vw,48px)}
-  .bg-zeile{margin:0 0 clamp(14px,3vw,26px);font-family:var(--mo);font-size:11px;
-    letter-spacing:.2em;text-transform:uppercase;color:var(--ti2);
-    display:flex;align-items:center;gap:12px}
-  .bg-zeile i{display:block;width:clamp(24px,6vw,90px);height:1px;background:var(--ti2);
-    flex:0 0 auto}
-  body[data-bogen="1"] #title{font-size:clamp(38px,8.5vw,88px);line-height:.94;
-    letter-spacing:-.045em;font-weight:800;margin:0;max-width:14ch;text-wrap:balance}
-  .bg-lead{margin:clamp(14px,2vw,20px) 0 0;font-size:clamp(15px,1.5vw,18px);line-height:1.55;
-    color:var(--ti2);max-width:52ch}
+  /* Kopfbalken: schwarz, randlos, mit Kennzeile. Der Titel steht drin. */
+  .bg-kopf{border-bottom:2px solid var(--ti)}
+  .bg-balken{background:var(--ti);color:var(--pa3);
+    padding:clamp(16px,2.4vw,26px) clamp(16px,3vw,34px) clamp(18px,2.6vw,30px)}
+  .bg-zeile{margin:0 0 clamp(10px,1.6vw,18px);font-family:var(--mo);font-size:10.5px;
+    letter-spacing:.24em;text-transform:uppercase;color:var(--pa);
+    display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .bg-zeile i{display:block;width:22px;height:1px;background:var(--pa);flex:0 0 auto;opacity:.6}
+  .bg-zeile b{font-weight:400;color:var(--sig);background:var(--pa3);padding:2px 7px;
+    letter-spacing:.2em}
+  body[data-bogen="1"] #title{font-size:clamp(27px,4.6vw,46px);line-height:1.02;
+    letter-spacing:-.028em;font-weight:700;margin:0;max-width:22ch;text-transform:uppercase}
+  /* Der Vorspann ist ein durchgehendes Band. Die Zeilenlaenge wird ueber den
+     rechten Rand begrenzt, nicht ueber die Breite des Bandes — sonst hoerte
+     die Flaeche mitten auf dem Blatt auf. */
+  .bg-lead{margin:0;padding:clamp(14px,2vw,20px) clamp(16px,3vw,34px);
+    font-size:14.5px;line-height:1.6;color:var(--ti2);
+    background:var(--pa2);border-bottom:1px solid var(--li)}
+  @media(min-width:860px){ .bg-lead{padding-right:36%} }
+  @media(max-width:859px){ .bg-meta{text-align:left} }
+  /* Rechts im Kopfbalken steht, welcher Stand vorliegt — wie das Schriftfeld
+     einer Zeichnung. Steht nichts fest, steht dort auch nichts. */
+  .bg-balken{display:flex;flex-wrap:wrap;gap:18px 34px;align-items:flex-end;
+    justify-content:space-between}
+  .bg-kennung{flex:1 1 320px;min-width:0}
+  .bg-meta{margin:0;font-family:var(--mo);font-size:10px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--pa);text-align:right;line-height:2}
+  .bg-meta span{display:block}
+  .bg-meta b{color:var(--pa3);font-weight:700}
 
-  /* Ein Blatt: die Ziffer steht am Rand, die Fragen laufen in einer Spalte.
-     Auf schmalen Geraeten legt sich die Ziffer ueber den Satzspiegel. */
-  .bg-blatt{display:grid;grid-template-columns:1fr;gap:clamp(22px,3vw,34px);
-    padding-bottom:clamp(28px,5vw,56px)}
-  @media(min-width:900px){
-    .bg-blatt{grid-template-columns:clamp(90px,12vw,160px) minmax(0,1fr);
-      gap:0 clamp(28px,4vw,60px)}
-    .bg-nr{grid-row:1 / span 99}
-  }
-  .bg-nr{margin:0;font-family:var(--mo);font-size:clamp(13px,1.4vw,15px);letter-spacing:.14em;
-    color:var(--sig);font-weight:600;position:sticky;top:24px;align-self:start}
-  .bg-nr::after{content:"";display:block;width:34px;height:2px;background:var(--sig);margin-top:10px}
+  /* Ein Blatt der Strecke. Die Ziffer sitzt im Rand, die Zeilen im Raster. */
+  .bg-blatt{display:grid;grid-template-columns:1fr}
+  .bg-satz{display:block}
+  /* Kopfband des Blatts: welches Blatt, welche Zeilen. Wie die Kopfzeile
+     eines Abschnitts auf einem Formular — nicht wie eine Ueberschrift. */
+  .bg-nr{margin:0;padding:11px clamp(16px,3vw,34px);font-family:var(--mo);font-size:10px;
+    letter-spacing:.26em;text-transform:uppercase;color:var(--ti);background:var(--pa2);
+    border-bottom:1px solid var(--li);display:flex;align-items:center;gap:11px}
+  .bg-nr::before{content:"";width:20px;height:2px;background:var(--sig);flex:0 0 auto}
 
-  /* Fragen: keine Kaesten. Eine Beschriftung in Schreibmaschine, darunter die
-     blanke Linie, auf der geschrieben wird. */
-  body[data-bogen="1"] label{display:block;margin:0 0 clamp(26px,3.4vw,40px);max-width:60ch}
-  body[data-bogen="1"] .lbl{font-family:var(--mo);font-size:11.5px;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--ti2);font-weight:600;margin-bottom:10px;
-    display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
-  body[data-bogen="1"] .req{color:var(--sig);font-weight:600;letter-spacing:.14em}
-  body[data-bogen="1"] .lbl .sub{color:var(--ti2);opacity:.75}
+  /* Eine Zeile des Formulars: Nummer · Beschriftung · Eintrag.
+     Getrennt durch Haarlinien — nicht durch Abstand. */
+  /* Die Beschriftung steht auf grauem Grund, der Eintrag auf weissem: Man
+     sieht ohne Kasten und ohne Linie, WO geschrieben wird. Genau das fehlte
+     vorher — ein durchsichtiges Feld ist kein Feld. */
+  body[data-bogen="1"] label{display:grid;grid-template-columns:1fr;margin:0;
+    border-bottom:1px solid var(--li2);background:var(--pa2)}
+  body[data-bogen="1"] .lbl{margin:0;padding:13px clamp(16px,3vw,34px) 4px;
+    font-family:var(--mo);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ti2);font-weight:400;display:flex;flex-wrap:wrap;gap:0 9px;align-items:baseline}
+  body[data-bogen="1"] .lbl .nr{color:var(--ti);font-weight:700;font-style:normal;
+    letter-spacing:.1em}
+  body[data-bogen="1"] .req{color:var(--sig);font-weight:700;letter-spacing:.16em}
+  body[data-bogen="1"] .lbl .sub{color:var(--ti2);opacity:.7}
   body[data-bogen="1"] input,
   body[data-bogen="1"] textarea,
   body[data-bogen="1"] select{
-    width:100%;padding:2px 0 9px;border:0;border-bottom:1.5px solid var(--ru);border-radius:0;
-    background:transparent;color:var(--ti);font:inherit;font-size:clamp(17px,1.9vw,20px);
-    line-height:1.35;transition:border-color .15s}
-  body[data-bogen="1"] textarea{min-height:120px;resize:vertical;
-    border:1.5px solid var(--ru);padding:12px 14px;background:var(--pa2)}
-  body[data-bogen="1"] select{appearance:none;padding-right:24px;cursor:pointer}
-  body[data-bogen="1"] input:hover,
-  body[data-bogen="1"] textarea:hover,
-  body[data-bogen="1"] select:hover{border-color:var(--ti2)}
+    width:100%;border:0;border-radius:0;background:var(--ein);color:var(--ti);font:inherit;
+    font-size:16.5px;line-height:1.45;padding:14px clamp(16px,3vw,34px);
+    caret-color:var(--sig)}
+  body[data-bogen="1"] textarea{min-height:104px;resize:vertical;padding-top:8px}
+  body[data-bogen="1"] select{appearance:none;cursor:pointer}
   body[data-bogen="1"] input:focus,
   body[data-bogen="1"] textarea:focus,
-  body[data-bogen="1"] select:focus{outline:0;border-color:var(--sig);border-bottom-width:2px}
-  body[data-bogen="1"] [aria-invalid="true"]{border-color:var(--ru)}
-  body[data-bogen="1"] .hint{font-family:var(--mo);font-size:11.5px;line-height:1.6;
-    letter-spacing:.02em;color:var(--ti2);margin-top:9px;max-width:52ch}
+  body[data-bogen="1"] select:focus{outline:0}
+  /* Der Eintrag bekommt beim Schreiben eine blaue Kante links — die Zeile,
+     in der gearbeitet wird, ist damit ohne Kasten erkennbar. */
+  body[data-bogen="1"] label:focus-within{box-shadow:inset 3px 0 0 var(--sig)}
+  /* Offene Pflichtangaben bleiben Eintragsflaeche — sie duerfen NICHT grau
+     werden. Genau das machte die Felder unsichtbar: `aria-invalid` steht auf
+     jeder leeren Pflichtzeile und schlug die Flaechenfarbe. Angezeigt wird
+     der offene Stand deshalb am Rand, nicht durch Wegnahme des Feldes. */
+  body[data-bogen="1"] [aria-invalid="true"]{background:var(--ein);
+    box-shadow:inset 2px 0 0 var(--li)}
+  body[data-bogen="1"] [aria-invalid="false"]{box-shadow:inset 2px 0 0 var(--sig)}
+  body[data-bogen="1"] .hint{margin:0;padding:0 clamp(16px,3vw,34px) 12px;
+    font-family:var(--mo);font-size:10.5px;line-height:1.6;color:var(--ti2);
+    background:var(--ein)}
 
-  /* Der Fuss der Strecke. Er klebt unten, damit der Weg weiter immer da ist. */
-  .bg-steuer{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;
-    gap:clamp(12px,2vw,20px);flex-wrap:wrap;
-    padding:16px 0;margin-top:clamp(8px,2vw,18px);
-    border-top:2px solid var(--ti);background:var(--pa)}
-  .bg-stand{margin:0;flex:1 1 auto;font-family:var(--mo);font-size:11.5px;letter-spacing:.2em;
-    color:var(--ti2)}
-  body[data-bogen="1"] .bg-steuer button{border-radius:0;padding:14px 28px;font-family:var(--mo);
-    font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;
-    background:var(--ti);color:var(--pa);border:2px solid var(--ti);background-image:none}
-  body[data-bogen="1"] .bg-steuer button:hover{background:var(--sig);border-color:var(--sig)}
-  body[data-bogen="1"] .bg-still{background:transparent;color:var(--ti)}
-  body[data-bogen="1"] .bg-still:hover{background:var(--ti);color:var(--pa);border-color:var(--ti)}
-  body[data-bogen="1"] #submit{background:var(--sig);border-color:var(--sig);color:#fff}
-  body[data-bogen="1"] #submit:hover{background:var(--ti);border-color:var(--ti)}
-  body[data-bogen="1"] button[aria-disabled="true"]{background:transparent;color:var(--ti2);
-    border-color:var(--ru);cursor:not-allowed}
-  body[data-bogen="1"] button[aria-disabled="true"]:hover{background:transparent;color:var(--ti2);
-    border-color:var(--ru)}
-  body[data-bogen="1"] .need{font-family:var(--mo);font-size:11.5px;letter-spacing:.06em;
-    line-height:1.7;color:var(--ti2);font-weight:500;margin-top:14px;text-transform:none}
-  body[data-bogen="1"] .need::before{content:"↳ ";color:var(--sig)}
-  body[data-bogen="1"] .need.done::before{content:"✓ ";color:var(--ti)}
-  .bg-klein{margin:16px 0 clamp(30px,6vw,70px);font-family:var(--mo);font-size:11px;
-    line-height:1.7;letter-spacing:.04em;color:var(--ti2);max-width:56ch}
-  body[data-bogen="1"] .status{border-radius:0;font-family:var(--mo);font-size:11.5px;
-    letter-spacing:.06em;padding:14px 16px;margin-top:14px}
-  body[data-bogen="1"] .status.ok{background:transparent;border:2px solid var(--ti);color:var(--ti)}
-  body[data-bogen="1"] .status.err{background:transparent;border:2px solid var(--sig);color:var(--sig)}
+  @media(min-width:860px){
+    /* Zweispaltig wie ein ausgefuelltes Formular: links steht, was gefragt
+       ist, rechts steht die Antwort. Die Trennlinie laeuft durch. */
+    body[data-bogen="1"] label{grid-template-columns:minmax(180px,17rem) minmax(0,1fr);
+      align-items:stretch}
+    /* Bis zur letzten Linie, nicht ueber zwei feste Zeilen: Ohne Hinweistext
+       gibt es keine zweite Zeile — sonst bliebe unter dem Eintrag ein grauer
+       Streifen stehen. */
+    body[data-bogen="1"] .lbl{grid-column:1;grid-row:1 / -1;padding:16px 18px 16px 34px;
+      border-right:1px solid var(--li2);align-content:start}
+    body[data-bogen="1"] input,
+    body[data-bogen="1"] textarea,
+    body[data-bogen="1"] select{grid-column:2;grid-row:1;padding:15px 34px 15px 20px}
+    body[data-bogen="1"] .hint{grid-column:2;grid-row:2;padding:0 34px 13px 20px}
+    .bg-blatt{grid-template-columns:1fr}
+  }
 
-  /* Der Vision Room ist das letzte Blatt. Er behaelt seinen eigenen Baustein,
-     bekommt hier aber denselben Satz wie der uebrige Bogen. */
-  body[data-bogen="1"] .vr{background:transparent;border:0;border-top:1px solid var(--ru);
-    border-radius:0;padding:clamp(22px,3vw,34px) 0 0;margin:0}
-  body[data-bogen="1"] .vr h3{font-family:var(--mo);font-size:11.5px;letter-spacing:.2em;
-    text-transform:uppercase;color:var(--sig);margin:0 0 12px}
-  body[data-bogen="1"] .vr .vr-lead{color:var(--ti2);font-size:14px;max-width:56ch}
-  /* Die Mindmap bleibt dunkel — sie IST der Baustein von flowertech.ch und
-     wird hier nicht nachgebaut. Auf Papier wird sie deshalb wie eine
-     eingelegte Tafel behandelt: harte Kante statt runder Ecken, kein
-     schwebender Schatten. Eingelegt, nicht aufgeklebt. */
-  body[data-bogen="1"] .mm{border-radius:0;border:2px solid var(--ti);box-shadow:none}
-  /* Die Notiz und der Fehlerkasten liegen auf demselben Papier. */
+  /* Das Schriftfeld: unten, in Zellen, wie auf einer Zeichnung. Es sagt, wo
+     man steht — und traegt den Weg weiter. */
+  .bg-steuer{position:sticky;bottom:0;z-index:3;display:flex;flex-wrap:wrap;align-items:stretch;
+    border-top:2px solid var(--ti);border-bottom:1px solid var(--li);background:var(--pa2);
+    margin:0}
+  .bg-stand{margin:0;flex:1 1 210px;display:flex;align-items:center;gap:14px;
+    padding:0 clamp(16px,3vw,34px);font-family:var(--mo);font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--ti);border-right:1px solid var(--li2);min-height:56px}
+  body[data-bogen="1"] .bg-steuer button{border-radius:0;padding:0 clamp(20px,3vw,34px);
+    min-height:56px;font-family:var(--mo);font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;font-weight:700;background:var(--pa2);color:var(--ti);
+    border:0;border-left:1px solid var(--li2);background-image:none}
+  body[data-bogen="1"] .bg-steuer button:hover{background:var(--ti);color:var(--pa3)}
+  body[data-bogen="1"] .bg-weiter{background:var(--ti);color:var(--pa3)}
+  body[data-bogen="1"] .bg-weiter:hover{background:var(--sig);color:#fff}
+  body[data-bogen="1"] #submit{background:var(--sig);color:#fff}
+  body[data-bogen="1"] #submit:hover{background:var(--ti);color:var(--pa3)}
+  body[data-bogen="1"] button[aria-disabled="true"]{background:var(--pa2);color:var(--ti2);
+    cursor:not-allowed}
+  body[data-bogen="1"] button[aria-disabled="true"]:hover{background:var(--pa2);color:var(--ti2)}
+
+  /* Meldungen stehen als Zeile unter dem Schriftfeld, nicht als Kasten. */
+  body[data-bogen="1"] .need{margin:0;padding:12px clamp(16px,3vw,34px);
+    font-family:var(--mo);font-size:10.5px;letter-spacing:.08em;line-height:1.7;
+    color:var(--ti);font-weight:400;background:var(--pa2);
+    border-bottom:1px solid var(--li2);text-transform:uppercase}
+  body[data-bogen="1"] .need::before{content:"offen ";color:var(--sig);font-weight:700}
+  body[data-bogen="1"] .need.done::before{content:"bereit ";color:var(--ti);font-weight:700}
+  .bg-klein{margin:0;padding:13px clamp(16px,3vw,34px) clamp(26px,4vw,44px);
+    font-family:var(--mo);font-size:10px;line-height:1.7;letter-spacing:.06em;
+    color:var(--ti2);max-width:80ch}
+  body[data-bogen="1"] .status{border-radius:0;font-family:var(--mo);font-size:10.5px;
+    letter-spacing:.08em;text-transform:uppercase;padding:13px clamp(16px,3vw,34px);margin:0;
+    border-bottom:1px solid var(--li2)}
+  body[data-bogen="1"] .status.ok{background:var(--ti);border:0;color:var(--pa3)}
+  body[data-bogen="1"] .status.err{background:var(--sig);border:0;color:#fff}
+
+  /* Die Fusszeile ist das untere Randfeld des Blatts. */
+  body[data-bogen="1"] .page-foot{display:block;font-family:var(--mo);font-size:10px;
+    letter-spacing:.24em;text-transform:uppercase;color:var(--ti2);text-align:left;
+    margin:0;padding:14px clamp(16px,3vw,34px) 30px;border-top:1px solid var(--li2)}
+
+  /* Der Vision Room bleibt der Baustein von flowertech.ch. Auf dem Werkblatt
+     wird er wie eine eingelegte Tafel behandelt: harte Kante, kein Schweben. */
+  body[data-bogen="1"] .vr{background:var(--pa3);border:0;border-radius:0;
+    padding:clamp(18px,2.6vw,28px) clamp(16px,3vw,34px);margin:0}
+  body[data-bogen="1"] .vr h3{font-family:var(--mo);font-size:10.5px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--ti);margin:0 0 10px}
+  body[data-bogen="1"] .vr h3::before{content:"08 ";color:var(--sig);font-weight:700}
+  body[data-bogen="1"] .vr .vr-lead{color:var(--ti2);font-size:13.5px;max-width:74ch}
+  body[data-bogen="1"] .mm{border-radius:0;border:1px solid var(--ti);box-shadow:none}
+
+  /* Notiz und Fehler liegen im selben Raster. */
   body[data-bogen="1"] #answered,
   body[data-bogen="1"] #error,
-  body[data-bogen="1"] #loading{background:transparent;border:0;border-left:3px solid var(--sig);
-    border-radius:0;color:var(--ti);max-width:1180px;
-    margin:clamp(26px,6vw,70px) auto;padding:4px 0 4px clamp(16px,2vw,24px)}
+  body[data-bogen="1"] #loading{background:var(--pa3);border:0;border-radius:0;
+    border-top:2px solid var(--ti);color:var(--ti);max-width:1240px;margin:0 auto;
+    padding:clamp(18px,3vw,30px) clamp(16px,3vw,34px)}
   body[data-bogen="1"] #answered h2,
-  body[data-bogen="1"] #error h2{font-size:clamp(22px,3vw,32px);letter-spacing:-.03em;
-    margin-bottom:8px}
+  body[data-bogen="1"] #error h2{font-size:clamp(18px,2.4vw,26px);letter-spacing:-.02em;
+    text-transform:uppercase;margin-bottom:8px}
   body[data-bogen="1"] #answered .sub,
-  body[data-bogen="1"] #error .sub{color:var(--ti2);font-size:15px}
+  body[data-bogen="1"] #error .sub{color:var(--ti2);font-size:14px}
 
   @media(prefers-reduced-motion:reduce){
-    body[data-bogen="1"] input,body[data-bogen="1"] textarea,
-    body[data-bogen="1"] select{transition:none}
+    body[data-bogen="1"] label{transition:none}
   }
 </style>
 </head>
@@ -614,8 +665,13 @@
        (siehe `body[data-bogen]`). -->
   <section id="content" hidden>
     <header class="bg-kopf">
-      <p class="bg-zeile"><span id="subtitle">FlowerTech</span><i aria-hidden="true"></i>Erfassung</p>
-      <h1 id="title">Ihre Angaben</h1>
+      <div class="bg-balken">
+        <div class="bg-kennung">
+          <p class="bg-zeile"><span id="subtitle">FlowerTech</span><i aria-hidden="true"></i>Erfassungsblatt<i aria-hidden="true"></i><b>unverbindlich</b></p>
+          <h1 id="title">Ihre Angaben</h1>
+        </div>
+        <p class="bg-meta" id="bogenMeta"></p>
+      </div>
       <p class="bg-lead" id="intro"></p>
     </header>
 
@@ -630,7 +686,7 @@
            umgeblättert; ob es den Vision Room ueberhaupt gibt, entscheidet
            weiterhin er selbst (`#visionRoom[hidden]`). -->
       <section class="bg-blatt" id="blatt_vr" data-blatt="vr" hidden>
-      <p class="bg-nr" id="bogenNrVr" aria-hidden="true">04</p>
+      <p class="bg-nr" id="bogenNrVr">Blatt 04 · Vision Room</p>
       <div class="bg-satz">
       <section class="vr" id="visionRoom" hidden aria-labelledby="vrHeading">
         <h3 id="vrHeading">Vision Room</h3>
@@ -874,7 +930,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "ft-bogen-1";
+  var CK_BUILD = "ft-werkblatt-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -2601,7 +2657,8 @@
       var gruppe = qs.slice(i, i + BLATT_GROESSE);
       var von = i;
       teile.push('<section class="bg-blatt" id="blatt_' + (nr - 1) + '" data-blatt="' + nr + '">' +
-        '<p class="bg-nr" aria-hidden="true">' + zwei(nr) + "</p>" +
+        '<p class="bg-nr">Blatt ' + zwei(nr) + " · Zeilen " + zwei(i + 1) + "–" +
+          zwei(i + gruppe.length) + "</p>" +
         '<div class="bg-satz">' +
         gruppe.map(function (q, j) { return fieldHtml(q, von + j); }).join("") +
         "</div></section>");
@@ -2622,7 +2679,7 @@
       bogenBlaetter.push("blatt_vr");
       // Die Ziffer am Rand zaehlt weiter — auch ueber das letzte Blatt.
       var nr = el("bogenNrVr");
-      if (nr) nr.textContent = zwei(bogenBlaetter.length);
+      if (nr) nr.textContent = "Blatt " + zwei(bogenBlaetter.length) + " · Vision Room";
     }
     bogenZeigen(0);
     return bogenBlaetter.length;
@@ -2720,7 +2777,11 @@
         : q.type === "date" ? "date" : q.type === "number" ? "number" : "text";
       field = '<input type="' + type + '" ' + attrs + ' maxlength="400">';
     }
-    return '<label for="' + id + '"><span class="lbl">' + esc(q.label) + required + "</span>" +
+    /* Laufende Nummer wie auf einem Formular: Jede Frage hat eine Stelle auf
+       dem Blatt — darauf kann man sich am Telefon beziehen. */
+    return '<label for="' + id + '"><span class="lbl">' +
+      '<i class="nr" aria-hidden="true">' + zwei(i + 1) + "</i>" +
+      esc(q.label) + required + "</span>" +
       field +
       (q.hint ? '<span class="hint" id="' + id + '_h">' + esc(q.hint) + "</span>" : "") +
       "</label>";
@@ -2822,6 +2883,15 @@
     el("subtitle").textContent = (data.company && data.company.name) || "FlowerTech";
     el("intro").textContent = data.intro || "";
     el("footer").textContent = (data.company && data.company.name) || "FlowerTech";
+    /* Das Schriftfeld im Kopf: nur was der Datensatz wirklich hergibt. Steht
+       keine Fassung und kein Stand darin, bleibt die Stelle leer. */
+    var meta = el("bogenMeta");
+    if (meta) {
+      var zeilen = [];
+      if (data.generation) zeilen.push("Fassung <b>" + esc(String(data.generation)) + "</b>");
+      if (data.updatedAt) zeilen.push("Stand <b>" + esc(datum(data.updatedAt)) + "</b>");
+      meta.innerHTML = zeilen.map(function (z) { return "<span>" + z + "</span>"; }).join("");
+    }
     el("fields").innerHTML = blaetterHtml(questions);
     questions.forEach(function (q, i) {
       var node = el("q_" + i);
