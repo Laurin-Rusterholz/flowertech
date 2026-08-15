@@ -187,10 +187,45 @@ async function seite(d) {
     "das Senden springt nicht zu dem Blatt, auf dem die Angabe fehlt");
 }
 
+/* ══ 3b. Das Eintragsfeld muss zu SEHEN sein ══════════════════════════════
+   Ein durchsichtiges Feld ist kein Feld. Der Befund im Browser: Die offenen
+   Pflichtzeilen tragen `aria-invalid="true"`, und eine Regel darauf schlug die
+   Flächenfarbe — genau die Zeilen, in die man schreiben soll, waren grau wie
+   die Beschriftung daneben. */
+{
+  const eng = stil.replace(/\s*\n\s*/g, "");
+  const feld = /body\[data-bogen="1"\] input,[^{]*\{([^}]*)\}/.exec(eng);
+  ok(!!feld && /background:var\(--ein\)/.test(feld[1]),
+    "die Eintragsfläche hat keine eigene Farbe — man sieht nicht, wo geschrieben wird");
+  const invalid = /body\[data-bogen="1"\] \[aria-invalid="true"\]\{([^}]*)\}/.exec(eng);
+  ok(!invalid || !/background:transparent/.test(invalid[1]),
+    "eine offene Pflichtzeile verliert ihre Eintragsfläche");
+}
+
 /* ══ 4. Nichts von der Stange ═════════════════════════════════════════════ */
 {
   const bogen = stil.split('body[data-bogen="1"]').slice(1).join(" ");
   ok(bogen.length > 400, "es gibt gar keine eigene Gestalt für den Bogen");
+
+  /* Die Rückmeldung war „sieht aus wie eine Claude-Website": warmes Cremepapier
+     mit Terrakotta-Akzent. Das ist keine Geschmacksfrage, sondern messbar —
+     beide Töne müssen kalt liegen, nicht warm. */
+  const ton = (name) => {
+    const t = new RegExp("--" + name + ":#([0-9a-f]{6})", "i").exec(stil);
+    if (!t) return null;
+    const v = t[1];
+    return { r: parseInt(v.slice(0, 2), 16), g: parseInt(v.slice(2, 4), 16), b: parseInt(v.slice(4, 6), 16) };
+  };
+  const papier = ton("pa");
+  const signal = ton("sig");
+  ok(!!papier && !!signal, "die Grundtöne des Bogens stehen nicht als Werte da");
+  // Ein Grundton mit deutlichem Rotstich ist wieder Cremepapier.
+  ok(papier.r - papier.b <= 4,
+    `der Grundton ist wieder warm (r${papier.r} b${papier.b})`);
+  // Und ein Akzent, der von Rot über Grün nach Blau abfällt, ist Terrakotta.
+  const terrakotta = signal.r > signal.g && signal.g > signal.b && signal.r - signal.b > 40;
+  ok(!terrakotta,
+    `der Akzent ist wieder ein Rost-/Terrakottaton (r${signal.r} g${signal.g} b${signal.b})`);
   ok(!/linear-gradient|radial-gradient/.test(bogen),
     "der Bogen trägt einen Verlauf");
   ok(!/box-shadow:\s*0 \d/.test(bogen), "der Bogen trägt einen schwebenden Schatten");
