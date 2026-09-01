@@ -50,6 +50,7 @@
   .lbl{display:block;font-weight:600;margin-bottom:5px;font-size:14px}
   .req{color:var(--violet);font-weight:700}
   .hint{display:block;margin-top:6px;font-size:13px;line-height:1.5;color:var(--muted)}
+  .bg-vorbelegt{font-size:14px;color:var(--muted);border-left:2px solid var(--lime);padding-left:12px}
   input,textarea,select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;
     background:var(--bg);color:var(--text);font:inherit}
   input:focus,textarea:focus,select:focus{outline:2px solid var(--violet);outline-offset:1px}
@@ -673,6 +674,7 @@
         <p class="bg-meta" id="bogenMeta"></p>
       </div>
       <p class="bg-lead" id="intro"></p>
+      <p class="bg-lead bg-vorbelegt" id="vorbelegt" hidden></p>
     </header>
 
     <form id="form" novalidate>
@@ -930,7 +932,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "ft-werkblatt-1";
+  var CK_BUILD = "ft-vorbelegt-1";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -2900,6 +2902,9 @@
       if (q.vision === "idea") visionIdea = i;
       if (q.vision === "features") visionFeatures = i;
     });
+    // Erst die Vorbelegung, dann der Vision Room: Er liest Art, Idee und
+    // Funktionen aus genau diesen Feldern und beginnt damit nicht leer.
+    vorbelegen(data);
     setupVisionRoom();
     bedingteFelder();
     // Erst jetzt steht fest, wie viele Blaetter es gibt — der Vision Room
@@ -2907,6 +2912,48 @@
     bogenAufbau();
     bogenVerdrahten();
     sync();
+  }
+
+  /* ── Vorbelegung ─────────────────────────────────────────────────────────
+     Was FlowerTech ueber die Kundschaft schon weiss (Firma, Ansprechperson,
+     E-Mail, Art des Vorhabens …), steht bereits im Bogen — sie muss es nicht
+     ein zweites Mal abtippen. Die Werte kommen aus demselben Datensatz wie die
+     Fragen (`prefill.values`, nach Frageschluessel); Quantus hat dort nur
+     eingetragen, was wirklich bekannt ist. Die Seite erfindet nichts dazu.
+
+     Drei Dinge gelten dabei:
+       * Jedes vorbelegte Feld bleibt ein ganz normales Feld — die Kundschaft
+         aendert, was nicht stimmt, und beim Senden zaehlt ausschliesslich,
+         was dann im Feld steht.
+       * Nur, was in das Feld passt: eine Auswahl nur, wenn der Wert eine
+         ihrer Optionen ist; ein Datum nur als JJJJ-MM-TT.
+       * Ein Datensatz OHNE `prefill` (aeltere Veroeffentlichung) verhaelt
+         sich genau wie bisher: leere Felder, kein Hinweis. */
+  function vorbelegen(data) {
+    var prefill = data && data.prefill && typeof data.prefill === "object" ? data.prefill : null;
+    var values = prefill && prefill.values && typeof prefill.values === "object" ? prefill.values : null;
+    var hinweis = el("vorbelegt");
+    if (!values) { if (hinweis) hinweis.hidden = true; return 0; }
+    var anzahl = 0;
+    questions.forEach(function (q, i) {
+      if (!Object.prototype.hasOwnProperty.call(values, q.key)) return;
+      var wert = String(values[q.key] == null ? "" : values[q.key]).trim();
+      var node = el("q_" + i);
+      if (!wert || !node) return;
+      if (node.tagName === "SELECT" && !hasOption(node, wert)) return;
+      if (q.type === "date" && !/^\d{4}-\d{2}-\d{2}$/.test(wert)) return;
+      node.value = wert;
+      node.setAttribute("data-vorbelegt", "1");
+      anzahl++;
+    });
+    if (hinweis) {
+      hinweis.hidden = anzahl === 0;
+      hinweis.textContent = anzahl
+        ? "Einige Angaben haben wir bereits für Sie eingetragen. Bitte prüfen Sie sie kurz — " +
+          "Sie können alles anpassen."
+        : "";
+    }
+    return anzahl;
   }
 
   /* Bedingte Fragen (showIf). Sie erscheinen nur, wenn eine andere Frage genau

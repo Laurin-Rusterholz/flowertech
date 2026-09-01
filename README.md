@@ -47,6 +47,15 @@ ausschliesslich der Datensatz, den Quantus unter
 `flowertech/intakeForms/<token>` veröffentlicht (`stage` und `tiles`); die Seite
 erfindet nichts dazu und ruft nichts Zweites ab.
 
+Trägt der Datensatz `prefill` (`version`, `values` nach Frageschlüssel), stehen
+diese Werte nach dem Rendern bereits in den passenden Feldern des Fragebogens —
+was FlowerTech über die Kundschaft schon weiss (Firma, Ansprechperson, E-Mail,
+Art des Vorhabens …). Die Felder bleiben vollständig editierbar; beim Senden
+zählt allein, was dann im Feld steht. Der Vision Room liest Art, Idee und
+Funktionen aus genau diesen Feldern und beginnt damit nicht leer. Eine Auswahl
+wird nur vorbelegt, wenn der Wert eine ihrer Optionen ist; ein Datensatz ohne
+`prefill` verhält sich wie bisher (`tests/vorbelegung.test.mjs`).
+
 | Stufe | Sichtbar, sobald … | Zeigt |
 | --- | --- | --- |
 | 1 · Fragebogen | immer | Kundendaten, Bestandesaufnahme, Vision Room |
