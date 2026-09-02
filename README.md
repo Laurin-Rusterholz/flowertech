@@ -47,6 +47,25 @@ ausschliesslich der Datensatz, den Quantus unter
 `flowertech/intakeForms/<token>` veröffentlicht (`stage` und `tiles`); die Seite
 erfindet nichts dazu und ruft nichts Zweites ab.
 
+Trägt der Datensatz `prefill` (`version`, `values` nach Frageschlüssel), stehen
+diese Werte nach dem Rendern bereits in den passenden Feldern des Fragebogens —
+was FlowerTech über die Kundschaft schon weiss (Firma, Ansprechperson, E-Mail,
+Art des Vorhabens …). Die Felder bleiben vollständig editierbar; beim Senden
+zählt allein, was dann im Feld steht. Der Vision Room liest Art, Idee und
+Funktionen aus genau diesen Feldern und beginnt damit nicht leer. Eine Auswahl
+wird nur vorbelegt, wenn der Wert eine ihrer Optionen ist; ein Datensatz ohne
+`prefill` verhält sich wie bisher (`tests/vorbelegung.test.mjs`).
+
+**Dateien im Vision Room.** Logos, Bilder, Designentwürfe und andere Referenzen
+lädt die Kundschaft direkt im Vision Room hoch — freiwillig, mehrere auf
+einmal. Der Baustein (`visionroom.js`) zeigt und prüft; die Seite sendet jede
+Datei als Roh-Bytes (PUT) an `flowertech-upload?e=<token>` und beim Absenden
+nur die zurückgegebenen Ids (`payload.files`). Grenzen: PNG, JPG, WEBP, PDF ·
+5 MB pro Datei · 10 Dateien; HEIC wird mit Hinweis abgelehnt (keine
+Umwandlung). Kein Base64, kein Dateiinhalt im Datensatz; eine Datei lässt sich
+bis zum Absenden wieder entfernen (DELETE). Belegt in
+`tests/vision-upload.test.mjs`.
+
 | Stufe | Sichtbar, sobald … | Zeigt |
 | --- | --- | --- |
 | 1 · Fragebogen | immer | Kundendaten, Bestandesaufnahme, Vision Room |
