@@ -223,6 +223,14 @@ async function seite() {
   // Mit Dateien.
   const { dom, calls } = await seite();
   ok(dom.node("vrFiles") && dom.node("vrFileInput"), "der Upload-Block fehlt auf dem Fragebogen");
+  // Sichtbar, bevor irgendjemand eine Idee tippt: nicht verborgen, mit Knopf,
+  // Beschriftung und Abnahme-Marke — auch bei vorbelegter Art „Website".
+  ok(dom.node("vrFiles").hidden === false && dom.node("vrFilePick") && dom.node("vrFileLabel"),
+    "der Upload-Block ist auf dem Website-Fragebogen nicht sichtbar aufgebaut");
+  const aufbau = dom.node("visionRoomMount").innerHTML;
+  ok(/data-ft="vision-files"/.test(aufbau) && /aria-labelledby="vrFileLabel"/.test(aufbau),
+    "Abnahme-Marke oder Beschriftung des Upload-Blocks fehlen");
+  ok(aufbau.indexOf('id="vrFiles"') < aufbau.indexOf('id="mmCanvas"'), "der Upload-Block steht nicht vor der Mindmap");
   ok(dom.node("mmType").textContent === "Website", "die vorbelegte Art setzt den Vision Room nicht auf Website");
   dom.node("vrFileInput").files = [datei("logo.png", "image/png", 50 * 1024), datei("cd.pdf", "application/pdf", 3 * MB)];
   dom.node("vrFileInput").fire("change");

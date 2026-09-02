@@ -108,6 +108,11 @@
         '<div class="mm-hint" id="mmHint">Idee eintippen → Funktionen anhängen</div>' +
         '<button type="button" class="mm-reset" id="mmReset" title="Visionroom neu starten">Neu starten</button>' +
       '</div>' +
+      /* Die Dateien stehen als eigene Zeile direkt unter der Art — sichtbar,
+         bevor jemand eine Idee tippt oder scrollt. Im Fuss der Mindmap lagen
+         sie auf dem Desktop unter der Falz und waren mobil bis zur ersten
+         Idee ausgeblendet. */
+      (intake && o.upload ? filesMarkup(o.upload) : '') +
 
       '<div class="mm-canvas" id="mmCanvas">' +
         '<svg class="mm-links" id="mmLinks" aria-hidden="true"></svg>' +
@@ -139,7 +144,6 @@
         '<div class="mm-mobile-step"><em>04</em><span>' + (intake ? 'Auswahl übernehmen' : 'Auswahl senden') + '</span></div>' +
         '<div class="mm-own"><input id="vrOwn" placeholder="Eigene Funktion anhängen …" maxlength="70" autocomplete="off" aria-label="Eigene Funktion">' +
           '<button type="button" id="vrAdd" aria-label="Funktion hinzufügen">+</button></div>' +
-        (intake && o.upload ? filesMarkup(o.upload) : '') +
         (intake ? '' :
           '<div class="mm-send">' +
             '<input id="vrMail" type="email" placeholder="Ihre E-Mail für die Antwort" autocomplete="email" aria-label="E-Mail für die Antwort">' +
@@ -174,13 +178,16 @@
   function filesMarkup(upload) {
     var maxMb = Math.round(((upload && upload.maxBytes) || 5 * 1024 * 1024) / (1024 * 1024));
     var maxFiles = (upload && upload.maxFiles) || 10;
-    return '<div class="mm-files" id="vrFiles">' +
+    return '<div class="mm-files" id="vrFiles" data-ft="vision-files">' +
       '<div class="mm-files-head">' +
-        '<label class="mm-files-label" for="vrFileInput">Logos, Bilder, Designentwürfe <span>· freiwillig</span></label>' +
+        /* Kein <label>: Der Fragebogen gestaltet jedes <label> im Formular als
+           Frage-Zeile (Raster, heller Grund) — hier wuerde das die Beschriftung
+           unlesbar machen. Die Zuordnung uebernimmt aria-labelledby. */
+        '<p class="mm-files-label" id="vrFileLabel">Logos, Bilder, Designentwürfe <span>· freiwillig</span></p>' +
         '<p class="mm-files-hint" id="vrFileHint">PNG, JPG, WEBP oder PDF · bis ' + maxMb + ' MB pro Datei · bis ' +
           maxFiles + ' Dateien. Vorhandenes Material hilft uns, Ihren Stil zu treffen.</p>' +
       '</div>' +
-      '<input type="file" id="vrFileInput" multiple accept="' + UPLOAD_ACCEPT + '" aria-describedby="vrFileHint">' +
+      '<input type="file" id="vrFileInput" multiple accept="' + UPLOAD_ACCEPT + '" aria-labelledby="vrFileLabel" aria-describedby="vrFileHint">' +
       '<button type="button" class="mm-files-pick" id="vrFilePick">Dateien auswählen</button>' +
       '<ul class="mm-files-list" id="vrFileList" aria-live="polite"></ul>' +
       '<p class="mm-files-status" id="vrFileStatus" role="status" aria-live="polite"></p>' +

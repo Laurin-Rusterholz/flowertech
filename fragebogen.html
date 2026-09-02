@@ -456,8 +456,11 @@
   body[data-bogen="1"] .ck-stage{overflow:visible;padding:0;background:var(--pa)}
   body[data-bogen="1"] .wrap{max-width:none;padding:0}
 
-  /* Das Blatt: begrenzte Flaeche mit Rand, nicht endloser Fluss. */
-  body[data-bogen="1"] #content{max-width:1240px;margin:0 auto;padding:0;
+  /* Das Blatt: begrenzte Flaeche mit Rand, nicht endloser Fluss. Zentriert,
+     hoechstens 1120 px breit — auf einem breiten Bildschirm liefen die Felder
+     sonst fast ueber das ganze Fenster und wurden schlecht lesbar. Mobil
+     bleibt das Blatt 100 % breit. */
+  body[data-bogen="1"] #content{max-width:1120px;margin:0 auto;padding:0;
     border-left:1px solid var(--li);border-right:1px solid var(--li);
     background:var(--pa3);min-height:100dvh}
 
@@ -550,10 +553,12 @@
        Streifen stehen. */
     body[data-bogen="1"] .lbl{grid-column:1;grid-row:1 / -1;padding:16px 18px 16px 34px;
       border-right:1px solid var(--li2);align-content:start}
+    /* Die Antwortspalte bleibt eine lesbare Zeile: hoechstens 46rem, nicht
+       die ganze Restbreite. Der Rest der Zeile bleibt Blatt. */
     body[data-bogen="1"] input,
     body[data-bogen="1"] textarea,
-    body[data-bogen="1"] select{grid-column:2;grid-row:1;padding:15px 34px 15px 20px}
-    body[data-bogen="1"] .hint{grid-column:2;grid-row:2;padding:0 34px 13px 20px}
+    body[data-bogen="1"] select{grid-column:2;grid-row:1;padding:15px 34px 15px 20px;max-width:46rem}
+    body[data-bogen="1"] .hint{grid-column:2;grid-row:2;padding:0 34px 13px 20px;max-width:46rem}
     .bg-blatt{grid-template-columns:1fr}
   }
 
@@ -938,7 +943,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "ft-vorbelegt-2";
+  var CK_BUILD = "ft-vorbelegt-3";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
