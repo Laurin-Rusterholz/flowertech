@@ -139,6 +139,7 @@
         '<div class="mm-mobile-step"><em>04</em><span>' + (intake ? 'Auswahl übernehmen' : 'Auswahl senden') + '</span></div>' +
         '<div class="mm-own"><input id="vrOwn" placeholder="Eigene Funktion anhängen …" maxlength="70" autocomplete="off" aria-label="Eigene Funktion">' +
           '<button type="button" id="vrAdd" aria-label="Funktion hinzufügen">+</button></div>' +
+        (intake && o.upload ? filesMarkup(o.upload) : '') +
         (intake ? '' :
           '<div class="mm-send">' +
             '<input id="vrMail" type="email" placeholder="Ihre E-Mail für die Antwort" autocomplete="email" aria-label="E-Mail für die Antwort">' +
@@ -152,6 +153,58 @@
     '</div>';
   }
 
+
+  /* ── Dateien: Logos, Bilder, Designentwürfe ────────────────────────────
+     Nur im Fragebogen-Modus, und nur, wenn die Seite einen Upload-Weg mitgibt
+     (options.upload mit send/remove). Der Baustein zeigt und prüft; gesendet
+     wird ausschliesslich über die Seite — er selbst ruft nichts auf. Was hier
+     liegt, geht als Datei-Referenz mit dem Bogen ab, nie als Inhalt. */
+  var UPLOAD_ACCEPT = '.png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf';
+  var UPLOAD_TYPES = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'application/pdf': 'pdf' };
+  var UPLOAD_EXT = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', pdf: 'application/pdf' };
+  var UPLOAD_MESSAGES = {
+    type: 'Dieser Dateityp wird nicht unterstützt. Erlaubt sind PNG, JPG, WEBP und PDF.',
+    heic: 'HEIC-Bilder können wir nicht verarbeiten. Bitte exportieren Sie das Bild als JPG oder PNG.',
+    size: 'Die Datei ist grösser als 5 MB. Bitte verkleinern Sie sie oder wählen Sie eine kleinere Fassung.',
+    count: 'Es sind höchstens 10 Dateien möglich. Bitte entfernen Sie eine, um eine andere hochzuladen.',
+    empty: 'Die Datei ist leer.',
+    failed: 'Der Upload hat nicht geklappt. Bitte versuchen Sie es gleich nochmals.',
+  };
+
+  function filesMarkup(upload) {
+    var maxMb = Math.round(((upload && upload.maxBytes) || 5 * 1024 * 1024) / (1024 * 1024));
+    var maxFiles = (upload && upload.maxFiles) || 10;
+    return '<div class="mm-files" id="vrFiles">' +
+      '<div class="mm-files-head">' +
+        '<label class="mm-files-label" for="vrFileInput">Logos, Bilder, Designentwürfe <span>· freiwillig</span></label>' +
+        '<p class="mm-files-hint" id="vrFileHint">PNG, JPG, WEBP oder PDF · bis ' + maxMb + ' MB pro Datei · bis ' +
+          maxFiles + ' Dateien. Vorhandenes Material hilft uns, Ihren Stil zu treffen.</p>' +
+      '</div>' +
+      '<input type="file" id="vrFileInput" multiple accept="' + UPLOAD_ACCEPT + '" aria-describedby="vrFileHint">' +
+      '<button type="button" class="mm-files-pick" id="vrFilePick">Dateien auswählen</button>' +
+      '<ul class="mm-files-list" id="vrFileList" aria-live="polite"></ul>' +
+      '<p class="mm-files-status" id="vrFileStatus" role="status" aria-live="polite"></p>' +
+    '</div>';
+  }
+
+  /* Der Typ einer Datei: Was der Browser meldet, sonst die Endung. HEIC wird
+     ausdrücklich benannt, nicht nur abgelehnt. */
+  function fileType(file) {
+    var type = String((file && file.type) || '').toLowerCase();
+    var name = String((file && file.name) || '').toLowerCase();
+    var ext = name.indexOf('.') >= 0 ? name.split('.').pop() : '';
+    if (ext === 'heic' || ext === 'heif' || /heic|heif/.test(type)) return 'image/heic';
+    if (UPLOAD_TYPES[type]) return type;
+    if (UPLOAD_EXT[ext]) return UPLOAD_EXT[ext];
+    return '';
+  }
+
+  function sizeLabel(n) {
+    n = Number(n) || 0;
+    if (n >= 1024 * 1024) return (Math.round(n / (1024 * 1024) * 10) / 10) + ' MB';
+    if (n >= 1024) return Math.round(n / 1024) + ' KB';
+    return n + ' B';
+  }
 
   /* Der Aufbau samt Verhalten. `container` bekommt die Mindmap; zurück kommt
      eine kleine Steuerung für die Seite, die den Baustein einsetzt. */
@@ -520,6 +573,108 @@
     });
     window.addEventListener('resize', layout);
     render(); sync();
+
+    /* ── Dateien ──────────────────────────────────────────────────────── */
+    var files = [];                    // { id, name, type, size, state: 'uploading'|'done' }
+    var upload = intake && options.upload && typeof options.upload.send === 'function' ? options.upload : null;
+    var fileInput = el('vrFileInput'), fileList = el('vrFileList'), fileStatus = el('vrFileStatus'), filePick = el('vrFilePick');
+    var maxBytes = (upload && upload.maxBytes) || 5 * 1024 * 1024;
+    var maxFiles = (upload && upload.maxFiles) || 10;
+
+    function sayFiles(text, isError) {
+      if (!fileStatus) return;
+      fileStatus.textContent = text || '';
+      fileStatus.classList.toggle('err', !!isError);
+    }
+    function renderFiles() {
+      if (!fileList) return;
+      while (fileList.children && fileList.children.length) fileList.removeChild(fileList.children[0]);
+      files.forEach(function (f) {
+        var li = document.createElement('li');
+        li.className = 'mm-file' + (f.state === 'uploading' ? ' uploading' : '');
+        li.dataset.id = f.id || '';
+        var name = document.createElement('span'); name.className = 'mm-file-name'; name.textContent = f.name; li.appendChild(name);
+        var meta = document.createElement('span'); meta.className = 'mm-file-meta';
+        meta.textContent = f.state === 'uploading' ? 'lädt hoch …' : sizeLabel(f.size); li.appendChild(meta);
+        if (f.state === 'done') {
+          var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'mm-file-remove';
+          rm.textContent = '×'; rm.setAttribute('aria-label', f.name + ' entfernen');
+          rm.addEventListener('click', function () { removeFile(f); });
+          li.appendChild(rm);
+        }
+        fileList.appendChild(li);
+      });
+      if (mm) mm.classList.toggle('has-files', files.some(function (f) { return f.state === 'done'; }));
+      if (typeof options.onFiles === 'function') options.onFiles(api.files());
+    }
+    function removeFile(f) {
+      var idx = files.indexOf(f);
+      if (idx < 0) return;
+      files.splice(idx, 1);
+      renderFiles();
+      sayFiles(f.name + ' entfernt.');
+      if (upload && typeof upload.remove === 'function' && f.id) {
+        Promise.resolve(upload.remove(f.id)).catch(function () { /* die Referenz ist weg — das zählt */ });
+      }
+    }
+    function checkFile(file) {
+      var type = fileType(file);
+      if (type === 'image/heic') return UPLOAD_MESSAGES.heic;
+      if (!type) return UPLOAD_MESSAGES.type;
+      if (!(file.size > 0)) return UPLOAD_MESSAGES.empty;
+      if (file.size > maxBytes) return UPLOAD_MESSAGES.size;
+      return '';
+    }
+    function addFiles(list) {
+      var chosen = Array.prototype.slice.call(list || []);
+      if (!chosen.length) return;
+      var errors = [];
+      var started = 0;
+      chosen.forEach(function (file) {
+        if (files.length >= maxFiles) { errors.push(UPLOAD_MESSAGES.count.replace('10', String(maxFiles))); return; }
+        var problem = checkFile(file);
+        if (problem) { errors.push(String(file.name || 'Datei') + ': ' + problem); return; }
+        var entry = { id: '', name: String(file.name || 'Datei'), type: fileType(file), size: file.size, state: 'uploading' };
+        files.push(entry);
+        started++;
+        Promise.resolve(upload.send(file)).then(function (result) {
+          var meta = result && result.file ? result.file : result;
+          if (!meta || !meta.id) throw new Error(UPLOAD_MESSAGES.failed);
+          entry.id = String(meta.id); entry.state = 'done';
+          if (meta.name) entry.name = String(meta.name);
+          if (meta.size) entry.size = meta.size;
+          renderFiles();
+          sayFiles(files.filter(function (f) { return f.state === 'done'; }).length + ' Datei(en) hochgeladen.');
+        }).catch(function (e) {
+          var at = files.indexOf(entry);
+          if (at >= 0) files.splice(at, 1);
+          renderFiles();
+          sayFiles(entry.name + ': ' + ((e && e.message) || UPLOAD_MESSAGES.failed), true);
+        });
+      });
+      renderFiles();
+      if (errors.length) sayFiles(errors.join(' '), true);
+      else if (started) sayFiles('Wird hochgeladen …');
+    }
+    api.files = function () {
+      return files.filter(function (f) { return f.state === 'done' && f.id; }).map(function (f) {
+        return { id: f.id, name: f.name, type: f.type, size: f.size };
+      });
+    };
+    api.addFiles = addFiles;
+    if (upload && fileInput) {
+      fileInput.addEventListener('change', function () {
+        addFiles(fileInput.files);
+        try { fileInput.value = ''; } catch (e) { /* alte Browser */ }
+      });
+      if (filePick) filePick.addEventListener('click', function () { if (fileInput.click) fileInput.click(); });
+      (Array.isArray(upload.initial) ? upload.initial : []).forEach(function (f) {
+        if (f && f.id) files.push({ id: String(f.id), name: String(f.name || 'Datei'), type: String(f.type || ''), size: Number(f.size) || 0, state: 'done' });
+      });
+      renderFiles();
+    } else if (el('vrFiles')) {
+      el('vrFiles').hidden = true;
+    }
 
     /* Vorbelegung: Was im Fragebogen schon dasteht (etwa nach einem Wechsel
        zurück auf die Seite), erscheint im Zentrum und in der Auswahl — der

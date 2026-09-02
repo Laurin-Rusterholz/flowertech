@@ -313,3 +313,22 @@
    ganz normale Frage des Bogens. Die Felder des Fragebogens bleiben als
    Wertträger bestehen, werden aber vom Zentrum der Mindmap bedient. */
 .mm[data-mode="intake"] .mm-send { display: none; }
+
+/* ── Dateien im Vision Room (nur Fragebogen-Modus) ─────────────────────── */
+.mm-files { flex-basis: 100%; display: grid; gap: 8px; padding: 12px 14px; border: 1px dashed var(--line-2); border-radius: 14px; }
+.mm-files-label { font-size: 13px; font-weight: 650; color: var(--ink); }
+.mm-files-label span { font-weight: 400; color: var(--ink-faint); }
+.mm-files-hint { margin: 2px 0 0; font-size: 12px; line-height: 1.5; color: var(--ink-faint); }
+.mm-files input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.mm-files-pick { justify-self: start; border: 1px solid var(--line-2); background: rgba(255,255,255,.06); color: var(--ink); font-family: inherit; font-size: 12.5px; border-radius: 100px; padding: 7px 14px; cursor: pointer; transition: .25s; }
+.mm-files-pick:hover, .mm-files-pick:focus-visible { border-color: var(--lime); outline: 0; }
+.mm-files-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.mm-files-list:empty { display: none; }
+.mm-file { display: flex; align-items: center; gap: 10px; font-size: 12.5px; padding: 6px 10px; border-radius: 10px; background: rgba(255,255,255,.04); }
+.mm-file.uploading { opacity: .6; }
+.mm-file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.mm-file-meta { color: var(--ink-faint); white-space: nowrap; }
+.mm-file-remove { width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(255,255,255,.1); color: var(--ink); cursor: pointer; font-size: 15px; line-height: 1; }
+.mm-file-remove:hover, .mm-file-remove:focus-visible { background: rgba(255,255,255,.2); outline: 0; }
+.mm-files-status { margin: 0; font-size: 12px; color: var(--ink-faint); min-height: 1em; }
+.mm-files-status.err { color: #ffb4a8; }

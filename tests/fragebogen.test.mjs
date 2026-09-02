@@ -55,9 +55,17 @@ ok(!/apiKey|serviceAccount|private_key|FIREBASE_[A-Z_]+|Bearer\s+[A-Za-z0-9]/i.t
   "die Seite enthält Zugangsdaten");
 ok(!/\.set\(|\.update\(|\.remove\(/.test(page), "die Seite schreibt direkt in die Datenbank");
 const fetches = page.match(/fetch\(/g) || [];
-ok(fetches.length === 3,
-  `es gibt ${fetches.length} fetch-Aufrufe statt drei (Fragebogen lesen, Antworten senden, ` +
-  "Inhalte der Website lesen)");
+/* Fuenf Aufrufe, und nur diese: den Fragebogen lesen, die Antworten senden,
+   die Inhalte der Website lesen — und fuer den Vision Room eine Datei
+   hochladen (PUT) bzw. wieder entfernen (DELETE). Die Antworten selbst gehen
+   weiterhin an genau EINE Stelle (tests/vorbelegung.test.mjs prueft den
+   Upload-Weg). */
+ok(fetches.length === 5,
+  `es gibt ${fetches.length} fetch-Aufrufe statt fuenf (Fragebogen lesen, Antworten senden, ` +
+  "Inhalte der Website lesen, Datei hochladen, Datei entfernen)");
+ok((page.match(/method: "PUT"/g) || []).length === 1 && /UPLOAD_ENDPOINT/.test(page),
+  "der Upload geht nicht als Roh-Bytes an die Upload-Funktion");
+ok(!/readAsDataURL|btoa\(/.test(page), "die Seite wandelt Dateien in Base64 um");
 /* Der dritte Aufruf holt die Abschrift der veroeffentlichten Inhalte — von der
    Herkunft der Vorschau, ohne Zugangsdaten. Er darf nirgends sonst hingehen. */
 ok(/window\.fetch\(adressen\[i\], \{ credentials: "omit"/.test(page),

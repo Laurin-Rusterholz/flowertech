@@ -765,6 +765,12 @@
 
   var FORM_BASE = "https://jupidu-36804-default-rtdb.europe-west1.firebasedatabase.app";
   var PORTAL_ENDPOINT = "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-portal";
+  /* Dateien aus dem Vision Room gehen als Roh-Bytes an diese Funktion — nie
+     als Base64 in den Datensatz. Zurück kommt eine Referenz (id, name, type,
+     size); nur diese Ids gehen später mit dem Bogen ab. Die Grenzen spiegeln
+     INTAKE_UPLOAD_LIMITS aus Quantus: 5 MB pro Datei, 10 Dateien. */
+  var UPLOAD_ENDPOINT = "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-upload";
+  var UPLOAD_LIMITS = { maxBytes: 5 * 1024 * 1024, maxFiles: 10 };
 
   var el = function (id) { return document.getElementById(id); };
   var esc = function (v) {
@@ -932,7 +938,7 @@
   var ckDaten = null;
   /* Steht am <html>, sobald das Cockpit aufgebaut ist. Fuer die Abnahme:
      `document.documentElement.dataset.ftCockpit` in der Konsole. */
-  var CK_BUILD = "ft-vorbelegt-1";
+  var CK_BUILD = "ft-vorbelegt-2";
 
   /* Der Name des Vorhabens kommt aus den Daten — die Seite erfindet keinen.
      Der Datensatz kennt bewusst KEINEN Projektnamen (kein Feld dafuer, keine
@@ -2846,6 +2852,9 @@
     var typeNode = typeQuestionNode();
     visionRoom = window.FlowerTechVisionRoom.mount(el("visionRoomMount"), {
       mode: "intake",
+      // Logos, Bilder, Designentwürfe: der Baustein zeigt und prüft, die
+      // Seite sendet — an genau eine Adresse, mit genau diesem Token.
+      upload: { maxBytes: UPLOAD_LIMITS.maxBytes, maxFiles: UPLOAD_LIMITS.maxFiles, send: hochladen, remove: dateiEntfernen },
       initial: {
         idea: ideaNode ? ideaNode.value : "",
         type: typeNode && hasOption(typeNode, typeNode.value) ? typeNode.value : "",
@@ -3037,8 +3046,31 @@
     return "ft_" + hash.toString(36) + "_" + basis.length.toString(36);
   }
 
-  /* Genau EIN Sendeweg für diese Seite: derselbe abgesicherte Eingang, dieselbe
-     Fehlerbehandlung — für die Antworten wie für einen Änderungswunsch. */
+  /* Eine Datei hochladen: Roh-Bytes, Typ und Name im Header, der Token in der
+     Adresse. Antwortet die Funktion mit einem Fehler, kommt seine Meldung
+     wörtlich zur Kundschaft — sie sagt, was zu tun ist (Typ, Grösse, Anzahl). */
+  function hochladen(file) {
+    return fetch(UPLOAD_ENDPOINT + "?e=" + encodeURIComponent(token), {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type || "application/octet-stream",
+        "X-FlowerTech-Filename": encodeURIComponent(String(file.name || "")),
+      },
+      body: file,
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) throw new Error(data.error || "Der Upload hat nicht geklappt.");
+        return data;
+      });
+    });
+  }
+  function dateiEntfernen(id) {
+    return fetch(UPLOAD_ENDPOINT + "?e=" + encodeURIComponent(token) + "&id=" + encodeURIComponent(id),
+      { method: "DELETE" }).then(function (r) { return r.ok; });
+  }
+
+  /* Genau EIN Sendeweg für die Antworten: derselbe abgesicherte Eingang,
+     dieselbe Fehlerbehandlung — für den Bogen wie für einen Änderungswunsch. */
   function post(body) {
     return fetch(PORTAL_ENDPOINT, {
       method: "POST",
@@ -3075,9 +3107,11 @@
     btn.disabled = true;
     status.className = "status show ok";
     status.textContent = "Wird gesendet …";
+    // Die Dateien aus dem Vision Room: nur ihre Referenzen, keine Inhalte.
+    var dateien = visionRoom && visionRoom.files ? visionRoom.files().map(function (f) { return f.id; }) : [];
     post({
       token: token, kind: "intake",
-      payload: { answers: answers },
+      payload: { answers: answers, files: dateien },
       website: el("hp").value,
       idempotencyKey: idemKey([token, "intake"]),
     })
