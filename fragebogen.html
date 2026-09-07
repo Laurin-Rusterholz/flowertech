@@ -2643,6 +2643,11 @@
   var BLATT_GROESSE = 3;
   var bogenBlaetter = [];
   var bogenSchritt = 0;
+  /* Welche Fragen auf welchem Blatt stehen — festgehalten beim Aufbau, nicht
+     aus der laufenden Nummer errechnet. Gerechnet stimmte es nur, solange die
+     Reihenfolge unangetastet blieb; der Vision Room verschiebt aber zwei
+     Fragen auf sein eigenes Blatt. */
+  var bogenFragen = [];
 
   function zwei(n) { return (n < 10 ? "0" : "") + n; }
 
@@ -2665,10 +2670,12 @@
 
   function blaetterHtml(qs) {
     var teile = [];
+    bogenFragen = [];
     for (var i = 0; i < qs.length; i += BLATT_GROESSE) {
       var nr = teile.length + 1;
       var gruppe = qs.slice(i, i + BLATT_GROESSE);
       var von = i;
+      bogenFragen.push(gruppe.map(function (q, j) { return von + j; }));
       teile.push('<section class="bg-blatt" id="blatt_' + (nr - 1) + '" data-blatt="' + nr + '">' +
         '<p class="bg-nr">Blatt ' + zwei(nr) + " · Zeilen " + zwei(i + 1) + "–" +
           zwei(i + gruppe.length) + "</p>" +
@@ -2733,15 +2740,50 @@
     return bogenZeigen(Math.floor(i / BLATT_GROESSE));
   }
 
+  /* ── Pflichtfelder ───────────────────────────────────────────────────────
+     Befund (07.09.2026, Kundenlink, Blatt 2): E-Mail, Telefon und Adresse
+     standen leer da — die Statusanzeige nannte aber nur die Adresse. Die
+     Pruefung stuetzte sich allein auf die Angaben im Datensatz (`q.required`,
+     `showIf`) und rechnete die Blattzugehoerigkeit aus der Nummer. Wich davon
+     ab, was wirklich auf dem Blatt stand, verschwand ein Pflichtfeld still aus
+     der Meldung: gefragt, leer — und trotzdem nicht genannt.
+
+     Jetzt entscheidet das Feld selbst. Gefragt wird, was die Kundschaft vor
+     sich hat: Steht das Feld auf diesem Blatt, ist es als Pflicht ausgezeichnet,
+     ist es sichtbar — und ist es leer? Damit kann die Meldung nicht mehr
+     weniger nennen, als tatsaechlich offen ist. */
+  function pflichtfeld(q, node) {
+    if (q && q.required) return true;
+    // Die Auszeichnung am Feld zaehlt genauso: Was als Pflichtfeld beschriftet
+    // ist, muss auch als Pflichtfeld geprueft werden.
+    return !!(node && node.getAttribute && node.getAttribute("aria-required") === "true");
+  }
+
+  // Steht das Feld wirklich vor der Kundschaft? Die Huelle (das <label>) ist
+  // die Wahrheit; nur ohne sie entscheidet die Bedingung aus dem Datensatz.
+  function feldSichtbar(q, node) {
+    var wrap = node && node.closest ? node.closest("label") : null;
+    if (wrap) return !wrap.hidden;
+    return sichtbar(q);
+  }
+
+  function feldOffen(i) {
+    var q = questions[i];
+    var node = el("q_" + i);
+    if (!q || !node) return false;
+    return pflichtfeld(q, node) && feldSichtbar(q, node) && !value(i);
+  }
+
   // Was auf dem aktuellen Blatt noch offen ist — nur Sichtbares zaehlt.
   function blattOffen() {
-    var von = bogenSchritt * BLATT_GROESSE;
+    var indizes = bogenFragen[bogenSchritt] || [];
     var offen = [];
-    for (var i = von; i < von + BLATT_GROESSE && i < questions.length; i++) {
-      var q = questions[i];
-      if (!q || !q.required || !sichtbar(q) || isVisionCarrier(i)) continue;
-      if (!value(i)) offen.push({ index: i, label: q.label });
-    }
+    indizes.forEach(function (i) {
+      // Die Werttraeger des Vision Rooms stehen laengst auf seinem Blatt —
+      // sie wurden hier zwar erzeugt, aber dorthin verschoben.
+      if (isVisionCarrier(i)) return;
+      if (feldOffen(i)) offen.push({ index: i, label: questions[i].label });
+    });
     return offen;
   }
 
@@ -2977,6 +3019,13 @@
      niemand beantwortet. */
   function sichtbar(q) {
     if (!q || !q.showIf || !q.showIf.key) return true;
+    /* Eine halb ausgefuellte Bedingung ist keine Bedingung. Ohne Wert hiess sie
+       bisher „sichtbar, solange die andere Frage LEER ist" — die Frage
+       verschwand also genau dann, wenn die vorhergehende beantwortet war, und
+       fiel damit still aus der Pflichtfeldpruefung. Quantus laesst so etwas
+       nicht mehr entstehen; bereits veroeffentlichte Boegen tragen es aber
+       noch, deshalb faengt die Seite es selbst ab. */
+    if (!String(q.showIf.value == null ? "" : q.showIf.value).trim()) return true;
     var quelle = -1;
     for (var i = 0; i < questions.length; i++) {
       if (questions[i].key === q.showIf.key) { quelle = i; break; }
@@ -3007,11 +3056,15 @@
   function missing() {
     var out = [];
     questions.forEach(function (q, i) {
-      if (!sichtbar(q)) return;              // ausgeblendet ist nicht offen
-      var filled = !!value(i);
       var node = el("q_" + i);
-      if (q.required && node) node.setAttribute("aria-invalid", filled ? "false" : "true");
-      if (q.required && !filled) out.push(q.label);
+      if (!node) return;
+      var pflicht = pflichtfeld(q, node);
+      var da = feldSichtbar(q, node);        // ausgeblendet ist nicht offen
+      var filled = !!value(i);
+      if (pflicht && node.setAttribute) {
+        node.setAttribute("aria-invalid", (filled || !da) ? "false" : "true");
+      }
+      if (pflicht && da && !filled) out.push(q.label);
     });
     return out;
   }
