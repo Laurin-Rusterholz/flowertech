@@ -13,10 +13,12 @@
  *           1048 px breit direkt unter der Art; mobil 354 px breit, sichtbar
  *
  * Bewiesen wird statisch, was diese Masse erzeugt:
- *   1. Das Blatt ist zentriert und hoechstens 1120 px breit; mobil 100 %.
- *   2. Die Antwortspalte ist auf dem Desktop auf 46rem begrenzt — keine
- *      endlos langen Eingabezeilen; unter 860 px gilt weiterhin die volle
- *      Breite.
+ *   1. Die Lesespalte ist zentriert und 640–860 px breit; mobil 100 %.
+ *      (Seit der Angleichung an flowertech.ch am 11.09.2026 begrenzt die
+ *      SPALTE die Zeilenlaenge — nicht mehr jedes Feld einzeln. Derselbe
+ *      Befund, direkter geloest.)
+ *   2. Kein Feld traegt eine eigene, groessere Breite; auf schmalen Geraeten
+ *      gehoert ihm die ganze Breite, und der Weg unten stapelt.
  *   3. Der Upload-Block steht VOR der Mindmap-Flaeche (direkt unter der
  *      Art), nicht im Fuss — und haengt an keiner Idee und keiner Auswahl.
  *   4. Er benutzt kein <label>, das der Bogen als Frage-Zeile gestalten
@@ -37,26 +39,41 @@ const ok = (condition, message) => { assert.ok(condition, message); checks++; };
 const style = /<style>([\s\S]*?)<\/style>/.exec(page)[1];
 const flach = (s) => s.replace(/\s*\n\s*/g, "");
 
-// ── 1. Das Blatt: zentriert, begrenzt, mobil voll ─────────────────────────
-const blatt = /body\[data-bogen="1"\] #content\{([^}]*)\}/.exec(flach(style));
-ok(blatt, "die Regel für das Blatt fehlt");
-const blattMax = Number((/max-width:(\d+)px/.exec(blatt[1]) || [])[1]);
-ok(blattMax >= 1050 && blattMax <= 1200, `das Blatt ist ${blattMax} px breit — erwartet 1050–1200 px`);
-ok(/margin:0 auto/.test(blatt[1]), "das Blatt ist nicht zentriert");
+// ── 1. Die Spalte: zentriert, lesbar breit, mobil voll ──────────────────
+/* Seit der Angleichung an flowertech.ch (11.09.2026) gibt es kein „Blatt"
+   mehr, auf dem zwei Spalten nebeneinander stehen. Der Bogen ist eine ruhige,
+   mittige Lesespalte auf schwarzem Grund — das loest denselben Befund von
+   damals direkter: Kein Feld laeuft mehr ueber die Fensterbreite, weil die
+   SPALTE begrenzt ist, nicht jedes Feld einzeln. */
+const spalte = /body\[data-bogen="1"\] #content\{([^}]*)\}/.exec(flach(style));
+ok(spalte, "die Regel für die Spalte fehlt");
+const spalteMax = Number((/max-width:(\d+)px/.exec(spalte[1]) || [])[1]);
+ok(spalteMax >= 640 && spalteMax <= 860,
+  `die Spalte ist ${spalteMax} px breit — erwartet 640–860 px (lesbare Zeile)`);
+ok(/margin:0 auto/.test(spalte[1]), "die Spalte ist nicht zentriert");
+ok(/background:transparent/.test(spalte[1]),
+  "die Spalte liegt auf einer eigenen Fläche — der Grund muss durchgehend schwarz bleiben");
 // Die Basisregel: volle Breite — sie gilt ueberall, wo keine engere greift.
 ok(/input,textarea,select\{width:100%/.test(flach(style)), "die Felder sind nicht standardmässig 100 % breit");
 
-// ── 2. Die Antwortspalte: begrenzt nur auf dem Desktop ───────────────────
-const desktop = /@media\(min-width:860px\)\{([\s\S]*?)\n  \}/.exec(style);
-ok(desktop, "der Desktop-Block der Bogenregeln fehlt");
-const antwort = /body\[data-bogen="1"\] select\{[^}]*max-width:(\d+)rem/.exec(flach(desktop[1]));
-ok(antwort, "die Antwortspalte ist auf dem Desktop nicht begrenzt");
-ok(Number(antwort[1]) >= 36 && Number(antwort[1]) <= 52, `die Antwortspalte ist ${antwort[1]}rem — erwartet 36–52rem`);
-ok(/\.hint\{[^}]*max-width:\d+rem/.test(flach(desktop[1])), "der Hinweistext folgt der Antwortspalte nicht");
-// Ausserhalb des Desktop-Blocks gibt es KEINE Begrenzung der Felder.
-const ohneDesktop = style.replace(desktop[0], "");
-ok(!/body\[data-bogen="1"\] (input|textarea|select)[^{]*\{[^}]*max-width/.test(flach(ohneDesktop)),
-  "die Felder sind auch auf dem Handy begrenzt — dort gehört ihnen die ganze Breite");
+// ── 2. Kein Feld laeuft ueber die Fensterbreite ─────────────────────────
+/* Die Begrenzung sitzt jetzt an der Spalte. Damit das auch so bleibt, darf
+   kein Feld eine eigene, groessere Breite bekommen — und auf dem Handy
+   gehoert ihm weiterhin die ganze Breite. */
+const felder = /body\[data-bogen="1"\] input,body\[data-bogen="1"\] textarea,body\[data-bogen="1"\] select\{([^}]*)\}/
+  .exec(flach(style));
+ok(felder, "die Feldregel des Bogens fehlt");
+ok(/width:100%/.test(felder[1]), "die Felder füllen die Spalte nicht");
+ok(/max-width:none/.test(felder[1]),
+  "die Felder tragen eine eigene Breitenbegrenzung — die Spalte ist die eine Stelle dafür");
+// Und es gibt keinen Desktop-Block mehr, der zwei Spalten aufbaut.
+ok(!/grid-template-columns:minmax\(180px/.test(flach(style)),
+  "die alte Zweispaltigkeit des Werkblatts steht noch im Stil");
+// Mobil bleibt alles voll — und der Weg unten stapelt statt zu quetschen.
+const klein = /@media\(max-width:520px\)\{([\s\S]*?)\n  \}/.exec(style);
+ok(klein, "es gibt keine Regeln für schmale Geräte");
+ok(/\.bg-steuer button\{[^}]*flex:1 1 auto/.test(flach(klein[1])),
+  "auf dem Handy stehen die Knöpfe nicht nebeneinander in voller Breite");
 
 // ── 3. Der Upload-Block steht vor der Mindmap, nicht im Fuss ─────────────
 const markup = /function markup\(opts\) \{([\s\S]*?)\n  \}/.exec(component);

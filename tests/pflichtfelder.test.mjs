@@ -110,15 +110,15 @@ for (const breite of [1200, 390]) {
   const wo = breite === 390 ? "auf dem Handy" : "auf dem Desktop";
   const dom = await seite(bogen(KATALOG), { breite });
 
-  ok(/Blatt 01 von/.test(dom.node("bogenStand").textContent),
-    `der Bogen startet ${wo} nicht auf Blatt 1`);
+  ok(/Schritt 1 von/.test(dom.node("bogenStand").textContent),
+    `der Bogen startet ${wo} nicht auf Schritt 1`);
 
   // Blatt 1 ausfüllen und weiterblättern.
   tippen(dom, 0, "Gartenbau Muster");
   tippen(dom, 2, "Anna Muster");
   dom.node("bogenWeiter").fire("click");
-  ok(/Blatt 02 von/.test(dom.node("bogenStand").textContent),
-    `der Bogen blättert ${wo} nicht auf Blatt 2 weiter`);
+  ok(/Schritt 2 von/.test(dom.node("bogenStand").textContent),
+    `der Bogen geht ${wo} nicht auf Schritt 2 weiter`);
 
   const gemeldet = status(dom);
   ["E-Mail", "Telefon", "Adresse"].forEach((feld) => {
@@ -134,11 +134,11 @@ for (const breite of [1200, 390]) {
   ok(status(dom).includes("Adresse") && !status(dom).includes("Telefon"),
     `nach dem Telefon stimmt die Meldung ${wo} nicht: ${status(dom)}`);
   tippen(dom, 5, "Blumenweg 3, 8000 Zürich");
-  ok(/vollständig/.test(status(dom)), `das volle Blatt gilt ${wo} nicht als vollständig: ${status(dom)}`);
+  ok(/vollständig/.test(status(dom)), `der volle Schritt gilt ${wo} nicht als vollständig: ${status(dom)}`);
 
   // Solange etwas offen ist, blättert der Knopf nicht weiter — und sagt alles.
   dom.node("bogenWeiter").fire("click");
-  ok(/Blatt 03 von/.test(dom.node("bogenStand").textContent),
+  ok(/Schritt 3 von/.test(dom.node("bogenStand").textContent),
     `der volle Bogen blättert ${wo} nicht weiter`);
 }
 
@@ -149,7 +149,7 @@ for (const breite of [1200, 390]) {
   tippen(dom, 2, "Anna Muster");
   dom.node("bogenWeiter").fire("click");     // auf Blatt 2
   dom.node("bogenWeiter").fire("click");     // Versuch mit leerem Blatt 2
-  ok(/Blatt 02 von/.test(dom.node("bogenStand").textContent),
+  ok(/Schritt 2 von/.test(dom.node("bogenStand").textContent),
     "der Bogen blättert über offene Pflichtfelder hinweg");
   const gemeldet = status(dom);
   ["E-Mail", "Telefon", "Adresse"].forEach((feld) => {
