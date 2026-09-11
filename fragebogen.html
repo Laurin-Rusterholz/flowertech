@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow, noarchive">
+<!-- Welcher Stand gerade ausgeliefert wird. Ohne diese Marke liess sich nach
+     einer Aenderung nicht sagen, ob der Browser schon die neue Fassung hat —
+     der Befund vom 11.09.2026 („Schritt 1 von 11, PR37 nicht angekommen?")
+     war genau diese Frage. Die Marke steht auch sichtbar im Fuss, weil die
+     Konsole nicht immer bedienbar ist. Bei jeder Aenderung mitziehen. -->
+<meta name="ft-build" content="fragebogen-2026-09-11-b">
 <meta name="referrer" content="no-referrer">
 <title>Ihre Angaben — FlowerTech</title>
 <link rel="icon" href="/favicon.svg">
@@ -602,6 +608,7 @@
   body[data-bogen="1"] .status.err{background:rgba(255,62,165,.12);color:#ff86c4;
     box-shadow:inset 0 0 0 1px rgba(255,62,165,.34)}
 
+  .foot-build{display:block;margin-top:4px;font-size:11px;opacity:.55;letter-spacing:.02em}
   body[data-bogen="1"] .page-foot{display:block;font-family:inherit;font-size:12px;
     letter-spacing:0;text-transform:none;color:var(--faint);text-align:left;
     margin:clamp(26px,4vw,40px) 0 0;padding:18px 0 0;border-top:1px solid var(--li)}
@@ -799,7 +806,7 @@
     <div class="dlg" id="pickDlg" hidden></div>
   </div>
 
-  <footer class="page-foot" id="footer">FlowerTech</footer>
+  <footer class="page-foot" id="footer"><span id="footName">FlowerTech</span><span id="footBuild" class="foot-build"></span></footer>
 </div>
 
 <script src="/visionroom.js"></script>
@@ -881,6 +888,21 @@
     el("errorText").textContent = text;
   }
 
+  /* Der Absendername steht im Fuss — und daneben, klein, welcher Stand dieser
+     Seite gerade laeuft. Beides hat seine eigene Stelle, damit das eine das
+     andere nicht ueberschreibt. */
+  function setFooterName(name) {
+    var n = el("footName");
+    if (n) n.textContent = name;
+    else if (el("footer")) el("footer").textContent = name;
+  }
+  function zeigeBuild() {
+    var b = el("footBuild");
+    if (!b || !document.querySelector) return;
+    var m = document.querySelector('meta[name="ft-build"]');
+    if (m) b.textContent = "Stand " + (m.getAttribute("content") || "");
+  }
+
   function load() {
     if (!token) {
       return fail("Der Link ist unvollständig",
@@ -939,7 +961,7 @@
     el("answeredTitle").textContent = titel;
     el("answeredText").textContent = text;
     el("subtitle").textContent = name;
-    el("footer").textContent = name;
+    setFooterName(name);
   }
 
   /* ── Ihr Bereich ────────────────────────────────────────────────────────
@@ -3013,7 +3035,7 @@
     document.title = (data.title || "Ihre Angaben") + " — FlowerTech";
     el("subtitle").textContent = (data.company && data.company.name) || "FlowerTech";
     el("intro").textContent = data.intro || "";
-    el("footer").textContent = (data.company && data.company.name) || "FlowerTech";
+    setFooterName((data.company && data.company.name) || "FlowerTech");
     /* Das Schriftfeld im Kopf: nur was der Datensatz wirklich hergibt. Steht
        keine Fassung und kein Stand darin, bleibt die Stelle leer. */
     var meta = el("bogenMeta");
@@ -3262,6 +3284,7 @@
       });
   });
 
+  zeigeBuild();
   load();
 })();
 </script>
