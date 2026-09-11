@@ -2735,8 +2735,24 @@
   /* Welche Blaetter es gibt — inklusive des Vision Rooms, sofern dieser Bogen
      ihn traegt. Er ist das letzte Blatt und behaelt seinen eigenen Baustein. */
   function bogenAufbau() {
+    /* Ein Schritt ohne Felder ist eine leere Seite mit einem „Weiter“ darauf.
+       Befund der Abnahme (11.09.2026, 28 Fragen, 11 Schritte): Die beiden
+       Vision-Room-Fragen sind die letzten der Strecke und wandern in den
+       Vision Room. Ihr Schritt blieb als leere Seite stehen — Schritt 10 von
+       11 zeigte NICHTS ausser dem Weiter-Knopf. Solche Schritte fallen jetzt
+       weg; die Zaehlung zaehlt nur noch, was es wirklich gibt. */
     bogenBlaetter = [];
-    for (var n = 0; el("blatt_" + n); n++) bogenBlaetter.push("blatt_" + n);
+    var behaltene = [];
+    for (var n = 0; el("blatt_" + n); n++) {
+      // Gefragt wird der Bauplan, nicht das DOM: Auf dem Schritt steht nur
+      // das, was nicht in den Vision Room gewandert ist.
+      var traegt = (bogenFragen[n] || []).some(function (i) { return !isVisionCarrier(i); });
+      if (!traegt) { el("blatt_" + n).hidden = true; continue; }
+      bogenBlaetter.push("blatt_" + n);
+      behaltene.push(bogenFragen[n] || []);
+    }
+    // Die Zuordnung Schritt → Fragen muss der gekuerzten Strecke folgen.
+    bogenFragen = behaltene;
     /* Ob es das Vision-Room-Blatt gibt, entscheidet der Baustein selbst: Er
        bleibt verborgen, wenn dieser Bogen die beiden Fragen nicht traegt. Das
        Blatt drumherum wird nur umgeblaettert — es setzt ihn nie zurueck. */
