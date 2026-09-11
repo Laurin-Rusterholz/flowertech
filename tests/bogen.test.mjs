@@ -81,7 +81,7 @@ const VORSCHAU = {
   releasedAt: "2026-08-13T08:00:00.000Z", feedback: true,
 };
 
-async function seite(d) {
+async function seite(d, opts) {
   const dom = makeDom();
   IDS.forEach((id) => dom.ensure(id));
   ["error", "content", "answered", "area", "ck", "ckSide", "ckLock", "tileOffer", "tilePreview",
@@ -95,6 +95,10 @@ async function seite(d) {
   };
   dom.window.location.search = "?e=" + TOKEN;
   dom.window.fetch = fetchDouble;
+  // Der Vision Room wird nur eingeschaltet, wenn der Baustein da ist. Fuer die
+  // Frage „bleibt ein leerer Schritt stehen?" braucht es ihn — sonst wandern
+  // die Traegerfelder gar nicht erst weg.
+  if (opts && opts.vision) dom.window.FlowerTechVisionRoom = opts.vision;
   const echtesGet = dom.document.getElementById;
   dom.document.getElementById = (id) => echtesGet(id) || (/^q_\d+$/.test(id) ? dom.ensure(id, "INPUT") : null);
   const ctx = {
@@ -330,6 +334,37 @@ async function seite(d) {
   ok(/var UPLOAD_ENDPOINT = "https:\/\/management-xo2-pro\.netlify\.app/.test(script),
     "der Weg für Dateien wurde verändert");
   ok(/id="hp"/.test(page), "die Spamfalle ist verschwunden");
+}
+
+/* ══ 6. Kein leerer Schritt ═══════════════════════════════════════════════
+   Befund der Abnahme (11.09.2026, 28 Fragen): Die beiden Vision-Room-Fragen
+   sind die letzten der Strecke und wandern in den Vision Room. Ihr Schritt
+   blieb als leere Seite stehen — „Schritt 10 von 11" zeigte nichts ausser
+   dem Weiter-Knopf. */
+{
+  // Zwei zusaetzliche Fragen, die beide in den Vision Room wandern: Sie sitzen
+  // allein auf dem letzten Fragen-Schritt.
+  // Sechs gewoehnliche Fragen + die beiden Vision-Fragen: zwei volle Schritte,
+  // und ein dritter, auf dem NUR die beiden Traeger stehen.
+  const mitVision = FRAGEN.slice(0, 6).concat([
+    { key: "idee", label: "Ihre Idee", type: "textarea", role: "", required: false, hint: "", options: [], vision: "idea" },
+    { key: "funktionen", label: "Funktionen", type: "textarea", role: "", required: false, hint: "", options: [], vision: "features" },
+  ]);
+  const { dom } = await seite(daten({ questions: mitVision }), {
+    vision: { mount() { return { setIdea() {}, setType() {}, destroy() {} }; } },
+  });
+  // Der Vision Room hat seine beiden Traeger uebernommen …
+  ok(dom.node("visionRoom").hidden === false, "der Vision Room wurde nicht eingeschaltet");
+  // … und der leer gewordene Schritt taucht in der Strecke nicht mehr auf.
+  // Zwei Fragen-Schritte plus der Vision Room — der leere zaehlt nicht mit.
+  ok(/Schritt 1 von 3$/.test(dom.node("bogenStand").textContent.trim()),
+    `die Strecke zaehlt einen leeren Schritt mit: ${dom.node("bogenStand").textContent}`);
+  ok(dom.node("blatt_2").hidden === true, "der leere Schritt steht weiterhin in der Strecke");
+  // Die Zuordnung Schritt → Fragen ist mitgewandert: Die Meldung auf Schritt 1
+  // nennt weiterhin die Fragen von Schritt 1.
+  dom.node("bogenWeiter").click();
+  ok(/Betrieb/.test(dom.node("need").textContent),
+    `die Zuordnung Schritt → Fragen ist verrutscht: ${dom.node("need").textContent}`);
 }
 
 console.log(`Bogen: ok (${geprueft} Pruefungen)`);
