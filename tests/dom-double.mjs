@@ -40,7 +40,11 @@ export function makeDom({ innerWidth = 1200, innerHeight = 900 } = {}) {
       },
       clientWidth: innerWidth,
       clientHeight: 560,
+      /* Ein verborgener Knoten hat im Browser keine Flaeche — und eine Pruefung,
+         die "ist das gemalt?" fragt, darf hier nichts anderes erfahren.
+         Verborgen ist auch, wer einen verborgenen Vorfahren hat. */
       getBoundingClientRect() {
+        for (var n = node; n; n = n.parentNode) if (n.hidden) return { width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0 };
         return { width: innerWidth, height: 560, top: 0, left: 0, bottom: 560, right: innerWidth };
       },
       focus() {}, select() {}, blur() { node.fire("blur"); },
