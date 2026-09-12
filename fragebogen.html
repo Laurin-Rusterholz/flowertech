@@ -9,7 +9,7 @@
      der Befund vom 11.09.2026 („Schritt 1 von 11, PR37 nicht angekommen?")
      war genau diese Frage. Die Marke steht auch sichtbar im Fuss, weil die
      Konsole nicht immer bedienbar ist. Bei jeder Aenderung mitziehen. -->
-<meta name="ft-build" content="fragebogen-2026-09-12-a">
+<meta name="ft-build" content="fragebogen-2026-09-12-c">
 <meta name="referrer" content="no-referrer">
 <title>Ihre Angaben — FlowerTech</title>
 <link rel="icon" href="/favicon.svg">
@@ -2779,7 +2779,9 @@
     for (var n = 0; el("blatt_" + n); n++) {
       // Gefragt wird der Bauplan, nicht das DOM: Auf dem Schritt steht nur
       // das, was nicht in den Vision Room gewandert ist.
-      var traegt = (bogenFragen[n] || []).some(function (i) { return !isVisionCarrier(i); });
+      // Ein Blatt gilt nur dann als leer, wenn seine Felder WIRKLICH im Vision
+      // Room stehen. Sonst verschwaende ein sichtbares Pflichtfeld mit ihm.
+      var traegt = (bogenFragen[n] || []).some(function (i) { return !imVisionRoom(i); });
       if (!traegt) { el("blatt_" + n).hidden = true; continue; }
       bogenBlaetter.push("blatt_" + n);
       behaltene.push(bogenFragen[n] || []);
@@ -2839,9 +2841,14 @@
      Pflichtangabe vergisst, soll sie sehen und nicht suchen. */
   function bogenZuFrage(i) {
     if (!bogenBlaetter.length) return false;
-    if (isVisionCarrier(i)) {
+    if (imVisionRoom(i)) {
       var vr = bogenBlaetter.indexOf("blatt_vr");
       return bogenZeigen(vr >= 0 ? vr : bogenBlaetter.length - 1);
+    }
+    /* Das Blatt kommt aus der Zuordnung, nicht aus einer Division: Faellt ein
+       Blatt weg (alle Felder im Vision Room), stimmt die Rechnung nicht mehr. */
+    for (var n = 0; n < bogenFragen.length; n++) {
+      if ((bogenFragen[n] || []).indexOf(i) >= 0) return bogenZeigen(n);
     }
     return bogenZeigen(Math.floor(i / BLATT_GROESSE));
   }
@@ -2885,12 +2892,40 @@
     var indizes = bogenFragen[bogenSchritt] || [];
     var offen = [];
     indizes.forEach(function (i) {
-      // Die Werttraeger des Vision Rooms stehen laengst auf seinem Blatt —
-      // sie wurden hier zwar erzeugt, aber dorthin verschoben.
-      if (isVisionCarrier(i)) return;
+      // Nur was wirklich in den Vision Room gewandert ist, wird dort geprueft.
+      if (imVisionRoom(i)) return;
       if (feldOffen(i)) offen.push({ index: i, label: questions[i].label });
     });
     return offen;
+  }
+
+  /* Sichtbar, leer — aber nicht verlangt. Genau diese Felder sind der Grund,
+     warum die Statuszeile weniger nennt, als leer dasteht: die Kundschaft
+     sieht drei leere Felder und liest nur eines. Befund vom 12.09.2026 auf
+     Schritt 2 (E-Mail, Telefon, Adresse leer, gemeldet nur „Adresse"). Die
+     Pruefung war richtig — die Auskunft unvollstaendig. Jetzt sagt sie beides:
+     was fehlt, und was freiwillig ist. */
+  function blattLeerFreiwillig() {
+    var indizes = bogenFragen[bogenSchritt] || [];
+    var frei = [];
+    indizes.forEach(function (i) {
+      if (imVisionRoom(i)) return;
+      var q = questions[i];
+      var node = el("q_" + i);
+      if (!q || !node) return;
+      if (pflichtfeld(q, node)) return;       // verlangte Felder stehen oben
+      if (!feldSichtbar(q, node)) return;     // was niemand sieht, fehlt nicht
+      if (value(i)) return;                   // ausgefuellt ist kein Hinweis
+      frei.push(q.label);
+    });
+    return frei;
+  }
+
+  function freiwilligSatz(frei) {
+    if (!frei.length) return "";
+    return frei.length === 1
+      ? " " + frei[0] + " ist freiwillig und noch leer."
+      : " Freiwillig und noch leer: " + frei.join(", ") + ".";
   }
 
   function bogenVerdrahten() {
@@ -2900,10 +2935,11 @@
       if (offen.length) {
         // Nicht weiter, ohne es zu sagen — und die Stelle gleich zeigen.
         el("need").className = "need";
-        el("need").textContent = offen.length === 1
+        el("need").textContent = (offen.length === 1
           ? "Hier fehlt noch: " + offen[0].label + "."
           : "Hier fehlen noch: " +
-            offen.map(function (o) { return o.label; }).join(", ") + ".";
+            offen.map(function (o) { return o.label; }).join(", ") + ".")
+          + freiwilligSatz(blattLeerFreiwillig());
         var node = el("q_" + offen[0].index);
         if (node && node.focus) node.focus();
         return;
@@ -3039,10 +3075,28 @@
     }
   }
 
-  // Gehört eine Frage zu den Wertträgern des Vision Rooms? Dann wird nicht
-  // sie angesprungen, sondern das Zentrum der Mindmap.
-  function isVisionCarrier(index) {
-    return index === visionIdea || index === visionFeatures;
+  /* Gehoert eine Frage zu den Wertträgern des Vision Rooms? Diese Frage
+     allein genuegt NICHT — sie sagt nur, was gemeint war. Was zaehlt, ist, ob
+     der Raum sie auch bekommen hat: imVisionRoom(). */
+
+  /* BEFUND (12.09.2026, Kundenlink, Schritt 2): E-Mail, Telefon und Adresse
+     standen leer und ALLE DREI sichtbar als „· Pflichtfeld" da — gemeldet
+     wurde nur die Adresse. Nachgestellt: Traegt eine Frage die Vision-Marke,
+     hat der Vision Room sie aber NICHT uebernommen (Baustein nicht geladen,
+     Raum nicht aufgebaut, Marke aus einem alten Fragebogen), dann blieb das
+     Feld auf seinem Blatt stehen — sichtbar, verlangt, leer — und fiel
+     trotzdem aus der Pruefung, weil diese die MARKE fragte statt das Blatt.
+
+     Deshalb entscheidet ab hier der Ort, nicht die Absicht: uebernommen ist
+     nur, was wirklich im Traeger des Vision Rooms steht. Was auf dem Blatt
+     steht, wird auf dem Blatt geprueft. */
+  function imVisionRoom(index) {
+    var node = el("q_" + index);
+    var wrap = node && node.closest ? node.closest("label") : null;
+    var traeger = el("vrCarriers");
+    if (!wrap || !traeger) return false;
+    for (var n = wrap; n; n = n.parentNode) if (n === traeger) return true;
+    return false;
   }
 
   function render(data) {
@@ -3195,10 +3249,11 @@
     var unterwegs = bogenBlaetter.length > 1 && bogenSchritt < bogenBlaetter.length - 1;
     if (unterwegs) {
       var hier = blattOffen().map(function (o) { return o.label; });
+      var frei = freiwilligSatz(blattLeerFreiwillig());
       el("need").className = hier.length ? "need" : "need done";
-      el("need").textContent = hier.length
+      el("need").textContent = (hier.length
         ? "Noch offen in diesem Schritt: " + hier.join(", ") + "."
-        : "Dieser Schritt ist vollständig — weiter zum nächsten.";
+        : "Dieser Schritt ist vollständig — weiter zum nächsten.") + frei;
       return ready;
     }
 
@@ -3207,11 +3262,12 @@
       el("need").textContent = dateiBestand === BESTAND_FEHLER ? FEHLER_DATEILISTE : WARTETEXT;
       return ready;
     }
-    el("need").textContent = ready
+    var freiLetzte = freiwilligSatz(blattLeerFreiwillig());
+    el("need").textContent = (ready
       ? "Danke — das genügt uns. Sie können jetzt senden."
       : offen.length === 1
         ? "Noch offen: " + offen[0] + ". Danach können Sie senden."
-        : "Noch offen: " + offen.join(", ") + ". Danach können Sie senden.";
+        : "Noch offen: " + offen.join(", ") + ". Danach können Sie senden.") + freiLetzte;
     return ready;
   }
 
@@ -3337,7 +3393,7 @@
       if (first >= 0) bogenZuFrage(first);
       // Die Wertträger des Vision Rooms sind ausgeblendet — angesprungen wird
       // das Feld, das die Kundschaft wirklich vor sich hat.
-      var ziel = first >= 0 && isVisionCarrier(first) ? el("vrIdea") : (first >= 0 ? el("q_" + first) : null);
+      var ziel = first >= 0 && imVisionRoom(first) ? el("vrIdea") : (first >= 0 ? el("q_" + first) : null);
       if (ziel && ziel.focus) ziel.focus();
       return;
     }
