@@ -188,7 +188,7 @@ async function seite({ bestand = [], listeScheitert = false } = {}) {
   const auswahl = dom.ensure("q_2", "SELECT");
   auswahl.options = ["", "Website", "Web-App"].map((value) => ({ value }));
   const form = { schema: 1, title: "Ihre Angaben", intro: "", status: "open", company: { name: "FlowerTech" },
-    questions: FRAGEN, prefill: { version: 1, values: { name: "Herr Aljia", email: "juledal19@gmail.com", kind: "Website" } } };
+    questions: FRAGEN, prefill: { version: 1, values: { name: "Beispielperson", email: "kontakt@example.com", kind: "Website" } } };
   const calls = [];
   let n = 0;
   const fetchDouble = (url, init) => {
@@ -272,7 +272,7 @@ async function seite({ bestand = [], listeScheitert = false } = {}) {
   ok(Array.isArray(body.payload.files) && body.payload.files.length === 1 && body.payload.files[0] === "f_0000000001",
     `die Datei-Referenzen fehlen oder tragen zu viel: ${JSON.stringify(body.payload.files)}`);
   ok(!JSON.stringify(body).includes("storagePath") && !JSON.stringify(body).includes("logo.png"), "der Bogen trägt mehr als die Ids");
-  ok(body.payload.answers.find((a) => a.key === "email").answer === "juledal19@gmail.com", "die Vorbelegung geht nicht mit dem Bogen ab");
+  ok(body.payload.answers.find((a) => a.key === "email").answer === "kontakt@example.com", "die Vorbelegung geht nicht mit dem Bogen ab");
   ok(calls.filter((c) => c.url.includes("flowertech-portal")).length === 1, "die Antworten gingen mehr als einmal ab");
 }
 {
