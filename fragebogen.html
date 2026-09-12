@@ -9,7 +9,7 @@
      der Befund vom 11.09.2026 („Schritt 1 von 11, PR37 nicht angekommen?")
      war genau diese Frage. Die Marke steht auch sichtbar im Fuss, weil die
      Konsole nicht immer bedienbar ist. Bei jeder Aenderung mitziehen. -->
-<meta name="ft-build" content="fragebogen-2026-09-12-c">
+<meta name="ft-build" content="fragebogen-2026-09-12-d">
 <meta name="referrer" content="no-referrer">
 <title>Ihre Angaben — FlowerTech</title>
 <link rel="icon" href="/favicon.svg">
@@ -2874,10 +2874,26 @@
 
   // Steht das Feld wirklich vor der Kundschaft? Die Huelle (das <label>) ist
   // die Wahrheit; nur ohne sie entscheidet die Bedingung aus dem Datensatz.
+  /* BEFUND (12.09.2026, am Original-Link gemessen, Build …-c): E-Mail, Telefon
+     und Adresse standen sichtbar und als Pflichtfeld beschriftet leer da,
+     gemeldet wurde nur die Adresse — und zwar OHNE dass die Felder im Vision
+     Room lagen. Uebrig bleibt als Ausschlussgrund allein diese Stelle: das
+     hidden-Attribut am <label>. Es ist aber nur eine ABSICHT; ob das Feld
+     wirklich verschwindet, entscheidet die Gestaltung, und eine Regel kann das
+     Attribut ueberstimmen. Dann steht das Feld vor der Kundschaft und gilt
+     trotzdem als nicht vorhanden.
+
+     Deshalb zaehlt ab hier zuerst, was WIRKLICH gemalt ist. Ist nichts gemalt
+     — etwa weil das ganze Blatt gerade zu ist —, gilt wie bisher die Absicht.
+     Die Regel kann damit nur MEHR Felder in die Pruefung holen, nie weniger. */
   function feldSichtbar(q, node) {
     var wrap = node && node.closest ? node.closest("label") : null;
-    if (wrap) return !wrap.hidden;
-    return sichtbar(q);
+    if (!wrap) return sichtbar(q);
+    if (wrap.getBoundingClientRect) {
+      var r = wrap.getBoundingClientRect();
+      if (r && r.width > 0 && r.height > 0) return true;
+    }
+    return !wrap.hidden;
   }
 
   function feldOffen(i) {
@@ -2887,9 +2903,26 @@
     return pflichtfeld(q, node) && feldSichtbar(q, node) && !value(i);
   }
 
+  /* Welche Felder auf dem gezeigten Blatt STEHEN. Gefragt wird das Blatt
+     selbst, nicht die Buchfuehrung: Wich die Zuordnung (bogenFragen) auch nur
+     um einen Schritt von der Anzeige ab, meldete die Zeile Felder eines
+     anderen Blattes — und schwieg zu denen, die die Kundschaft vor sich hat.
+     Die Buchfuehrung bleibt der Rueckfall, falls das Blatt fehlt. */
+  function blattFelder() {
+    var blatt = el(bogenBlaetter[bogenSchritt] || "");
+    if (!blatt || !blatt.querySelectorAll) return (bogenFragen[bogenSchritt] || []).slice();
+    var knoten = blatt.querySelectorAll("[id^='q_']");
+    var out = [];
+    for (var k = 0; k < knoten.length; k++) {
+      var treffer = /^q_(\d+)$/.exec(knoten[k].id || "");
+      if (treffer) out.push(Number(treffer[1]));
+    }
+    return out.length ? out : (bogenFragen[bogenSchritt] || []).slice();
+  }
+
   // Was auf dem aktuellen Blatt noch offen ist — nur Sichtbares zaehlt.
   function blattOffen() {
-    var indizes = bogenFragen[bogenSchritt] || [];
+    var indizes = blattFelder();
     var offen = [];
     indizes.forEach(function (i) {
       // Nur was wirklich in den Vision Room gewandert ist, wird dort geprueft.
@@ -2906,7 +2939,7 @@
      Pruefung war richtig — die Auskunft unvollstaendig. Jetzt sagt sie beides:
      was fehlt, und was freiwillig ist. */
   function blattLeerFreiwillig() {
-    var indizes = bogenFragen[bogenSchritt] || [];
+    var indizes = blattFelder();
     var frei = [];
     indizes.forEach(function (i) {
       if (imVisionRoom(i)) return;
@@ -2927,6 +2960,43 @@
       ? " " + frei[0] + " ist freiwillig und noch leer."
       : " Freiwillig und noch leer: " + frei.join(", ") + ".";
   }
+
+  /* Eine rein LESENDE Selbstauskunft fuer die Abnahme am echten Link. Sie
+     aendert nichts, sendet nichts und traegt keine Antworten aus dem Bogen:
+     nur die Groessen, an denen die Pruefung haengt. Ohne sie blieb bei einem
+     Befund von aussen nur Raten.
+        window.__ftFeldDiagnose()   →   Zeile je Feld des gezeigten Blattes */
+  window.__ftFeldDiagnose = function () {
+    var offen = blattOffen().map(function (o) { return o.index; });
+    return {
+      schritt: bogenSchritt + 1,
+      blattId: bogenBlaetter[bogenSchritt] || null,
+      blaetter: bogenBlaetter.length,
+      ausDerBuchfuehrung: (bogenFragen[bogenSchritt] || []).slice(),
+      aufDemBlatt: blattFelder(),
+      gemeldet: offen,
+      felder: blattFelder().map(function (i) {
+        var q = questions[i] || {};
+        var node = el("q_" + i);
+        var wrap = node && node.closest ? node.closest("label") : null;
+        var r = wrap && wrap.getBoundingClientRect ? wrap.getBoundingClientRect() : null;
+        return {
+          i: i, key: q.key || null, typ: q.type || null,
+          verlangtLautDaten: !!q.required,
+          verlangtLautFeld: node && node.getAttribute ? node.getAttribute("aria-required") : null,
+          hatWert: !!value(i),
+          labelHidden: wrap ? !!wrap.hidden : null,
+          gemalt: r ? (r.width > 0 && r.height > 0) : null,
+          anzeige: wrap && window.getComputedStyle ? window.getComputedStyle(wrap).display : null,
+          bedingung: q.showIf ? q.showIf.key + "=" + q.showIf.value : null,
+          bedingungErfuellt: q.showIf ? sichtbar(q) : null,
+          visionMarke: q.vision || "",
+          imVisionRoom: imVisionRoom(i),
+          gilt: { pflicht: pflichtfeld(q, node), sichtbar: feldSichtbar(q, node), offen: feldOffen(i) },
+        };
+      }),
+    };
+  };
 
   function bogenVerdrahten() {
     var weiter = el("bogenWeiter");
