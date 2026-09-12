@@ -68,7 +68,7 @@ const IDS = [
   "bogenZurueck", "bogenWeiter", "bogenStand", "bogenMeta", "bogenNrVr", "vorbelegt",
 ];
 
-async function seite(daten, { breite = 1200 } = {}) {
+async function seite(daten, { breite = 1200, visionRoom = false } = {}) {
   const dom = makeDom({ innerWidth: breite });
   IDS.forEach((id) => dom.ensure(id));
   ["error", "content", "answered", "area", "ck", "ckSide", "ckLock", "tileTest", "tileOffer",
@@ -80,6 +80,14 @@ async function seite(daten, { breite = 1200 } = {}) {
   });
   dom.window.location.search = "?e=" + TOKEN;
   dom.window.fetch = fetchDouble;
+  /* Der Vision Room ist hier nur so weit da, wie dieser Test ihn braucht: Er
+     nimmt die Wertträger entgegen — genau das unterscheidet „uebernommen" von
+     „bloss markiert". Ohne ihn steigt setupVisionRoom() vorzeitig aus. */
+  if (visionRoom) {
+    dom.window.FlowerTechVisionRoom = {
+      mount: () => ({ setType() {}, files: () => [], addUploaded: () => 0, sayFiles() {} }),
+    };
+  }
   const ctx = {
     window: dom.window, document: dom.document, location: dom.window.location,
     setTimeout: dom.window.setTimeout, clearTimeout() {}, console,
@@ -320,6 +328,69 @@ const KATALOG_GEMISCHT = KATALOG.map((q) => (
     ok(gemeldet.includes(feld), `die Meldung nennt „${feld}" nicht: ${gemeldet}`);
   });
   ok(!/Freiwillig und noch leer/.test(gemeldet), `ein freiwilliger Nachsatz ohne freiwillige Felder: ${gemeldet}`);
+}
+
+/* ══ Befund 12.09.2026, bestaetigt am Original-Link ════════════════════════
+   Auf Schritt 2 standen E-Mail, Telefon und Adresse leer, ALLE DREI sichtbar
+   als „· Pflichtfeld" beschriftet — gemeldet wurde nur die Adresse.
+
+   Ursache: Die Blattpruefung fragte die MARKE (`q.vision`) statt den ORT.
+   Traegt eine Frage die Vision-Marke, hat der Vision Room sie aber nicht
+   uebernommen — Baustein nicht geladen, Raum nicht aufgebaut, Marke aus einem
+   alten Fragebogen —, dann bleibt das Feld auf seinem Blatt stehen: sichtbar,
+   verlangt, leer. Uebersprungen wurde es trotzdem.
+
+   Dieses DOM-Doppel hat KEIN window.FlowerTechVisionRoom — genau die Lage, in
+   der setupVisionRoom() vorzeitig aussteigt und nichts verschiebt. */
+const KATALOG_MARKE = KATALOG.map((q) => (
+  q.key === "email" ? Object.assign({}, q, { vision: "idea" })
+    : q.key === "phone" ? Object.assign({}, q, { vision: "features" }) : q));
+{
+  const dom = await seite(bogen(KATALOG_MARKE));
+  tippen(dom, 0, "Beispielprojekt");
+  tippen(dom, 2, "Beispielperson");
+  dom.node("bogenWeiter").fire("click");
+  ok(/Schritt 2 von/.test(dom.node("bogenStand").textContent), "der Bogen geht nicht auf Schritt 2");
+
+  // Vorbedingung: der Vision Room hat nichts uebernommen, die Felder stehen da.
+  ok(dom.node("vrCarriers").children.length === 0,
+    "Vorbedingung verfehlt: der Vision Room hat die Felder doch uebernommen");
+  [3, 4, 5].forEach((i) => ok(dom.node("q_" + i).value === "", `q_${i} ist nicht leer`));
+
+  const gemeldet = status(dom);
+  ["E-Mail", "Telefon", "Adresse"].forEach((feld) => {
+    ok(gemeldet.includes(feld),
+      `ein sichtbares, verlangtes, leeres Feld fehlt in der Meldung („${feld}"): ${gemeldet}`);
+  });
+  ok(dom.node("submit").getAttribute("aria-disabled") === "true",
+    "der Bogen gilt trotz offener Pflichtangaben als sendbereit");
+
+  // Der Weiter-Knopf haelt ebenfalls an — und nennt dieselben Felder.
+  dom.node("bogenWeiter").fire("click");
+  ok(/Schritt 2 von/.test(dom.node("bogenStand").textContent),
+    "der Weiter-Knopf blaettert ueber offene Pflichtangaben hinweg");
+  ["E-Mail", "Telefon", "Adresse"].forEach((feld) => {
+    ok(status(dom).includes(feld), `der Weiter-Knopf nennt „${feld}" nicht: ${status(dom)}`);
+  });
+
+  // Und ausgefuellt verschwinden sie der Reihe nach — wie jedes andere Feld.
+  tippen(dom, 3, "kontakt@example.com");
+  tippen(dom, 4, "000 000 00 00");
+  tippen(dom, 5, "Beispielweg 1, 0000 Beispielstadt");
+  ok(/vollständig/.test(status(dom)), `der volle Schritt gilt nicht als vollständig: ${status(dom)}`);
+}
+{
+  /* Gegenrichtung: Hat der Vision Room die Felder WIRKLICH uebernommen, dann
+     gehoeren sie ihm — und nicht mehr auf dieses Blatt. */
+  const dom = await seite(bogen(KATALOG_MARKE), { visionRoom: true });
+  tippen(dom, 0, "Beispielprojekt");
+  tippen(dom, 2, "Beispielperson");
+  dom.node("bogenWeiter").fire("click");
+  ok(dom.node("vrCarriers").children.length === 2,
+    `der Vision Room hat ${dom.node("vrCarriers").children.length} Felder uebernommen statt zwei`);
+  const gemeldet = status(dom);
+  ok(/Adresse/.test(gemeldet) && !/E-Mail/.test(gemeldet) && !/Telefon/.test(gemeldet),
+    `uebernommene Felder werden auf dem Blatt gemeldet: ${gemeldet}`);
 }
 
 console.log(`pflichtfelder: ok (${checks} Pruefungen)`);
