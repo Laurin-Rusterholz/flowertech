@@ -9,7 +9,7 @@
      der Befund vom 11.09.2026 („Schritt 1 von 11, PR37 nicht angekommen?")
      war genau diese Frage. Die Marke steht auch sichtbar im Fuss, weil die
      Konsole nicht immer bedienbar ist. Bei jeder Aenderung mitziehen. -->
-<meta name="ft-build" content="fragebogen-2026-09-11-b">
+<meta name="ft-build" content="fragebogen-2026-09-12-a">
 <meta name="referrer" content="no-referrer">
 <title>Ihre Angaben — FlowerTech</title>
 <link rel="icon" href="/favicon.svg">
@@ -829,6 +829,17 @@
      INTAKE_UPLOAD_LIMITS aus Quantus: 5 MB pro Datei, 10 Dateien. */
   var UPLOAD_ENDPOINT = "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-upload";
   var UPLOAD_LIMITS = { maxBytes: 5 * 1024 * 1024, maxFiles: 10 };
+  var FEHLER_DATEILISTE = "Früher hochgeladene Dateien konnten gerade nicht geladen werden. "
+    + "Bitte laden Sie die Seite später noch einmal, bevor Sie dieselbe Datei erneut hochladen.";
+  /* Solange nicht feststeht, WELCHE Dateien zu dieser Einladung schon
+     hochgeladen sind, darf der Bogen nicht abgehen: er tröge sonst nur die
+     Referenzen dieser Sitzung, und alles Frühere bliebe als Waise liegen —
+     genau der Fehler, den der Leseweg behebt. Ohne Vision Room gibt es nichts
+     zu warten, deshalb beginnt der Zustand bei „bereit". */
+  var BESTAND_LAEDT = "laedt", BESTAND_BEREIT = "bereit", BESTAND_FEHLER = "fehler";
+  var dateiBestand = BESTAND_BEREIT;
+  var WARTETEXT = "Einen Moment: Ihre früher hochgeladenen Dateien werden noch geladen. "
+    + "Ihre Eingaben bleiben stehen.";
 
   var el = function (id) { return document.getElementById(id); };
   var esc = function (v) {
@@ -3013,6 +3024,13 @@
       },
     });
 
+    /* Nach einem Neuladen stehen die bereits hochgeladenen Dateien wieder da —
+       sichtbar, entfernbar, und beim Absenden gehen ihre Ids mit. Solange das
+       nicht feststeht, ist der Bogen nicht sendbereit (siehe sync()); geht die
+       Abfrage schief, wird es gesagt und lässt sich wiederholen, ohne dass
+       eine Eingabe verloren geht. */
+    dateienHolen();
+
     // Wer die Art unten im Bogen ändert, ändert sie auch im Vision Room.
     if (typeNode && visionRoom && visionRoom.setType) {
       typeNode.addEventListener("change", function () {
@@ -3167,7 +3185,8 @@
   function sync() {
     bedingteFelder();
     var offen = missing();
-    var ready = offen.length === 0;
+    var bestandOffen = dateiBestand !== BESTAND_BEREIT;
+    var ready = offen.length === 0 && !bestandOffen;
     el("submit").setAttribute("aria-disabled", ready ? "false" : "true");
 
     /* Mitten in der Strecke zaehlt das Blatt, das vor der Kundschaft liegt.
@@ -3184,6 +3203,10 @@
     }
 
     el("need").className = ready ? "need done" : "need";
+    if (!offen.length && bestandOffen) {
+      el("need").textContent = dateiBestand === BESTAND_FEHLER ? FEHLER_DATEILISTE : WARTETEXT;
+      return ready;
+    }
     el("need").textContent = ready
       ? "Danke — das genügt uns. Sie können jetzt senden."
       : offen.length === 1
@@ -3217,6 +3240,50 @@
       });
     });
   }
+  /* Was diese Einladung schon hochgeladen hat. Ohne diese Frage kennt die
+     Seite nach einem Neuladen nur noch die Ids der laufenden Sitzung: die
+     Dateien lägen weiter am Server, zählten gegen die Zehnergrenze und gingen
+     beim Absenden nicht mit. Genau ein Token, nichts Fremdes. */
+  function dateienLaden() {
+    return fetch(UPLOAD_ENDPOINT + "?e=" + encodeURIComponent(token), { cache: "no-store" })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (data) {
+          // Bewusst IMMER derselbe eigene Satz: die Meldung der Gegenstelle
+          // gehört nicht vor die Kundschaft (bei einer noch nicht
+          // ausgelieferten Funktion stünde dort „Method not allowed"), und
+          // was zu tun ist, sagt sie ohnehin nicht.
+          if (!r.ok) throw new Error(FEHLER_DATEILISTE);
+          /* Eine 200 mit unbrauchbarem Inhalt ist KEINE leere Liste. Wer sie
+             als „nichts vorhanden" durchgehen liesse, verlöre genau die
+             Dateien, um die es hier geht — ungeprüft und unbemerkt. */
+          if (!data || data.ok !== true || !Array.isArray(data.files)) throw new Error(FEHLER_DATEILISTE);
+          for (var i = 0; i < data.files.length; i++) {
+            var f = data.files[i];
+            if (!f || typeof f !== "object" || typeof f.id !== "string" || !f.id) throw new Error(FEHLER_DATEILISTE);
+          }
+          return data.files;
+        });
+      });
+  }
+  /* Ein Anlauf, die eigenen Dateien zu holen. Auch die Wiederholung geht hier
+     durch — sie rührt nur den Vision Room an, nie die ausgefüllten Felder. */
+  function dateienHolen() {
+    dateiBestand = BESTAND_LAEDT;
+    if (visionRoom && visionRoom.sayFiles) visionRoom.sayFiles("Frühere Dateien werden geladen …");
+    sync();
+    return dateienLaden().then(function (liste) {
+      if (visionRoom && visionRoom.addUploaded) visionRoom.addUploaded(liste);
+      dateiBestand = BESTAND_BEREIT;
+      if (!liste.length && visionRoom && visionRoom.sayFiles) visionRoom.sayFiles("");
+      sync();
+      return true;
+    }).catch(function () {
+      dateiBestand = BESTAND_FEHLER;
+      if (visionRoom && visionRoom.sayFiles) visionRoom.sayFiles(FEHLER_DATEILISTE, true);
+      sync();
+      return false;
+    });
+  }
   function dateiEntfernen(id) {
     return fetch(UPLOAD_ENDPOINT + "?e=" + encodeURIComponent(token) + "&id=" + encodeURIComponent(id),
       { method: "DELETE" }).then(function (r) { return r.ok; });
@@ -3241,6 +3308,26 @@
     ev.preventDefault();
     var status = el("status");
     var btn = el("submit");
+    /* Der Riegel steht VOR der Pflichtfeldprüfung und im Handler selbst — ein
+       ausgegrauter Knopf allein hält weder Tastatur noch Formular-Absenden
+       auf. Ist die Abfrage gescheitert, IST dieser Versuch die Wiederholung:
+       sie läuft sofort an, die Eingaben bleiben unberührt, und die Kundschaft
+       sendet danach selbst noch einmal — es geht nichts ungefragt raus. */
+    if (dateiBestand !== BESTAND_BEREIT) {
+      var wiederholen = dateiBestand === BESTAND_FEHLER;
+      status.className = "status show err";
+      status.textContent = wiederholen
+        ? FEHLER_DATEILISTE + " Wir versuchen es gerade noch einmal — Ihre Eingaben bleiben stehen."
+        : WARTETEXT;
+      if (wiederholen) {
+        dateienHolen().then(function (gelungen) {
+          if (!gelungen) return;
+          status.className = "status show ok";
+          status.textContent = "Ihre früheren Dateien sind wieder da. Bitte senden Sie jetzt.";
+        });
+      }
+      return;
+    }
     if (!sync()) {
       status.className = "status show err";
       status.textContent = "Bitte noch ergänzen: " + missing().join(", ") + ".";

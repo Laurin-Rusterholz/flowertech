@@ -179,7 +179,7 @@ const FRAGEN = [
   { key: "vision-idee", label: "Idee", type: "text", role: "", required: false, hint: "", options: [], vision: "idea" },
   { key: "vision-funktionen", label: "Funktionen", type: "textarea", role: "", required: false, hint: "", options: [], vision: "features" },
 ];
-async function seite() {
+async function seite({ bestand = [], listeScheitert = false, listeHaengt = false, listeUnbrauchbar = false } = {}) {
   const dom = makeDom({ innerWidth: 1200 });
   ["loading", "error", "errorTitle", "errorText", "content", "title", "subtitle", "intro", "vorbelegt",
     "form", "fields", "hp", "submit", "need", "status", "footer",
@@ -188,13 +188,22 @@ async function seite() {
   const auswahl = dom.ensure("q_2", "SELECT");
   auswahl.options = ["", "Website", "Web-App"].map((value) => ({ value }));
   const form = { schema: 1, title: "Ihre Angaben", intro: "", status: "open", company: { name: "FlowerTech" },
-    questions: FRAGEN, prefill: { version: 1, values: { name: "Herr Aljia", email: "juledal19@gmail.com", kind: "Website" } } };
+    questions: FRAGEN, prefill: { version: 1, values: { name: "Beispielperson", email: "kontakt@example.com", kind: "Website" } } };
   const calls = [];
   let n = 0;
   const fetchDouble = (url, init) => {
     calls.push({ url: String(url), init: init || {} });
     if (String(url).includes("intakeForms")) return Promise.resolve({ ok: true, json: () => Promise.resolve(form) });
     if (String(url).includes("flowertech-upload")) {
+      // Die Liste der eigenen Dateien: ein einfaches GET ohne method.
+      if (!(init || {}).method) {
+        if (listeHaengt) return new Promise(() => {});          // antwortet nie
+        if (listeUnbrauchbar) return Promise.resolve({ ok: true, status: 200,
+          json: () => Promise.resolve({ ok: true }) });         // 200 ohne files
+        if (listeScheitert) return Promise.resolve({ ok: false, status: 405,
+          json: () => Promise.resolve({ error: "Method not allowed" }) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true, files: bestand.slice() }) });
+      }
       if ((init || {}).method === "DELETE") return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
       const file = init.body;
       if (file.size > 5 * MB) return Promise.resolve({ ok: false, status: 413, json: () => Promise.resolve({ error: "Die Datei ist grösser als 5 MB." }) });
@@ -266,7 +275,7 @@ async function seite() {
   ok(Array.isArray(body.payload.files) && body.payload.files.length === 1 && body.payload.files[0] === "f_0000000001",
     `die Datei-Referenzen fehlen oder tragen zu viel: ${JSON.stringify(body.payload.files)}`);
   ok(!JSON.stringify(body).includes("storagePath") && !JSON.stringify(body).includes("logo.png"), "der Bogen trägt mehr als die Ids");
-  ok(body.payload.answers.find((a) => a.key === "email").answer === "juledal19@gmail.com", "die Vorbelegung geht nicht mit dem Bogen ab");
+  ok(body.payload.answers.find((a) => a.key === "email").answer === "kontakt@example.com", "die Vorbelegung geht nicht mit dem Bogen ab");
   ok(calls.filter((c) => c.url.includes("flowertech-portal")).length === 1, "die Antworten gingen mehr als einmal ab");
 }
 {
@@ -277,7 +286,118 @@ async function seite() {
   const sendung = calls.find((c) => c.url.includes("flowertech-portal"));
   const body = JSON.parse(sendung.init.body);
   ok(Array.isArray(body.payload.files) && body.payload.files.length === 0, "ohne Dateien fehlt die leere Liste");
-  ok(!calls.some((c) => c.url.includes("flowertech-upload")), "ohne Dateien wurde die Upload-Funktion gerufen");
+  /* Ein GET an die Upload-Funktion gibt es immer: die Seite fragt beim Aufbau,
+     was diese Einladung schon hochgeladen hat. Geschrieben wird ohne Dateien
+     nichts — kein PUT, kein DELETE. */
+  ok(!calls.some((c) => c.url.includes("flowertech-upload") && ["PUT", "DELETE"].includes((c.init || {}).method)),
+    "ohne Dateien wurde an der Upload-Funktion geschrieben");
+}
+
+/* ── 6. Nach dem Neuladen: was schon hochgeladen ist, steht wieder da ──────
+   BEFUND (12.09.2026): Nach einem Neuladen kannte die Seite nur die Ids der
+   laufenden Sitzung. Die Dateien lagen weiter am Server, zaehlten gegen die
+   Zehnergrenze und gingen beim Absenden nicht mit — Waisen allein durch ein
+   Neuladen. Der Browserlauf dazu: scripts/upload-reload-regression.mjs. */
+{
+  const bestand = [
+    { id: "f_0000000001", name: "logo.png", type: "image/png", size: 50 * 1024 },
+    { id: "f_0000000002", name: "briefing.pdf", type: "application/pdf", size: 3 * MB },
+  ];
+  const { dom, calls } = await seite({ bestand });
+  const abfrage = calls.filter((c) => c.url.includes("flowertech-upload") && !(c.init || {}).method);
+  ok(abfrage.length === 1, `die Seite erfragt die eigenen Dateien nicht genau einmal (${abfrage.length})`);
+  ok(abfrage[0].url === "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-upload?e=" + TOKEN,
+    `die Abfrage geht an die falsche Adresse: ${abfrage[0].url}`);
+  ok(dom.node("vrFileList").children.length === 2, "die bereits hochgeladenen Dateien stehen nicht in der Liste");
+  ok(/logo\.png/.test(dom.node("vrFileList").children[0].children[0].textContent), "die erste Datei fehlt");
+  const knopf = dom.node("vrFileList").children[0].children.find((c) => c.tagName === "BUTTON");
+  ok(knopf && /entfernen/.test(knopf.getAttribute("aria-label")), "die wiederhergestellte Datei laesst sich nicht entfernen");
+  ok(/2 Datei\(en\) hochgeladen/.test(dom.node("vrFileStatus").textContent),
+    `der Stand wird nicht benannt: ${dom.node("vrFileStatus").textContent}`);
+
+  // Entfernen: DELETE mit der richtigen Id, und sie geht nicht mehr mit.
+  knopf.fire("click");
+  await tick();
+  const weg = calls.filter((c) => c.url.includes("flowertech-upload") && (c.init || {}).method === "DELETE");
+  ok(weg.length === 1 && weg[0].url.includes("&id=f_0000000001"), `das Entfernen erreicht die Funktion nicht: ${JSON.stringify(weg.map((w) => w.url))}`);
+
+  dom.node("form").fire("submit");
+  await tick();
+  const body = JSON.parse(calls.find((c) => c.url.includes("flowertech-portal")).init.body);
+  ok(body.payload.files.length === 1 && body.payload.files[0] === "f_0000000002",
+    `die wiederhergestellte Datei geht nicht richtig mit: ${JSON.stringify(body.payload.files)}`);
+  ok(!JSON.stringify(body).includes("logo.png") && !JSON.stringify(body).includes("storagePath"),
+    "der Bogen traegt mehr als die Ids");
+}
+{
+  // Dieselbe Datei zweimal gemeldet: kein Doppeleintrag.
+  const doppelt = { id: "f_0000000001", name: "logo.png", type: "image/png", size: 1000 };
+  const { dom } = await seite({ bestand: [doppelt, doppelt] });
+  ok(dom.node("vrFileList").children.length === 1, "eine doppelt gemeldete Datei steht zweimal da");
+}
+{
+  // Scheitert die Abfrage, wird das gesagt — eine stille Leere haette die
+  // Kundschaft dazu gebracht, dieselbe Datei ein zweites Mal hochzuladen.
+  const { dom, calls } = await seite({ listeScheitert: true });
+  ok(dom.node("vrFileList").children.length === 0, "nach einer gescheiterten Abfrage stehen Dateien da");
+  ok(/nicht geladen/.test(dom.node("vrFileStatus").textContent) && dom.node("vrFileStatus").classList.contains("err"),
+    `die gescheiterte Abfrage bleibt still: ${dom.node("vrFileStatus").textContent}`);
+  /* 405 ist der Fall „die Funktion kennt den Leseweg noch nicht" — solange die
+     Gegenseite nicht ausgeliefert ist. Die Kundschaft bekommt dann einen
+     verstaendlichen Satz und den Rat, nicht doppelt hochzuladen; die Meldung
+     der Gegenstelle gehoert nicht auf die Seite. */
+  ok(!/Method not allowed/.test(dom.node("vrFileStatus").textContent),
+    "die Meldung der Gegenstelle steht vor der Kundschaft");
+  ok(/erneut hochladen|nochmals hochladen|noch einmal/.test(dom.node("vrFileStatus").textContent),
+    `der Satz sagt nicht, was zu tun ist: ${dom.node("vrFileStatus").textContent}`);
+  ok(!calls.some((c) => ["PUT", "DELETE"].includes((c.init || {}).method)), "nach der gescheiterten Abfrage wurde geschrieben");
+}
+
+/* ── 7. Solange der Bestand nicht feststeht, geht der Bogen nicht ab ───────
+   BEFUND aus der Durchsicht: der Abruf lief unbeaufsichtigt nebenher. Wer
+   schnell genug war — oder wessen Abruf scheiterte — konnte absenden, bevor
+   die alten Ids uebernommen waren. Dieselbe Waisenfolge, nur ueber die Zeit
+   statt ueber das Neuladen. */
+{
+  // Der Abruf haengt: der Bogen ist nicht sendbereit und schickt nichts.
+  const { dom, calls } = await seite({ listeHaengt: true });
+  dom.node("q_0").value = "Beispielperson"; dom.node("q_0").fire("input");
+  dom.node("q_1").value = "kontakt@example.com"; dom.node("q_1").fire("input");
+  ok(dom.node("submit").getAttribute("aria-disabled") === "true",
+    "waehrend der Bestand laedt gilt der Bogen als sendbereit");
+  dom.node("form").fire("submit");
+  await tick();
+  ok(!calls.some((c) => c.url.includes("flowertech-portal")), "waehrend der Bestand laedt wurde gesendet");
+  ok(/geladen|Moment/i.test(dom.node("status").textContent), `der Grund fehlt: ${dom.node("status").textContent}`);
+}
+{
+  // 200 ohne brauchbare Liste ist KEINE leere Liste.
+  const { dom, calls } = await seite({ listeUnbrauchbar: true });
+  dom.node("form").fire("submit");
+  await tick();
+  ok(!calls.some((c) => c.url.includes("flowertech-portal")), "eine unbrauchbare 200 gilt still als leer");
+  ok(/nicht geladen/i.test(dom.node("status").textContent), `der Grund fehlt: ${dom.node("status").textContent}`);
+}
+{
+  // Gescheitert: nichts geht ab, die Eingaben bleiben, der Versuch wiederholt.
+  const { dom, calls } = await seite({ listeScheitert: true });
+  dom.node("q_0").value = "Beispielperson"; dom.node("q_0").fire("input");
+  const abrufeVorher = calls.filter((c) => c.url.includes("flowertech-upload") && !(c.init || {}).method).length;
+  dom.node("form").fire("submit");
+  await tick();
+  ok(!calls.some((c) => c.url.includes("flowertech-portal")), "bei gescheitertem Abruf wurde gesendet");
+  ok(dom.node("q_0").value === "Beispielperson", "die Eingabe ging beim gescheiterten Versuch verloren");
+  const abrufeNachher = calls.filter((c) => c.url.includes("flowertech-upload") && !(c.init || {}).method).length;
+  ok(abrufeNachher === abrufeVorher + 1, `der Versuch wiederholt den Abruf nicht (${abrufeVorher} → ${abrufeNachher})`);
+}
+{
+  // Die gueltige leere Liste sperrt nichts.
+  const { dom, calls } = await seite({ bestand: [] });
+  ok(dom.node("submit").getAttribute("aria-disabled") === "false",
+    "eine gueltige leere Liste sperrt das Absenden");
+  dom.node("form").fire("submit");
+  await tick();
+  ok(calls.some((c) => c.url.includes("flowertech-portal")), "mit gueltiger leerer Liste geht nichts ab");
 }
 
 console.log(`vision-upload: ok (${checks} Pruefungen)`);
