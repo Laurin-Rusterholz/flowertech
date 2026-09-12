@@ -210,6 +210,12 @@ ok(!/vr-chip|VISION_SUGGESTIONS|VISION_BASE/.test(page),
       if (String(url).includes("intakeForms")) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(form) });
       }
+      // Der Bestand der eigenen Dateien in der PRODUKTIONSFORM. Ein blosses
+      // { ok: true } gilt seit dem 12.09.2026 als unbrauchbare Antwort und
+      // sperrt das Absenden — genau so ist es gemeint.
+      if (String(url).includes("flowertech-upload") && !(init || {}).method) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true, files: [] }) });
+      }
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
     },
   };
@@ -356,6 +362,9 @@ ok(!/vr-chip|VISION_SUGGESTIONS|VISION_BASE/.test(page),
     posted.push({ url, init });
     if (String(url).includes("intakeForms")) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve(form) });
+    }
+    if (String(url).includes("flowertech-upload") && !(init || {}).method) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true, files: [] }) });
     }
     return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
   };

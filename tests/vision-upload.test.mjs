@@ -179,7 +179,7 @@ const FRAGEN = [
   { key: "vision-idee", label: "Idee", type: "text", role: "", required: false, hint: "", options: [], vision: "idea" },
   { key: "vision-funktionen", label: "Funktionen", type: "textarea", role: "", required: false, hint: "", options: [], vision: "features" },
 ];
-async function seite({ bestand = [], listeScheitert = false } = {}) {
+async function seite({ bestand = [], listeScheitert = false, listeHaengt = false, listeUnbrauchbar = false } = {}) {
   const dom = makeDom({ innerWidth: 1200 });
   ["loading", "error", "errorTitle", "errorText", "content", "title", "subtitle", "intro", "vorbelegt",
     "form", "fields", "hp", "submit", "need", "status", "footer",
@@ -197,6 +197,9 @@ async function seite({ bestand = [], listeScheitert = false } = {}) {
     if (String(url).includes("flowertech-upload")) {
       // Die Liste der eigenen Dateien: ein einfaches GET ohne method.
       if (!(init || {}).method) {
+        if (listeHaengt) return new Promise(() => {});          // antwortet nie
+        if (listeUnbrauchbar) return Promise.resolve({ ok: true, status: 200,
+          json: () => Promise.resolve({ ok: true }) });         // 200 ohne files
         if (listeScheitert) return Promise.resolve({ ok: false, status: 405,
           json: () => Promise.resolve({ error: "Method not allowed" }) });
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true, files: bestand.slice() }) });
@@ -348,6 +351,53 @@ async function seite({ bestand = [], listeScheitert = false } = {}) {
   ok(/erneut hochladen|nochmals hochladen|noch einmal/.test(dom.node("vrFileStatus").textContent),
     `der Satz sagt nicht, was zu tun ist: ${dom.node("vrFileStatus").textContent}`);
   ok(!calls.some((c) => ["PUT", "DELETE"].includes((c.init || {}).method)), "nach der gescheiterten Abfrage wurde geschrieben");
+}
+
+/* ── 7. Solange der Bestand nicht feststeht, geht der Bogen nicht ab ───────
+   BEFUND aus der Durchsicht: der Abruf lief unbeaufsichtigt nebenher. Wer
+   schnell genug war — oder wessen Abruf scheiterte — konnte absenden, bevor
+   die alten Ids uebernommen waren. Dieselbe Waisenfolge, nur ueber die Zeit
+   statt ueber das Neuladen. */
+{
+  // Der Abruf haengt: der Bogen ist nicht sendbereit und schickt nichts.
+  const { dom, calls } = await seite({ listeHaengt: true });
+  dom.node("q_0").value = "Beispielperson"; dom.node("q_0").fire("input");
+  dom.node("q_1").value = "kontakt@example.com"; dom.node("q_1").fire("input");
+  ok(dom.node("submit").getAttribute("aria-disabled") === "true",
+    "waehrend der Bestand laedt gilt der Bogen als sendbereit");
+  dom.node("form").fire("submit");
+  await tick();
+  ok(!calls.some((c) => c.url.includes("flowertech-portal")), "waehrend der Bestand laedt wurde gesendet");
+  ok(/geladen|Moment/i.test(dom.node("status").textContent), `der Grund fehlt: ${dom.node("status").textContent}`);
+}
+{
+  // 200 ohne brauchbare Liste ist KEINE leere Liste.
+  const { dom, calls } = await seite({ listeUnbrauchbar: true });
+  dom.node("form").fire("submit");
+  await tick();
+  ok(!calls.some((c) => c.url.includes("flowertech-portal")), "eine unbrauchbare 200 gilt still als leer");
+  ok(/nicht geladen/i.test(dom.node("status").textContent), `der Grund fehlt: ${dom.node("status").textContent}`);
+}
+{
+  // Gescheitert: nichts geht ab, die Eingaben bleiben, der Versuch wiederholt.
+  const { dom, calls } = await seite({ listeScheitert: true });
+  dom.node("q_0").value = "Beispielperson"; dom.node("q_0").fire("input");
+  const abrufeVorher = calls.filter((c) => c.url.includes("flowertech-upload") && !(c.init || {}).method).length;
+  dom.node("form").fire("submit");
+  await tick();
+  ok(!calls.some((c) => c.url.includes("flowertech-portal")), "bei gescheitertem Abruf wurde gesendet");
+  ok(dom.node("q_0").value === "Beispielperson", "die Eingabe ging beim gescheiterten Versuch verloren");
+  const abrufeNachher = calls.filter((c) => c.url.includes("flowertech-upload") && !(c.init || {}).method).length;
+  ok(abrufeNachher === abrufeVorher + 1, `der Versuch wiederholt den Abruf nicht (${abrufeVorher} → ${abrufeNachher})`);
+}
+{
+  // Die gueltige leere Liste sperrt nichts.
+  const { dom, calls } = await seite({ bestand: [] });
+  ok(dom.node("submit").getAttribute("aria-disabled") === "false",
+    "eine gueltige leere Liste sperrt das Absenden");
+  dom.node("form").fire("submit");
+  await tick();
+  ok(calls.some((c) => c.url.includes("flowertech-portal")), "mit gueltiger leerer Liste geht nichts ab");
 }
 
 console.log(`vision-upload: ok (${checks} Pruefungen)`);

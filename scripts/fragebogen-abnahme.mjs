@@ -5,9 +5,9 @@
        npm i --no-save playwright-core          # einmalig
        node scripts/fragebogen-abnahme.mjs
 
-   Der Pfad zu Chromium und die Playwright-Zeile unten sind an diese Maschine
-   angepasst; auf einem anderen Rechner beide anpassen. Die Bilder landen in
-   dem Ordner, den SP nennt.
+   Nichts ist an eine bestimmte Maschine genagelt: die Wurzel ist das
+   Repository dieses Skripts. Wo noetig, setzen PW_PFAD (playwright-core),
+   CHROME_PFAD (Chromium) und ABNAHME_AUS (Bilderordner) das Uebrige.
 
    Isoliert: eigener Server auf 127.0.0.1, JEDE Verbindung nach draussen
    abgefangen. Es wird nichts veröffentlicht, nichts gesendet, keine echte
@@ -16,10 +16,16 @@
 
    Geprüft: alle 11 Schritte, Vorbelegung, Pflichtfeldprüfung, Zurück/Weiter,
    mehrere Bild- und Dateiuploads im Vision Room, drei Breiten. */
-import http from "node:http"; import fs from "node:fs"; import path from "node:path";
-import { chromium } from "/tmp/claude-0/-home-user/18cbce41-cbe5-5300-9142-3055f6610cde/scratchpad/node_modules/playwright-core/index.mjs";
-const SP = "/tmp/claude-0/-home-user/18cbce41-cbe5-5300-9142-3055f6610cde/scratchpad/abnahme";
-const ROOT = "/home/user/flowertech";
+import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import os from "node:os";
+import { fileURLToPath } from "node:url";
+/* Nichts ist mehr an eine bestimmte Maschine genagelt: die Wurzel ist das
+   Repository, in dem dieses Skript liegt; Chromium und playwright-core lassen
+   sich ueber CHROME_PFAD und PW_PFAD setzen, der Bilderordner ueber
+   ABNAHME_AUS. So laesst sich die Abnahme anderswo wiederholen. */
+const { chromium } = await import(process.env.PW_PFAD || "playwright-core");
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SP = process.env.ABNAHME_AUS || path.join(os.tmpdir(), "flowertech-fragebogen-abnahme");
+fs.mkdirSync(SP, { recursive: true });
 const T = {".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".svg":"image/svg+xml"};
 const server = http.createServer((req,res)=>{ let u=decodeURIComponent(req.url.split("?")[0]); if(u==="/")u="/index.html";
   const p=path.join(ROOT,u); if(!p.startsWith(ROOT)||!fs.existsSync(p)||fs.statSync(p).isDirectory()){res.writeHead(404);return res.end();}
@@ -71,7 +77,8 @@ const VEROEFFENTLICHT = {
 };
 
 const bericht = [];
-const browser = await chromium.launch({executablePath:"/opt/pw-browsers/chromium-1194/chrome-linux/chrome"});
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PFAD
+  || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
 for (const [name, geraet, breite] of [
   ["handy",  { viewport:{width:390,height:900}, isMobile:true, hasTouch:true, deviceScaleFactor:2 }, 390],
   ["tablet", { viewport:{width:820,height:1180} }, 820],

@@ -26,10 +26,13 @@
    Aufruf:  node scripts/upload-reload-regression.mjs [port]
    Chromium/Playwright wie in scripts/fragebogen-abnahme.mjs. */
 import http from "node:http"; import fs from "node:fs"; import path from "node:path";
+import { fileURLToPath } from "node:url";
 const { chromium } = await import(process.env.PW_PFAD
   || "/tmp/claude-0/-home-user/18cbce41-cbe5-5300-9142-3055f6610cde/scratchpad/node_modules/playwright-core/index.mjs");
 
-const ROOT = "/home/user/flowertech";
+/* Die Wurzel ist das Repository, in dem dieses Skript liegt — nicht ein Pfad
+   dieser Maschine. Nur so laesst sich die Abnahme anderswo wiederholen. */
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.argv[2] || 8907);
 const T = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8",
             ".css":"text/css; charset=utf-8", ".svg":"image/svg+xml" };
@@ -72,13 +75,16 @@ const dateien = [
   { name:"briefing.pdf", mimeType:"application/pdf", buffer: Buffer.from("%PDF-1.4 Beispieldatei","utf8") },
 ];
 
-async function lauf(breite, hoehe){
-  console.log(`\n══ ${breite}x${hoehe} ══`);
+async function umgebung(breite, hoehe){
   /* Das Serverdoppel. Es lebt ausserhalb der Seite und ueberlebt damit das
      Neuladen — genau wie der echte Server. */
   const ablage = new Map();                   // id → { id, name, type, size }
-  const protokoll = { put:0, get:0, del:[], optionen:[], gesendet:null };
+  const protokoll = { put:0, get:0, del:[], optionen:[], gesendet:null, posts:0 };
   let n = 0;
+  /* Steuerung des Bestandsabrufs, um die Zustaende nachzustellen, in denen der
+     Bogen NICHT abgehen darf: er laeuft noch, er ist gescheitert, oder er
+     antwortet mit 200 und unbrauchbarem Inhalt. */
+  const g = { modus:"ok", verzoegerung:0 };
 
   const browser = await chromium.launch({ executablePath: process.env.CHROME_PFAD
     || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
@@ -111,6 +117,15 @@ async function lauf(breite, hoehe){
       }
       if (req.method() === "GET"){
         protokoll.get++;
+        if (g.verzoegerung) await new Promise(r => setTimeout(r, g.verzoegerung));
+        if (g.modus === "fehler")
+          return route.fulfill({ status:500, contentType:"application/json", headers:kopf,
+            body: JSON.stringify({ error:"Serverfehler" }) });
+        if (g.modus === "ungueltig")       // 200, aber ohne brauchbare Liste
+          return route.fulfill({ status:200, contentType:"application/json", headers:kopf,
+            body: JSON.stringify({ ok:true }) });
+        if (g.modus === "kaputt")          // 200 mit unlesbarem Inhalt
+          return route.fulfill({ status:200, contentType:"application/json", headers:kopf, body:"<html>nein" });
         return route.fulfill({ status:200, contentType:"application/json", headers:kopf,
           body: JSON.stringify({ ok:true, files: Array.from(ablage.values()) }) });
       }
@@ -136,6 +151,7 @@ async function lauf(breite, hoehe){
 
     if (/flowertech-portal/.test(url)){
       // KEINE Livesubmission: der Eingang wird abgefangen und nur festgehalten.
+      protokoll.posts++;
       protokoll.gesendet = JSON.parse(req.postData() || "{}");
       return route.fulfill({ status:200, contentType:"application/json", headers:kopf,
         body: JSON.stringify({ ok:true, submissionId:"test" }) });
@@ -179,6 +195,39 @@ async function lauf(breite, hoehe){
     name: (li.querySelector(".mm-file-name")||{}).textContent || "",
     entfernbar: !!li.querySelector(".mm-file-remove"),
   })));
+
+  /* Alle Pflichtangaben fuellen — damit ein blockiertes Absenden spaeter
+     NUR am Dateibestand liegen kann und an nichts anderem. */
+  const fuellen = () => page.evaluate(()=>{
+    document.querySelectorAll("[aria-invalid='true']").forEach(el=>{
+      if (el.tagName === "SELECT") el.selectedIndex = 1;
+      else if (el.type === "email") el.value = "kontakt@example.com";
+      else el.value = "Beispieleingabe";
+      el.dispatchEvent(new Event("input",{bubbles:true}));
+      el.dispatchEvent(new Event("change",{bubbles:true}));
+    });
+  });
+  const absendeversuch = async (wartenMs = 900) => {
+    const vorher = protokoll.posts;
+    await page.evaluate(()=>document.getElementById("form")
+      .dispatchEvent(new Event("submit", { bubbles:true, cancelable:true })));
+    await page.waitForTimeout(wartenMs);
+    return {
+      gesendet: protokoll.posts > vorher,
+      status: await page.evaluate(()=>(document.getElementById("status")||{}).textContent || ""),
+      knopf: await page.evaluate(()=>(document.getElementById("submit")||{}).getAttribute
+        ? document.getElementById("submit").getAttribute("aria-disabled") : null),
+    };
+  };
+
+  return { browser, page, ablage, protokoll, g, seitenfehler, oeffnen, bisZumVisionRoom, gezeigt, fuellen, absendeversuch };
+}
+
+async function lauf(breite, hoehe){
+  console.log(`\n══ ${breite}x${hoehe} ══`);
+  const u = await umgebung(breite, hoehe);
+  const { page, ablage, protokoll, seitenfehler, oeffnen, bisZumVisionRoom, gezeigt } = u;
+  const browser = u.browser;
 
   // ── 1) Hochladen ───────────────────────────────────────────────────────
   await oeffnen();
@@ -261,8 +310,116 @@ async function lauf(breite, hoehe){
   await browser.close();
 }
 
+/* ══ Sperre: solange der Bestand nicht feststeht, geht nichts ab ═══════════
+   BEFUND aus der Durchsicht von PR39: der Bestandsabruf lief unbeaufsichtigt
+   nebenher. Wer schnell genug war — oder wessen Abruf scheiterte — konnte
+   absenden, BEVOR die alten Ids uebernommen waren: dieselbe Waisenfolge, nur
+   ueber die Zeit statt ueber das Neuladen. Geprueft wird deshalb, dass ein
+   Absenden in genau diesen drei Zustaenden nichts verschickt und danach die
+   Wiederholung gelingt — ohne dass eine Eingabe verloren geht. */
+async function laufSperre(breite, hoehe){
+  console.log(`\n══ Sperre ${breite}x${hoehe} ══`);
+  const u = await umgebung(breite, hoehe);
+  const { page, ablage, protokoll, g, seitenfehler, oeffnen, bisZumVisionRoom, gezeigt, fuellen, absendeversuch } = u;
+
+  // Zwei Dateien anlegen, damit es etwas zu verlieren gibt.
+  await oeffnen();
+  await page.locator("[data-ft='vision-files'] input[type=file]").first().setInputFiles(dateien);
+  await page.waitForTimeout(1200);
+  zusichern(ablage.size === 2, `zwei Dateien liegen am Server (${ablage.size})`);
+  const alleIds = Array.from(ablage.keys()).sort();
+
+  // ── A) Der Abruf laeuft noch ──────────────────────────────────────────
+  g.verzoegerung = 2500;
+  await page.reload({ waitUntil:"domcontentloaded" });
+  await page.waitForSelector("#q_0", { timeout:12000 });
+  await bisZumVisionRoom();
+  await fuellen();
+  const sofort = await absendeversuch(600);
+  zusichern(!sofort.gesendet, `waehrend der Bestand laedt, geht nichts ab (${protokoll.posts} Sendungen)`);
+  zusichern(/geladen|Moment/i.test(sofort.status), `der Status nennt den Grund — "${sofort.status}"`);
+  zusichern(sofort.knopf === "true", `der Sendeknopf ist als gesperrt gekennzeichnet (aria-disabled=${sofort.knopf})`);
+  zusichern((await gezeigt()).length === 0, "waehrend des Ladens steht noch keine Datei da");
+
+  // Ist der Bestand da, geht es regulaer weiter — mit ALLEN Ids.
+  await page.waitForTimeout(2600);
+  const nachLaden = await gezeigt();
+  zusichern(nachLaden.length === 2, `nach dem Laden stehen beide Dateien da (${nachLaden.length})`);
+  const jetzt = await absendeversuch();
+  zusichern(jetzt.gesendet, "nach erfolgreichem Abruf geht der Bogen nicht ab");
+  zusichern(JSON.stringify((protokoll.gesendet.payload.files || []).slice().sort()) === JSON.stringify(alleIds),
+    `es gehen alle bestehenden Ids mit: ${JSON.stringify(protokoll.gesendet.payload.files)}`);
+
+  // ── B) Der Abruf scheitert ────────────────────────────────────────────
+  g.verzoegerung = 0; g.modus = "fehler";
+  protokoll.gesendet = null;
+  const postsVorB = protokoll.posts;
+  await page.reload({ waitUntil:"domcontentloaded" });
+  await page.waitForSelector("#q_0", { timeout:12000 });
+  await bisZumVisionRoom();
+  await fuellen();
+  const eingabeVorher = await page.evaluate(()=>(document.getElementById("q_0")||{}).value || "");
+  const beiFehler = await absendeversuch();
+  zusichern(!beiFehler.gesendet && protokoll.posts === postsVorB,
+    `bei gescheitertem Abruf geht nichts ab (${protokoll.posts - postsVorB} Sendungen)`);
+  zusichern(/nicht geladen/i.test(beiFehler.status), `der Status nennt den Grund — "${beiFehler.status}"`);
+  zusichern(!/Method not allowed|Serverfehler/i.test(beiFehler.status),
+    "die Meldung der Gegenstelle steht NICHT vor der Kundschaft");
+  zusichern(await page.evaluate(()=>(document.getElementById("q_0")||{}).value || "") === eingabeVorher,
+    "die Eingaben stehen nach dem gescheiterten Versuch unveraendert da");
+
+  // Wiederholen: der naechste Versuch holt den Bestand erneut …
+  g.modus = "ok";
+  const zweiter = await absendeversuch(1500);
+  zusichern(!zweiter.gesendet, "der Wiederholversuch sendet nichts ungefragt");
+  zusichern((await gezeigt()).length === 2, `nach der Wiederholung stehen beide Dateien da (${(await gezeigt()).length})`);
+  zusichern(/wieder da|jetzt/i.test(zweiter.status), `die gelungene Wiederholung wird gesagt — "${zweiter.status}"`);
+  // … und erst der naechste Druck sendet, dann aber vollstaendig.
+  const dritter = await absendeversuch();
+  zusichern(dritter.gesendet, "nach der gelungenen Wiederholung geht der Bogen nicht ab");
+  zusichern(JSON.stringify((protokoll.gesendet.payload.files || []).slice().sort()) === JSON.stringify(alleIds),
+    `nach der Wiederholung gehen alle Ids mit: ${JSON.stringify(protokoll.gesendet.payload.files)}`);
+
+  // ── C) 200 mit unbrauchbarem Inhalt ───────────────────────────────────
+  for (const modus of ["ungueltig", "kaputt"]) {
+    g.modus = modus;
+    const postsVorC = protokoll.posts;
+    await page.reload({ waitUntil:"domcontentloaded" });
+    await page.waitForSelector("#q_0", { timeout:12000 });
+    await bisZumVisionRoom();
+    await fuellen();
+    const r = await absendeversuch();
+    zusichern(!r.gesendet && protokoll.posts === postsVorC,
+      `200 mit unbrauchbarem Inhalt (${modus}) gilt nicht still als leer — es geht nichts ab`);
+    zusichern(/nicht geladen/i.test(r.status), `${modus}: der Status nennt den Grund`);
+    zusichern((await gezeigt()).length === 0, `${modus}: es steht keine Datei da, die niemand gemeldet hat`);
+  }
+  // Danach geht es mit einer gueltigen Antwort regulaer weiter.
+  g.modus = "ok";
+  await absendeversuch(1500);
+  const zuletzt = await absendeversuch();
+  zusichern(zuletzt.gesendet, "nach der Rueckkehr zu einer gueltigen Antwort geht der Bogen nicht ab");
+  zusichern(JSON.stringify((protokoll.gesendet.payload.files || []).slice().sort()) === JSON.stringify(alleIds),
+    `zuletzt gehen alle Ids mit: ${JSON.stringify(protokoll.gesendet.payload.files)}`);
+
+  // ── D) Die leere, gueltige Antwort darf NICHT sperren ─────────────────
+  ablage.clear();
+  await page.reload({ waitUntil:"domcontentloaded" });
+  await page.waitForSelector("#q_0", { timeout:12000 });
+  await bisZumVisionRoom();
+  await fuellen();
+  const leer = await absendeversuch();
+  zusichern(leer.gesendet, "eine gueltige leere Liste laesst das Absenden regulaer zu");
+  zusichern(Array.isArray(protokoll.gesendet.payload.files) && protokoll.gesendet.payload.files.length === 0,
+    `ohne Dateien geht eine leere Liste mit: ${JSON.stringify(protokoll.gesendet.payload.files)}`);
+
+  zusichern(seitenfehler.length === 0, `keine Seitenfehler (${seitenfehler.slice(0,2).join(" | ")})`);
+  await u.browser.close();
+}
+
 await lauf(1440, 1000);
 await lauf(390, 900);
+await laufSperre(1440, 1000);
 
 server.close();
 console.log(`\n${geprueft - offen} von ${geprueft} Zusicherungen erfuellt.`);
