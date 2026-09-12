@@ -197,8 +197,8 @@ async function seite({ bestand = [], listeScheitert = false } = {}) {
     if (String(url).includes("flowertech-upload")) {
       // Die Liste der eigenen Dateien: ein einfaches GET ohne method.
       if (!(init || {}).method) {
-        if (listeScheitert) return Promise.resolve({ ok: false, status: 500,
-          json: () => Promise.resolve({ error: "Die bisherigen Dateien konnten nicht geladen werden." }) });
+        if (listeScheitert) return Promise.resolve({ ok: false, status: 405,
+          json: () => Promise.resolve({ error: "Method not allowed" }) });
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true, files: bestand.slice() }) });
       }
       if ((init || {}).method === "DELETE") return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
@@ -339,6 +339,14 @@ async function seite({ bestand = [], listeScheitert = false } = {}) {
   ok(dom.node("vrFileList").children.length === 0, "nach einer gescheiterten Abfrage stehen Dateien da");
   ok(/nicht geladen/.test(dom.node("vrFileStatus").textContent) && dom.node("vrFileStatus").classList.contains("err"),
     `die gescheiterte Abfrage bleibt still: ${dom.node("vrFileStatus").textContent}`);
+  /* 405 ist der Fall „die Funktion kennt den Leseweg noch nicht" — solange die
+     Gegenseite nicht ausgeliefert ist. Die Kundschaft bekommt dann einen
+     verstaendlichen Satz und den Rat, nicht doppelt hochzuladen; die Meldung
+     der Gegenstelle gehoert nicht auf die Seite. */
+  ok(!/Method not allowed/.test(dom.node("vrFileStatus").textContent),
+    "die Meldung der Gegenstelle steht vor der Kundschaft");
+  ok(/erneut hochladen|nochmals hochladen|noch einmal/.test(dom.node("vrFileStatus").textContent),
+    `der Satz sagt nicht, was zu tun ist: ${dom.node("vrFileStatus").textContent}`);
   ok(!calls.some((c) => ["PUT", "DELETE"].includes((c.init || {}).method)), "nach der gescheiterten Abfrage wurde geschrieben");
 }
 

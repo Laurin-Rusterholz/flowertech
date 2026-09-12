@@ -829,6 +829,8 @@
      INTAKE_UPLOAD_LIMITS aus Quantus: 5 MB pro Datei, 10 Dateien. */
   var UPLOAD_ENDPOINT = "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-upload";
   var UPLOAD_LIMITS = { maxBytes: 5 * 1024 * 1024, maxFiles: 10 };
+  var FEHLER_DATEILISTE = "Früher hochgeladene Dateien konnten gerade nicht geladen werden. "
+    + "Bitte laden Sie die Seite später noch einmal, bevor Sie dieselbe Datei erneut hochladen.";
 
   var el = function (id) { return document.getElementById(id); };
   var esc = function (v) {
@@ -3019,11 +3021,8 @@
        dazu gebracht, dieselbe Datei ein zweites Mal hochzuladen. */
     dateienLaden().then(function (liste) {
       if (visionRoom && visionRoom.addUploaded) visionRoom.addUploaded(liste);
-    }).catch(function (e) {
-      if (visionRoom && visionRoom.sayFiles) {
-        visionRoom.sayFiles((e && e.message) || "Die bisherigen Dateien konnten nicht geladen werden."
-          + " Bitte laden Sie die Seite später noch einmal.", true);
-      }
+    }).catch(function () {
+      if (visionRoom && visionRoom.sayFiles) visionRoom.sayFiles(FEHLER_DATEILISTE, true);
     });
 
     // Wer die Art unten im Bogen ändert, ändert sie auch im Vision Room.
@@ -3238,7 +3237,11 @@
     return fetch(UPLOAD_ENDPOINT + "?e=" + encodeURIComponent(token), { cache: "no-store" })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (data) {
-          if (!r.ok) throw new Error(data.error || "Die bisherigen Dateien konnten nicht geladen werden.");
+          // Bewusst IMMER derselbe eigene Satz: die Meldung der Gegenstelle
+          // gehört nicht vor die Kundschaft (bei einer noch nicht
+          // ausgelieferten Funktion stünde dort „Method not allowed"), und
+          // was zu tun ist, sagt sie ohnehin nicht.
+          if (!r.ok) throw new Error(FEHLER_DATEILISTE);
           return Array.isArray(data.files) ? data.files : [];
         });
       });
