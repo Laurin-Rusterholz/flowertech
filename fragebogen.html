@@ -9,7 +9,7 @@
      der Befund vom 11.09.2026 („Schritt 1 von 11, PR37 nicht angekommen?")
      war genau diese Frage. Die Marke steht auch sichtbar im Fuss, weil die
      Konsole nicht immer bedienbar ist. Bei jeder Aenderung mitziehen. -->
-<meta name="ft-build" content="fragebogen-2026-09-12-a">
+<meta name="ft-build" content="fragebogen-2026-09-12-b">
 <meta name="referrer" content="no-referrer">
 <title>Ihre Angaben — FlowerTech</title>
 <link rel="icon" href="/favicon.svg">
@@ -2893,6 +2893,35 @@
     return offen;
   }
 
+  /* Sichtbar, leer — aber nicht verlangt. Genau diese Felder sind der Grund,
+     warum die Statuszeile weniger nennt, als leer dasteht: die Kundschaft
+     sieht drei leere Felder und liest nur eines. Befund vom 12.09.2026 auf
+     Schritt 2 (E-Mail, Telefon, Adresse leer, gemeldet nur „Adresse"). Die
+     Pruefung war richtig — die Auskunft unvollstaendig. Jetzt sagt sie beides:
+     was fehlt, und was freiwillig ist. */
+  function blattLeerFreiwillig() {
+    var indizes = bogenFragen[bogenSchritt] || [];
+    var frei = [];
+    indizes.forEach(function (i) {
+      if (isVisionCarrier(i)) return;
+      var q = questions[i];
+      var node = el("q_" + i);
+      if (!q || !node) return;
+      if (pflichtfeld(q, node)) return;       // verlangte Felder stehen oben
+      if (!feldSichtbar(q, node)) return;     // was niemand sieht, fehlt nicht
+      if (value(i)) return;                   // ausgefuellt ist kein Hinweis
+      frei.push(q.label);
+    });
+    return frei;
+  }
+
+  function freiwilligSatz(frei) {
+    if (!frei.length) return "";
+    return frei.length === 1
+      ? " " + frei[0] + " ist freiwillig und noch leer."
+      : " Freiwillig und noch leer: " + frei.join(", ") + ".";
+  }
+
   function bogenVerdrahten() {
     var weiter = el("bogenWeiter");
     if (weiter) weiter.addEventListener("click", function () {
@@ -2900,10 +2929,11 @@
       if (offen.length) {
         // Nicht weiter, ohne es zu sagen — und die Stelle gleich zeigen.
         el("need").className = "need";
-        el("need").textContent = offen.length === 1
+        el("need").textContent = (offen.length === 1
           ? "Hier fehlt noch: " + offen[0].label + "."
           : "Hier fehlen noch: " +
-            offen.map(function (o) { return o.label; }).join(", ") + ".";
+            offen.map(function (o) { return o.label; }).join(", ") + ".")
+          + freiwilligSatz(blattLeerFreiwillig());
         var node = el("q_" + offen[0].index);
         if (node && node.focus) node.focus();
         return;
@@ -3195,10 +3225,11 @@
     var unterwegs = bogenBlaetter.length > 1 && bogenSchritt < bogenBlaetter.length - 1;
     if (unterwegs) {
       var hier = blattOffen().map(function (o) { return o.label; });
+      var frei = freiwilligSatz(blattLeerFreiwillig());
       el("need").className = hier.length ? "need" : "need done";
-      el("need").textContent = hier.length
+      el("need").textContent = (hier.length
         ? "Noch offen in diesem Schritt: " + hier.join(", ") + "."
-        : "Dieser Schritt ist vollständig — weiter zum nächsten.";
+        : "Dieser Schritt ist vollständig — weiter zum nächsten.") + frei;
       return ready;
     }
 
@@ -3207,11 +3238,12 @@
       el("need").textContent = dateiBestand === BESTAND_FEHLER ? FEHLER_DATEILISTE : WARTETEXT;
       return ready;
     }
-    el("need").textContent = ready
+    var freiLetzte = freiwilligSatz(blattLeerFreiwillig());
+    el("need").textContent = (ready
       ? "Danke — das genügt uns. Sie können jetzt senden."
       : offen.length === 1
         ? "Noch offen: " + offen[0] + ". Danach können Sie senden."
-        : "Noch offen: " + offen.join(", ") + ". Danach können Sie senden.";
+        : "Noch offen: " + offen.join(", ") + ". Danach können Sie senden.") + freiLetzte;
     return ready;
   }
 

@@ -248,4 +248,78 @@ for (const breite of [1200, 390]) {
     "das ausgefüllte Pflichtfeld bleibt als fehlerhaft ausgezeichnet");
 }
 
+/* ══ Befund 12.09.2026: drei leere Felder, nur eines gemeldet ══════════════
+   Live standen auf Schritt 2 E-Mail, Telefon und Adresse leer; die Zeile
+   darunter nannte nur „Adresse". Nachgestellt mit anonymisiertem Fixture:
+   Die PRUEFUNG war richtig — in diesem veroeffentlichten Bogen sind E-Mail
+   und Telefon nicht verlangt, ihre Beschriftung sagt „freiwillig", und
+   verlangt ist allein die Adresse. Unvollstaendig war die AUSKUNFT: sie
+   schwieg zu den beiden sichtbaren leeren Feldern und liess offen, warum sie
+   nicht vorkommen. Jetzt nennt sie beides. */
+const KATALOG_GEMISCHT = KATALOG.map((q) => (
+  q.key === "email" || q.key === "phone" ? Object.assign({}, q, { required: false }) : q));
+{
+  const dom = await seite(bogen(KATALOG_GEMISCHT));
+  tippen(dom, 0, "Beispielprojekt");
+  tippen(dom, 2, "Beispielperson");
+  dom.node("bogenWeiter").fire("click");
+  ok(/Schritt 2 von/.test(dom.node("bogenStand").textContent), "der Bogen geht nicht auf Schritt 2");
+
+  // Vorbedingung: alle drei stehen leer und sichtbar auf demselben Blatt.
+  [3, 4, 5].forEach((i) => {
+    ok(dom.node("q_" + i).value === "", `q_${i} ist nicht leer`);
+  });
+  const gemeldet = status(dom);
+  ok(/Noch offen in diesem Schritt: Adresse\./.test(gemeldet),
+    `verlangt ist allein die Adresse — gemeldet wird: ${gemeldet}`);
+  ok(/Freiwillig und noch leer:/.test(gemeldet) && /E-Mail/.test(gemeldet) && /Telefon/.test(gemeldet),
+    `die beiden freiwilligen leeren Felder werden nicht benannt: ${gemeldet}`);
+
+  /* Die Beschriftung sagt dasselbe wie die Zeile — sonst waere es wieder eine
+     Diskrepanz. Gelesen wird das ausgelieferte Markup des Blattes (das
+     DOM-Doppel fuehrt keinen Text ueber Knoten hinweg zusammen): vor jedem
+     Feld steht seine Auszeichnung. */
+  const markup = dom.node("fields").innerHTML;
+  const auszeichnung = (i) => {
+    const stelle = markup.indexOf('id="q_' + i + '"');
+    const vorher = markup.slice(Math.max(0, stelle - 260), stelle);
+    return /· Pflichtfeld/.test(vorher) ? "pflicht" : /· freiwillig/.test(vorher) ? "freiwillig" : "ohne";
+  };
+  ok(auszeichnung(3) === "freiwillig", `E-Mail ist als "${auszeichnung(3)}" beschriftet`);
+  ok(auszeichnung(4) === "freiwillig", `Telefon ist als "${auszeichnung(4)}" beschriftet`);
+  ok(auszeichnung(5) === "pflicht", `Adresse ist als "${auszeichnung(5)}" beschriftet`);
+
+  // Teilweise gefuellt: was dasteht, verschwindet aus beiden Listen.
+  tippen(dom, 3, "kontakt@example.com");
+  ok(!/E-Mail/.test(status(dom)) && /Telefon/.test(status(dom)) && /Adresse/.test(status(dom)),
+    `nach der E-Mail stimmt die Meldung nicht: ${status(dom)}`);
+  tippen(dom, 4, "000 000 00 00");
+  ok(!/Freiwillig und noch leer/.test(status(dom)) && /Adresse/.test(status(dom)),
+    `nach dem Telefon bleibt ein freiwilliger Hinweis stehen: ${status(dom)}`);
+  tippen(dom, 5, "Beispielweg 1, 0000 Beispielstadt");
+  ok(/vollständig/.test(status(dom)), `der volle Schritt gilt nicht als vollständig: ${status(dom)}`);
+
+  // Der Weiter-Knopf sagt dasselbe.
+  const dom2 = await seite(bogen(KATALOG_GEMISCHT));
+  tippen(dom2, 0, "Beispielprojekt");
+  tippen(dom2, 2, "Beispielperson");
+  dom2.node("bogenWeiter").fire("click");
+  dom2.node("bogenWeiter").fire("click");
+  ok(/Hier fehlt noch: Adresse\./.test(status(dom2)) && /Freiwillig und noch leer:/.test(status(dom2)),
+    `der Weiter-Knopf meldet es anders als die Zeile: ${status(dom2)}`);
+}
+{
+  // Gegenprobe: sind alle drei verlangt, aendert sich nichts an der Meldung —
+  // und es steht KEIN freiwilliger Nachsatz da.
+  const dom = await seite(bogen(KATALOG));
+  tippen(dom, 0, "Beispielprojekt");
+  tippen(dom, 2, "Beispielperson");
+  dom.node("bogenWeiter").fire("click");
+  const gemeldet = status(dom);
+  ["E-Mail", "Telefon", "Adresse"].forEach((feld) => {
+    ok(gemeldet.includes(feld), `die Meldung nennt „${feld}" nicht: ${gemeldet}`);
+  });
+  ok(!/Freiwillig und noch leer/.test(gemeldet), `ein freiwilliger Nachsatz ohne freiwillige Felder: ${gemeldet}`);
+}
+
 console.log(`pflichtfelder: ok (${checks} Pruefungen)`);
