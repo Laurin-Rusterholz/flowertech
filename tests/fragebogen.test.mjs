@@ -55,14 +55,22 @@ ok(!/apiKey|serviceAccount|private_key|FIREBASE_[A-Z_]+|Bearer\s+[A-Za-z0-9]/i.t
   "die Seite enthält Zugangsdaten");
 ok(!/\.set\(|\.update\(|\.remove\(/.test(page), "die Seite schreibt direkt in die Datenbank");
 const fetches = page.match(/fetch\(/g) || [];
-/* Fuenf Aufrufe, und nur diese: den Fragebogen lesen, die Antworten senden,
+/* Sechs Aufrufe, und nur diese: den Fragebogen lesen, die Antworten senden,
    die Inhalte der Website lesen — und fuer den Vision Room eine Datei
-   hochladen (PUT) bzw. wieder entfernen (DELETE). Die Antworten selbst gehen
-   weiterhin an genau EINE Stelle (tests/vorbelegung.test.mjs prueft den
-   Upload-Weg). */
-ok(fetches.length === 5,
-  `es gibt ${fetches.length} fetch-Aufrufe statt fuenf (Fragebogen lesen, Antworten senden, ` +
-  "Inhalte der Website lesen, Datei hochladen, Datei entfernen)");
+   hochladen (PUT), wieder entfernen (DELETE) und die bereits hochgeladenen
+   Dateien DIESER Einladung erfragen (GET). Der sechste kam dazu, weil die
+   Seite nach einem Neuladen sonst nur die Ids der laufenden Sitzung kannte:
+   die Dateien lagen weiter am Server, zaehlten gegen die Zehnergrenze und
+   gingen beim Absenden nicht mit. Die Antworten selbst gehen weiterhin an
+   genau EINE Stelle (tests/vorbelegung.test.mjs prueft den Upload-Weg). */
+ok(fetches.length === 6,
+  `es gibt ${fetches.length} fetch-Aufrufe statt sechs (Fragebogen lesen, Antworten senden, ` +
+  "Inhalte der Website lesen, Datei hochladen, Datei entfernen, eigene Dateien erfragen)");
+/* Der Leseweg haengt an derselben Adresse und demselben Token wie Upload und
+   Entfernen — keine zweite Stelle, keine fremde Einladung, kein Schreibzugriff. */
+ok(/function dateienLaden\(\) \{\s*\n\s*return fetch\(UPLOAD_ENDPOINT \+ "\?e=" \+ encodeURIComponent\(token\)/.test(page),
+  "die Seite erfragt die eigenen Dateien nicht an der Upload-Adresse mit ihrem Token");
+ok(!/dateienLaden[\s\S]{0,200}method:/.test(page), "das Erfragen der eigenen Dateien ist kein einfaches GET");
 ok((page.match(/method: "PUT"/g) || []).length === 1 && /UPLOAD_ENDPOINT/.test(page),
   "der Upload geht nicht als Roh-Bytes an die Upload-Funktion");
 ok(!/readAsDataURL|btoa\(/.test(page), "die Seite wandelt Dateien in Base64 um");

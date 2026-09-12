@@ -9,7 +9,7 @@
      der Befund vom 11.09.2026 („Schritt 1 von 11, PR37 nicht angekommen?")
      war genau diese Frage. Die Marke steht auch sichtbar im Fuss, weil die
      Konsole nicht immer bedienbar ist. Bei jeder Aenderung mitziehen. -->
-<meta name="ft-build" content="fragebogen-2026-09-11-b">
+<meta name="ft-build" content="fragebogen-2026-09-12-a">
 <meta name="referrer" content="no-referrer">
 <title>Ihre Angaben — FlowerTech</title>
 <link rel="icon" href="/favicon.svg">
@@ -3013,6 +3013,19 @@
       },
     });
 
+    /* Nach einem Neuladen stehen die bereits hochgeladenen Dateien wieder da —
+       sichtbar, entfernbar, und beim Absenden gehen ihre Ids mit. Scheitert
+       die Abfrage, wird das gesagt: eine stille Leere hätte die Kundschaft
+       dazu gebracht, dieselbe Datei ein zweites Mal hochzuladen. */
+    dateienLaden().then(function (liste) {
+      if (visionRoom && visionRoom.addUploaded) visionRoom.addUploaded(liste);
+    }).catch(function (e) {
+      if (visionRoom && visionRoom.sayFiles) {
+        visionRoom.sayFiles((e && e.message) || "Die bisherigen Dateien konnten nicht geladen werden."
+          + " Bitte laden Sie die Seite später noch einmal.", true);
+      }
+    });
+
     // Wer die Art unten im Bogen ändert, ändert sie auch im Vision Room.
     if (typeNode && visionRoom && visionRoom.setType) {
       typeNode.addEventListener("change", function () {
@@ -3216,6 +3229,19 @@
         return data;
       });
     });
+  }
+  /* Was diese Einladung schon hochgeladen hat. Ohne diese Frage kennt die
+     Seite nach einem Neuladen nur noch die Ids der laufenden Sitzung: die
+     Dateien lägen weiter am Server, zählten gegen die Zehnergrenze und gingen
+     beim Absenden nicht mit. Genau ein Token, nichts Fremdes. */
+  function dateienLaden() {
+    return fetch(UPLOAD_ENDPOINT + "?e=" + encodeURIComponent(token), { cache: "no-store" })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (data) {
+          if (!r.ok) throw new Error(data.error || "Die bisherigen Dateien konnten nicht geladen werden.");
+          return Array.isArray(data.files) ? data.files : [];
+        });
+      });
   }
   function dateiEntfernen(id) {
     return fetch(UPLOAD_ENDPOINT + "?e=" + encodeURIComponent(token) + "&id=" + encodeURIComponent(id),

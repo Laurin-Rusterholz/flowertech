@@ -179,7 +179,7 @@ const FRAGEN = [
   { key: "vision-idee", label: "Idee", type: "text", role: "", required: false, hint: "", options: [], vision: "idea" },
   { key: "vision-funktionen", label: "Funktionen", type: "textarea", role: "", required: false, hint: "", options: [], vision: "features" },
 ];
-async function seite() {
+async function seite({ bestand = [], listeScheitert = false } = {}) {
   const dom = makeDom({ innerWidth: 1200 });
   ["loading", "error", "errorTitle", "errorText", "content", "title", "subtitle", "intro", "vorbelegt",
     "form", "fields", "hp", "submit", "need", "status", "footer",
@@ -195,6 +195,12 @@ async function seite() {
     calls.push({ url: String(url), init: init || {} });
     if (String(url).includes("intakeForms")) return Promise.resolve({ ok: true, json: () => Promise.resolve(form) });
     if (String(url).includes("flowertech-upload")) {
+      // Die Liste der eigenen Dateien: ein einfaches GET ohne method.
+      if (!(init || {}).method) {
+        if (listeScheitert) return Promise.resolve({ ok: false, status: 500,
+          json: () => Promise.resolve({ error: "Die bisherigen Dateien konnten nicht geladen werden." }) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true, files: bestand.slice() }) });
+      }
       if ((init || {}).method === "DELETE") return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
       const file = init.body;
       if (file.size > 5 * MB) return Promise.resolve({ ok: false, status: 413, json: () => Promise.resolve({ error: "Die Datei ist grösser als 5 MB." }) });
@@ -277,7 +283,63 @@ async function seite() {
   const sendung = calls.find((c) => c.url.includes("flowertech-portal"));
   const body = JSON.parse(sendung.init.body);
   ok(Array.isArray(body.payload.files) && body.payload.files.length === 0, "ohne Dateien fehlt die leere Liste");
-  ok(!calls.some((c) => c.url.includes("flowertech-upload")), "ohne Dateien wurde die Upload-Funktion gerufen");
+  /* Ein GET an die Upload-Funktion gibt es immer: die Seite fragt beim Aufbau,
+     was diese Einladung schon hochgeladen hat. Geschrieben wird ohne Dateien
+     nichts — kein PUT, kein DELETE. */
+  ok(!calls.some((c) => c.url.includes("flowertech-upload") && ["PUT", "DELETE"].includes((c.init || {}).method)),
+    "ohne Dateien wurde an der Upload-Funktion geschrieben");
+}
+
+/* ── 6. Nach dem Neuladen: was schon hochgeladen ist, steht wieder da ──────
+   BEFUND (12.09.2026): Nach einem Neuladen kannte die Seite nur die Ids der
+   laufenden Sitzung. Die Dateien lagen weiter am Server, zaehlten gegen die
+   Zehnergrenze und gingen beim Absenden nicht mit — Waisen allein durch ein
+   Neuladen. Der Browserlauf dazu: scripts/upload-reload-regression.mjs. */
+{
+  const bestand = [
+    { id: "f_0000000001", name: "logo.png", type: "image/png", size: 50 * 1024 },
+    { id: "f_0000000002", name: "briefing.pdf", type: "application/pdf", size: 3 * MB },
+  ];
+  const { dom, calls } = await seite({ bestand });
+  const abfrage = calls.filter((c) => c.url.includes("flowertech-upload") && !(c.init || {}).method);
+  ok(abfrage.length === 1, `die Seite erfragt die eigenen Dateien nicht genau einmal (${abfrage.length})`);
+  ok(abfrage[0].url === "https://management-xo2-pro.netlify.app/.netlify/functions/flowertech-upload?e=" + TOKEN,
+    `die Abfrage geht an die falsche Adresse: ${abfrage[0].url}`);
+  ok(dom.node("vrFileList").children.length === 2, "die bereits hochgeladenen Dateien stehen nicht in der Liste");
+  ok(/logo\.png/.test(dom.node("vrFileList").children[0].children[0].textContent), "die erste Datei fehlt");
+  const knopf = dom.node("vrFileList").children[0].children.find((c) => c.tagName === "BUTTON");
+  ok(knopf && /entfernen/.test(knopf.getAttribute("aria-label")), "die wiederhergestellte Datei laesst sich nicht entfernen");
+  ok(/2 Datei\(en\) hochgeladen/.test(dom.node("vrFileStatus").textContent),
+    `der Stand wird nicht benannt: ${dom.node("vrFileStatus").textContent}`);
+
+  // Entfernen: DELETE mit der richtigen Id, und sie geht nicht mehr mit.
+  knopf.fire("click");
+  await tick();
+  const weg = calls.filter((c) => c.url.includes("flowertech-upload") && (c.init || {}).method === "DELETE");
+  ok(weg.length === 1 && weg[0].url.includes("&id=f_0000000001"), `das Entfernen erreicht die Funktion nicht: ${JSON.stringify(weg.map((w) => w.url))}`);
+
+  dom.node("form").fire("submit");
+  await tick();
+  const body = JSON.parse(calls.find((c) => c.url.includes("flowertech-portal")).init.body);
+  ok(body.payload.files.length === 1 && body.payload.files[0] === "f_0000000002",
+    `die wiederhergestellte Datei geht nicht richtig mit: ${JSON.stringify(body.payload.files)}`);
+  ok(!JSON.stringify(body).includes("logo.png") && !JSON.stringify(body).includes("storagePath"),
+    "der Bogen traegt mehr als die Ids");
+}
+{
+  // Dieselbe Datei zweimal gemeldet: kein Doppeleintrag.
+  const doppelt = { id: "f_0000000001", name: "logo.png", type: "image/png", size: 1000 };
+  const { dom } = await seite({ bestand: [doppelt, doppelt] });
+  ok(dom.node("vrFileList").children.length === 1, "eine doppelt gemeldete Datei steht zweimal da");
+}
+{
+  // Scheitert die Abfrage, wird das gesagt — eine stille Leere haette die
+  // Kundschaft dazu gebracht, dieselbe Datei ein zweites Mal hochzuladen.
+  const { dom, calls } = await seite({ listeScheitert: true });
+  ok(dom.node("vrFileList").children.length === 0, "nach einer gescheiterten Abfrage stehen Dateien da");
+  ok(/nicht geladen/.test(dom.node("vrFileStatus").textContent) && dom.node("vrFileStatus").classList.contains("err"),
+    `die gescheiterte Abfrage bleibt still: ${dom.node("vrFileStatus").textContent}`);
+  ok(!calls.some((c) => ["PUT", "DELETE"].includes((c.init || {}).method)), "nach der gescheiterten Abfrage wurde geschrieben");
 }
 
 console.log(`vision-upload: ok (${checks} Pruefungen)`);

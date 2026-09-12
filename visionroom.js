@@ -669,15 +669,41 @@
       });
     };
     api.addFiles = addFiles;
+    /* Bereits hochgeladene Dateien dieser Einladung nachtragen — etwa nach
+       einem Neuladen der Seite. Sie sind fertig hochgeladen, tragen ihre Id
+       und lassen sich wie jede andere wieder entfernen. Was schon in der Liste
+       steht, wird nicht doppelt eingetragen. Der Baustein erfragt nichts
+       selbst: die Seite kennt Adresse und Token, sie reicht das Ergebnis
+       herein. */
+    function uebernehmen(list) {
+      if (!upload) return 0;
+      var neu = 0;
+      (Array.isArray(list) ? list : []).forEach(function (f) {
+        if (!f || !f.id) return;
+        var id = String(f.id);
+        for (var i = 0; i < files.length; i++) if (files[i].id === id) return;
+        files.push({ id: id, name: String(f.name || 'Datei'), type: String(f.type || ''), size: Number(f.size) || 0, state: 'done' });
+        neu++;
+      });
+      return neu;
+    }
+    api.addUploaded = function (list) {
+      var neu = uebernehmen(list);
+      if (!neu) return 0;
+      renderFiles();
+      sayFiles(files.filter(function (f) { return f.state === 'done'; }).length + ' Datei(en) hochgeladen.');
+      return neu;
+    };
+    // Damit die Seite sagen kann, wenn das Erfragen selbst gescheitert ist —
+    // stilles Nichts waere genau der Fehler, der hier behoben wird.
+    api.sayFiles = function (text, isError) { sayFiles(text, isError); };
     if (upload && fileInput) {
       fileInput.addEventListener('change', function () {
         addFiles(fileInput.files);
         try { fileInput.value = ''; } catch (e) { /* alte Browser */ }
       });
       if (filePick) filePick.addEventListener('click', function () { if (fileInput.click) fileInput.click(); });
-      (Array.isArray(upload.initial) ? upload.initial : []).forEach(function (f) {
-        if (f && f.id) files.push({ id: String(f.id), name: String(f.name || 'Datei'), type: String(f.type || ''), size: Number(f.size) || 0, state: 'done' });
-      });
+      uebernehmen(upload.initial);
       renderFiles();
     } else if (el('vrFiles')) {
       el('vrFiles').hidden = true;
