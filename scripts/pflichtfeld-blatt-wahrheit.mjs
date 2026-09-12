@@ -65,7 +65,7 @@ const REC = (bedingung) => ({
   stage:"intake", tiles:{},
 });
 
-async function lauf(name, { bedingung, hiddenUebersteuern }) {
+async function lauf(name, { bedingung, hiddenUebersteuern, doppelteId, diagnose }) {
   console.log(`\n══ ${name} ══`);
   const browser = await chromium.launch({ executablePath: process.env.CHROME_PFAD
     || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
@@ -81,19 +81,33 @@ async function lauf(name, { bedingung, hiddenUebersteuern }) {
     if (/flowertech-upload/.test(u)) return r.fulfill({ status:200, contentType:"application/json", body:JSON.stringify({ ok:true, files:[] }) });
     return r.fulfill({ status:503, contentType:"application/json", body:"{}" });
   });
-  await page.goto(`http://127.0.0.1:${PORT}/fragebogen.html?e=${TOKEN}`, { waitUntil:"domcontentloaded" });
+  await page.goto(`http://127.0.0.1:${PORT}/fragebogen.html?e=${TOKEN}` + (diagnose ? "&diagnose=1" : ""),
+    { waitUntil:"domcontentloaded" });
   await page.waitForSelector("#q_0", { timeout:12000 });
   /* Die Gestaltung ueberstimmt das hidden-Attribut — genau die Lage, in der
      ein "verborgenes" Feld vor der Kundschaft steht. */
   if (hiddenUebersteuern) await page.addStyleTag({ content: ".ck label[hidden], label[hidden]{display:block !important}" });
+  /* Eine zweite Id „q_3" VOR dem Bogen: document.getElementById liefert dann
+     nicht mehr das Feld vom Blatt, sondern diesen Fremdknoten — mit einem
+     Wert, der das echte Feld als ausgefuellt erscheinen laesst. */
+  if (doppelteId) await page.evaluate(()=>{
+    const fremd = document.createElement("input");
+    fremd.id = "q_3"; fremd.value = "aus einem anderen Knoten"; fremd.hidden = true;
+    document.body.insertBefore(fremd, document.body.firstChild);
+  });
   await page.waitForTimeout(600);
   await page.click("#bogenWeiter");
   await page.waitForTimeout(400);
   const stand = await page.evaluate(()=>{
     const lese = (id) => {
-      const n = document.getElementById(id);
+      /* Gemessen wird das Feld AUF DEM BLATT — nicht irgendein gleichnamiger
+         Knoten. Genau dieser Unterschied ist Teil der Pruefung. */
+      const blatt = document.querySelector("[data-blatt]:not([hidden])");
+      const n = (blatt && blatt.querySelector('[id="' + id + '"]')) || document.getElementById(id);
       if (!n) return null;
       const l = n.closest("label");
+      if (!l) return { leer: String(n.value || "").trim() === "", gemalt: false, labelHidden: null,
+        marke: "ohne Label", imRaum: false };
       const r = l.getBoundingClientRect();
       return { leer: String(n.value || "").trim() === "",
         gemalt: r.width > 0 && r.height > 0 && getComputedStyle(l).display !== "none",
@@ -105,6 +119,9 @@ async function lauf(name, { bedingung, hiddenUebersteuern }) {
       meldung:(document.getElementById("need")||{}).textContent || "",
       sendbar:(document.getElementById("submit")||{}).getAttribute("aria-disabled"),
       diagnose: typeof window.__ftFeldDiagnose === "function" ? window.__ftFeldDiagnose() : null,
+      tafel: (function(){ const t = document.getElementById("diagnose");
+        return t ? { versteckt: !!t.hidden, text: (t.textContent||"").slice(0,4000),
+          zeilen: t.querySelectorAll("table.ft-diagnose tbody tr").length } : null; })(),
       q3:lese("q_3"), q4:lese("q_4"), q5:lese("q_5") };
   });
   await browser.close();
@@ -149,6 +166,32 @@ async function lauf(name, { bedingung, hiddenUebersteuern }) {
     `die Selbstauskunft nennt genau die offenen Felder: ${d ? JSON.stringify(d.gemeldet) : "-"}`);
   zusichern(d && d.felder.every((x) => x.verlangtLautDaten === (x.verlangtLautFeld === "true")),
     "Daten und Feld sagen bei „verlangt“ dasselbe");
+}
+
+/* ── 4) Doppelt vergebene Id: das Feld vom Blatt zaehlt ──────────────────── */
+{
+  const { stand, seitenfehler } = await lauf("zweite Id q_3 vor dem Bogen",
+    { bedingung:false, hiddenUebersteuern:false, doppelteId:true });
+  const d = stand.diagnose;
+  const feld3 = d && d.felder.find((x) => x.i === 3);
+  zusichern(!!feld3 && feld3.idDoppelt === 2, `die Id ist doppelt vergeben (${feld3 ? feld3.idDoppelt : "-"})`);
+  zusichern(!!feld3 && feld3.knotenVomBlattIstDerVonGetElementById === false,
+    "getElementById liefert einen anderen Knoten als das Blatt — genau der Fall");
+  zusichern(!!feld3 && feld3.hatWert === false, "der Wert wird am Feld DES BLATTES gelesen, nicht am Fremdknoten");
+  zusichern(stand.meldung.includes("E-Mail"), `die Meldung nennt E-Mail trotz Fremdknoten: "${stand.meldung}"`);
+  zusichern(seitenfehler.length === 0, `keine Seitenfehler (${seitenfehler.slice(0,2).join(" | ")})`);
+}
+
+/* ── 5) Diagnosemodus: sichtbar, lesend, ohne Antworten ─────────────────── */
+{
+  const { stand, seitenfehler } = await lauf("?diagnose=1", { bedingung:true, hiddenUebersteuern:false, diagnose:true });
+  zusichern(!!stand.tafel && stand.tafel.versteckt === false, "die Diagnosetafel steht sichtbar unter dem Bogen");
+  zusichern(!!stand.tafel && stand.tafel.zeilen === 3, `die Tafel zeigt die drei Felder des Blattes (${stand.tafel ? stand.tafel.zeilen : "-"})`);
+  zusichern(!!stand.tafel && /Schritt 2 von/.test(stand.tafel.text), "die Tafel nennt Schritt und Blatt");
+  zusichern(!!stand.tafel && !/Beispielprojekt|Beispielkunde|Beispielperson/.test(stand.tafel.text),
+    "die Tafel zeigt KEINE Antworten aus dem Bogen");
+  zusichern(!!stand.tafel && !stand.tafel.text.includes(TOKEN), "die Tafel zeigt den Token nicht");
+  zusichern(seitenfehler.length === 0, `keine Seitenfehler (${seitenfehler.slice(0,2).join(" | ")})`);
 }
 
 server.close();

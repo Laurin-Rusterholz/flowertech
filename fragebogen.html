@@ -9,7 +9,7 @@
      der Befund vom 11.09.2026 („Schritt 1 von 11, PR37 nicht angekommen?")
      war genau diese Frage. Die Marke steht auch sichtbar im Fuss, weil die
      Konsole nicht immer bedienbar ist. Bei jeder Aenderung mitziehen. -->
-<meta name="ft-build" content="fragebogen-2026-09-12-d">
+<meta name="ft-build" content="fragebogen-2026-09-12-e">
 <meta name="referrer" content="no-referrer">
 <title>Ihre Angaben — FlowerTech</title>
 <link rel="icon" href="/favicon.svg">
@@ -512,6 +512,15 @@
      Fortschritt steht oben, einmal, und zaehlt Schritte statt Blaetter. */
   body[data-bogen="1"] .bg-nr{display:none}
 
+  /* ── Diagnosetafel (nur mit ?diagnose=1) ─────────────────────────────── */
+  .ft-diagnose-box{margin:22px 0 0;padding:14px 16px;border:1px dashed var(--li2);
+    border-radius:14px;background:var(--feld);font-size:12.5px}
+  .ft-diagnose-box h2{font-size:14px;margin:0 0 6px}
+  table.ft-diagnose{border-collapse:collapse;width:100%;font-size:11.5px}
+  table.ft-diagnose th,table.ft-diagnose td{border:1px solid var(--li);padding:3px 6px;
+    text-align:left;vertical-align:top;white-space:nowrap}
+  table.ft-diagnose th{font-weight:600}
+
   /* ── Ein Feld ────────────────────────────────────────────────────────── */
   body[data-bogen="1"] label{display:block;margin:0;background:var(--feld);
     border:1px solid var(--li);border-radius:18px;
@@ -774,6 +783,9 @@
       <p class="bg-klein">Ihre Angaben gehen direkt zu FlowerTech. Unverbindlich —
         Sie erhalten eine Rückmeldung, keine Rechnung.</p>
     </form>
+    <!-- Nur mit ?diagnose=1: eine rein lesende Tafel fuer die Abnahme. Sie
+         zeigt keine Antworten, keine Kundendaten und keinen Token. -->
+    <section class="ft-diagnose-box" id="diagnose" hidden></section>
   </section>
 
   <!-- Der Fragebogen ist beantwortet oder abgeschlossen, aber es gibt schon
@@ -2896,11 +2908,11 @@
     return !wrap.hidden;
   }
 
-  function feldOffen(i) {
+  function feldOffen(i, node) {
     var q = questions[i];
-    var node = el("q_" + i);
-    if (!q || !node) return false;
-    return pflichtfeld(q, node) && feldSichtbar(q, node) && !value(i);
+    var n = node || el("q_" + i);
+    if (!q || !n) return false;
+    return pflichtfeld(q, n) && feldSichtbar(q, n) && !value(i, n);
   }
 
   /* Welche Felder auf dem gezeigten Blatt STEHEN. Gefragt wird das Blatt
@@ -2910,24 +2922,30 @@
      Die Buchfuehrung bleibt der Rueckfall, falls das Blatt fehlt. */
   function blattFelder() {
     var blatt = el(bogenBlaetter[bogenSchritt] || "");
-    if (!blatt || !blatt.querySelectorAll) return (bogenFragen[bogenSchritt] || []).slice();
+    var rueckfall = (bogenFragen[bogenSchritt] || []).map(function (i) {
+      return { index: i, node: el("q_" + i) };
+    });
+    if (!blatt || !blatt.querySelectorAll) return rueckfall;
     var knoten = blatt.querySelectorAll("[id^='q_']");
     var out = [];
     for (var k = 0; k < knoten.length; k++) {
       var treffer = /^q_(\d+)$/.exec(knoten[k].id || "");
-      if (treffer) out.push(Number(treffer[1]));
+      // Der Knoten wandert mit: geprueft wird DAS Feld vom Blatt, nicht ein
+      // gleichnamiges irgendwo sonst im Dokument.
+      if (treffer) out.push({ index: Number(treffer[1]), node: knoten[k] });
     }
-    return out.length ? out : (bogenFragen[bogenSchritt] || []).slice();
+    return out.length ? out : rueckfall;
   }
 
   // Was auf dem aktuellen Blatt noch offen ist — nur Sichtbares zaehlt.
   function blattOffen() {
-    var indizes = blattFelder();
     var offen = [];
-    indizes.forEach(function (i) {
+    blattFelder().forEach(function (f) {
       // Nur was wirklich in den Vision Room gewandert ist, wird dort geprueft.
-      if (imVisionRoom(i)) return;
-      if (feldOffen(i)) offen.push({ index: i, label: questions[i].label });
+      if (imVisionRoom(f.index)) return;
+      if (feldOffen(f.index, f.node)) {
+        offen.push({ index: f.index, label: (questions[f.index] || {}).label || ("Frage " + (f.index + 1)) });
+      }
     });
     return offen;
   }
@@ -2939,16 +2957,14 @@
      Pruefung war richtig — die Auskunft unvollstaendig. Jetzt sagt sie beides:
      was fehlt, und was freiwillig ist. */
   function blattLeerFreiwillig() {
-    var indizes = blattFelder();
     var frei = [];
-    indizes.forEach(function (i) {
-      if (imVisionRoom(i)) return;
-      var q = questions[i];
-      var node = el("q_" + i);
-      if (!q || !node) return;
-      if (pflichtfeld(q, node)) return;       // verlangte Felder stehen oben
-      if (!feldSichtbar(q, node)) return;     // was niemand sieht, fehlt nicht
-      if (value(i)) return;                   // ausgefuellt ist kein Hinweis
+    blattFelder().forEach(function (f) {
+      if (imVisionRoom(f.index)) return;
+      var q = questions[f.index];
+      if (!q || !f.node) return;
+      if (pflichtfeld(q, f.node)) return;         // verlangte Felder stehen oben
+      if (!feldSichtbar(q, f.node)) return;       // was niemand sieht, fehlt nicht
+      if (value(f.index, f.node)) return;         // ausgefuellt ist kein Hinweis
       frei.push(q.label);
     });
     return frei;
@@ -2966,37 +2982,111 @@
      nur die Groessen, an denen die Pruefung haengt. Ohne sie blieb bei einem
      Befund von aussen nur Raten.
         window.__ftFeldDiagnose()   →   Zeile je Feld des gezeigten Blattes */
-  window.__ftFeldDiagnose = function () {
-    var offen = blattOffen().map(function (o) { return o.index; });
+  /* ── Lesende Diagnose ────────────────────────────────────────────────────
+     Rein LESEND: aendert nichts, sendet nichts, zeigt KEINE Antworten (nur
+     "hat Wert: ja/nein") und keinen Token. Zwei Wege:
+       · window.__ftFeldDiagnose()  — als Objekt fuer die Konsole
+       · ?diagnose=1 an der Adresse — sichtbar als Tafel unter dem Bogen
+     Sie beantwortet genau die Fragen, an denen die Pruefung haengt: welches
+     Blatt gezeigt wird, welche Felder darauf stehen, ob eine Id doppelt
+     vergeben ist, ob getElementById denselben Knoten liefert wie das Blatt,
+     und was pflichtfeld/feldSichtbar/value daraus machen. */
+  function diagnoseDaten() {
+    var felder = blattFelder().map(function (f) {
+      var i = f.index;
+      var q = questions[i] || {};
+      var perId = el("q_" + i);
+      var doppelt = document.querySelectorAll
+        ? document.querySelectorAll('[id="q_' + i + '"]').length : null;
+      var wrap = f.node && f.node.closest ? f.node.closest("label") : null;
+      var r = wrap && wrap.getBoundingClientRect ? wrap.getBoundingClientRect() : null;
+      return {
+        i: i, key: q.key || null, typ: q.type || null, label: q.label || null,
+        verlangtLautDaten: !!q.required,
+        verlangtLautFeld: f.node && f.node.getAttribute ? f.node.getAttribute("aria-required") : null,
+        hatWert: !!value(i, f.node),
+        idDoppelt: doppelt,
+        knotenVomBlattIstDerVonGetElementById: perId === f.node,
+        labelHidden: wrap ? !!wrap.hidden : null,
+        gemalt: r ? (r.width > 0 && r.height > 0) : null,
+        anzeige: wrap && window.getComputedStyle ? window.getComputedStyle(wrap).display : null,
+        bedingung: q.showIf ? q.showIf.key + "=" + q.showIf.value : null,
+        bedingungErfuellt: q.showIf ? sichtbar(q) : null,
+        visionMarke: q.vision || "",
+        imVisionRoom: imVisionRoom(i),
+        gilt: {
+          pflicht: pflichtfeld(q, f.node),
+          sichtbar: feldSichtbar(q, f.node),
+          offen: feldOffen(i, f.node),
+        },
+      };
+    });
+    var blaetter = [];
+    if (document.querySelectorAll) {
+      var alle = document.querySelectorAll("[data-blatt]");
+      for (var k = 0; k < alle.length; k++) {
+        var rb = alle[k].getBoundingClientRect ? alle[k].getBoundingClientRect() : null;
+        blaetter.push({ id: alle[k].id || null, nr: alle[k].getAttribute("data-blatt"),
+          hidden: !!alle[k].hidden, gemalt: rb ? (rb.width > 0 && rb.height > 0) : null });
+      }
+    }
     return {
+      stand: (document.querySelector('meta[name="ft-build"]') || { getAttribute: function () { return null; } })
+        .getAttribute("content"),
       schritt: bogenSchritt + 1,
       blattId: bogenBlaetter[bogenSchritt] || null,
-      blaetter: bogenBlaetter.length,
+      blaetterInsgesamt: bogenBlaetter.length,
+      blaetterImDokument: blaetter,
       ausDerBuchfuehrung: (bogenFragen[bogenSchritt] || []).slice(),
-      aufDemBlatt: blattFelder(),
-      gemeldet: offen,
-      felder: blattFelder().map(function (i) {
-        var q = questions[i] || {};
-        var node = el("q_" + i);
-        var wrap = node && node.closest ? node.closest("label") : null;
-        var r = wrap && wrap.getBoundingClientRect ? wrap.getBoundingClientRect() : null;
-        return {
-          i: i, key: q.key || null, typ: q.type || null,
-          verlangtLautDaten: !!q.required,
-          verlangtLautFeld: node && node.getAttribute ? node.getAttribute("aria-required") : null,
-          hatWert: !!value(i),
-          labelHidden: wrap ? !!wrap.hidden : null,
-          gemalt: r ? (r.width > 0 && r.height > 0) : null,
-          anzeige: wrap && window.getComputedStyle ? window.getComputedStyle(wrap).display : null,
-          bedingung: q.showIf ? q.showIf.key + "=" + q.showIf.value : null,
-          bedingungErfuellt: q.showIf ? sichtbar(q) : null,
-          visionMarke: q.vision || "",
-          imVisionRoom: imVisionRoom(i),
-          gilt: { pflicht: pflichtfeld(q, node), sichtbar: feldSichtbar(q, node), offen: feldOffen(i) },
-        };
-      }),
+      aufDemBlatt: blattFelder().map(function (f) { return f.index; }),
+      gemeldet: blattOffen().map(function (o) { return o.index; }),
+      meldung: (el("need") || {}).textContent || "",
+      fragenInsgesamt: questions.length,
+      felder: felder,
     };
-  };
+  }
+  window.__ftFeldDiagnose = diagnoseDaten;
+
+  /* Die sichtbare Tafel. Sie erscheint nur, wenn sie ausdruecklich angefordert
+     wird (?diagnose=1), steht unter dem Bogen und laesst sich markieren. */
+  function diagnoseTafel() {
+    var tafel = el("diagnose");
+    if (!tafel) return false;
+    var d = diagnoseDaten();
+    var zeile = function (f) {
+      return "<tr><td>" + f.i + "</td><td>" + esc(f.key || "") + "</td>" +
+        "<td>" + esc(f.label || "") + "</td>" +
+        "<td>" + (f.verlangtLautDaten ? "ja" : "nein") + " / " + esc(String(f.verlangtLautFeld)) + "</td>" +
+        "<td>" + (f.hatWert ? "ja" : "nein") + "</td>" +
+        "<td>" + (f.labelHidden ? "ja" : "nein") + " / " + (f.gemalt ? "gemalt" : "nicht gemalt") + "</td>" +
+        "<td>" + esc(f.bedingung || "—") + (f.bedingung ? " (" + (f.bedingungErfuellt ? "erfüllt" : "nicht erfüllt") + ")" : "") + "</td>" +
+        "<td>" + esc(f.visionMarke || "—") + (f.imVisionRoom ? " · im Raum" : "") + "</td>" +
+        "<td>" + f.idDoppelt + (f.knotenVomBlattIstDerVonGetElementById ? "" : " ⚠ anderer Knoten") + "</td>" +
+        "<td>" + (f.gilt.pflicht ? "P" : "–") + (f.gilt.sichtbar ? "S" : "–") + (f.gilt.offen ? "O" : "–") + "</td></tr>";
+    };
+    tafel.hidden = false;
+    tafel.innerHTML = "<h2>Diagnose (nur lesend)</h2>" +
+      "<p class=\"mini\">Stand " + esc(String(d.stand)) + " · Schritt " + d.schritt + " von " +
+        d.blaetterInsgesamt + " · Blatt <b>" + esc(String(d.blattId)) + "</b> · " +
+        "auf dem Blatt [" + d.aufDemBlatt.join(", ") + "] · aus der Buchführung [" +
+        d.ausDerBuchfuehrung.join(", ") + "] · gemeldet [" + d.gemeldet.join(", ") + "]</p>" +
+      "<p class=\"mini\">Zeile unten: " + esc(d.meldung) + "</p>" +
+      "<div style=\"overflow-x:auto\"><table class=\"ft-diagnose\"><thead><tr>" +
+        "<th>#</th><th>Schlüssel</th><th>Frage</th><th>verlangt Daten/Feld</th><th>hat Wert</th>" +
+        "<th>hidden / gemalt</th><th>Bedingung</th><th>Vision</th><th>Ids</th><th>P S O</th>" +
+      "</tr></thead><tbody>" + d.felder.map(zeile).join("") + "</tbody></table></div>" +
+      "<p class=\"mini\">Blätter im Dokument: " + d.blaetterImDokument.map(function (b) {
+        return esc(String(b.id)) + (b.hidden ? " (hidden" : " (offen") + (b.gemalt ? ", gemalt)" : ", nicht gemalt)");
+      }).join(" · ") + "</p>" +
+      "<p class=\"mini\">Es werden keine Antworten, keine Kundendaten und kein Token angezeigt; " +
+      "diese Tafel verändert nichts und sendet nichts.</p>";
+    return true;
+  }
+  var diagnoseAn = (function () {
+    try { return new URLSearchParams(location.search).get("diagnose") === "1"; }
+    catch (e) { return false; }
+  })();
+  window.__ftDiagnoseTafel = diagnoseTafel;
 
   function bogenVerdrahten() {
     var weiter = el("bogenWeiter");
@@ -3205,6 +3295,7 @@
     bogenAufbau();
     bogenVerdrahten();
     sync();
+    if (diagnoseAn) diagnoseTafel();
   }
 
   /* ── Vorbelegung ─────────────────────────────────────────────────────────
@@ -3283,9 +3374,12 @@
     });
   }
 
-  function value(i) {
-    var node = el("q_" + i);
-    return node ? String(node.value || "").trim() : "";
+  /* Der Wert kommt aus DEM Knoten, um den es geht. Ohne ihn wird er ueber die
+     Id gesucht — und document.getElementById liefert bei doppelt vergebenen
+     Ids den ERSTEN Treffer im Dokument, nicht den auf dem Blatt. */
+  function value(i, node) {
+    var n = node || el("q_" + i);
+    return n ? String(n.value || "").trim() : "";
   }
 
   // Pflicht ist genau das, was als Pflicht gefragt wurde. Keine künstliche
@@ -3324,6 +3418,7 @@
       el("need").textContent = (hier.length
         ? "Noch offen in diesem Schritt: " + hier.join(", ") + "."
         : "Dieser Schritt ist vollständig — weiter zum nächsten.") + frei;
+      if (diagnoseAn) window.setTimeout(diagnoseTafel, 0);
       return ready;
     }
 
@@ -3332,6 +3427,7 @@
       el("need").textContent = dateiBestand === BESTAND_FEHLER ? FEHLER_DATEILISTE : WARTETEXT;
       return ready;
     }
+    if (diagnoseAn) window.setTimeout(diagnoseTafel, 0);
     var freiLetzte = freiwilligSatz(blattLeerFreiwillig());
     el("need").textContent = (ready
       ? "Danke — das genügt uns. Sie können jetzt senden."
